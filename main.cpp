@@ -7,7 +7,7 @@ int	main(int ac, char **av)
 	if (ac == 2)
 		configFile = av[1];
 	else if (ac == 1)
-		configFile = "default/default.conf"; // default path
+		configFile = "config/default.conf"; // default path
 	else
 	{
 		std::cerr << "Usage: ./webserv [configuration file]" << std::endl;
