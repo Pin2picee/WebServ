@@ -47,11 +47,17 @@ Socket::~Socket()
     close(this->Fd);
 }
 /*</DESTRUCTION>*/
-/**/
+
+
 void    Socket::set_socket_addr()
 {
     this->address1.sin_family = AF_INET;
     this->address1.sin_port = htons(this->_port);
     this->address1.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1 // little_endian to big_endian for network // inet_pton->function mais pas le droit
 
+}
+
+int Socket::getFd(void) const
+{
+    return (this->Fd);
 }
