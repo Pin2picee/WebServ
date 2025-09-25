@@ -41,6 +41,12 @@ Socket::Socket(size_t port)
 }
 /*</CONSTRUCTION>*/
 
+/*<DESTRUCTION>*/
+Socket::~Socket()
+{
+    close(this->Fd);
+}
+/*</DESTRUCTION>*/
 /**/
 void    Socket::set_socket_addr()
 {

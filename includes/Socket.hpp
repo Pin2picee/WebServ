@@ -14,12 +14,12 @@
 
 # define SOCKET_HPP
 
-#include <sys/socket.h>   // pour socket(), bind(), sockaddr et macro
-#include <netinet/in.h>   // pour sockaddr_in, in_addr
+# include <sys/socket.h>   // pour socket(), bind(), sockaddr et macro
+# include <netinet/in.h>   // pour sockaddr_in, in_addr
 # include <iostream>
 # include <errno.h>
 # include <string.h>
-
+# includee <unistd.h>
 // #class qui va creer un socket 
 class Socket
 {
