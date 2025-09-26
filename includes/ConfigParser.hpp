@@ -20,9 +20,9 @@ struct LocationConf
 
 struct ServerConf
 {
-	std::vector<std::pair<std::string,int> >	listen;
+	std::vector<std::pair<std::string, int> >	listen;
 	std::string									root;
-	std::map<int,std::string>					error_pages;
+	std::map<int, std::string>					error_pages;
 	size_t										client_max_body_size;
 	std::vector<LocationConf>					locations;
 };

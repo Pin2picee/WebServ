@@ -4,7 +4,8 @@ C++				= c++
 HDRS			= ./includes
 FLAGS			= -Wall -Wextra -Werror -std=c++98 -g -I $(HDRS)
 
-SRCS			=  main.cpp
+SRCS			=	main.cpp \
+					srcs/ConfigParser.cpp
 SRC_O			= $(SRCS:.cpp=.o)
 
 NAME			= webserv
