@@ -23,6 +23,27 @@ const char *Socket::SocketError::what() const throw()
 /*<CONSTRUCTION>*/
 Socket::Socket() {};
 
+Socket::Socket(const Socket &copy)
+{
+    if (this != &copy)
+    {
+        Fd = copy.Fd;
+        address1 = copy.address1;
+        _port = copy._port;
+    }
+}
+
+Socket &Socket::operator=(const Socket &assignement)
+{
+    if (this != &assignement)
+    {
+        Fd = assignement.Fd;
+        address1 = assignement.address1;
+        _port = assignement._port;
+    }
+    return (*this);
+}
+
 /**
  * @brief = creation du socket + liaison(=bind) localhost + port
  * @param = port sur lequel on va listen

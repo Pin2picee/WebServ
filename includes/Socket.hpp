@@ -19,7 +19,8 @@
 # include <iostream>
 # include <errno.h>
 # include <string.h>
-# includee <unistd.h>
+# include <unistd.h>
+
 // #class qui va creer un socket 
 class Socket
 {
@@ -35,7 +36,8 @@ class Socket
         Socket(size_t port);
         ~Socket();// le ferme
         int getFd(void) const;// recupere le 
-
+        Socket(const Socket &copy);
+        Socket &operator=(const Socket &assignement);
     class   SocketError : public std::exception
     {
         const char *what(void) const throw ();
