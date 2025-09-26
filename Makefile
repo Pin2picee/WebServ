@@ -29,7 +29,7 @@ $(NAME): $(SRC_O)
 
 clean:
 	@echo $(CYAN)"objets files suppression..."$(RESET)
-	@$(RM) *.o
+	@find . -name "*.o" -type f -exec $(RM) {} \;
 
 fclean: clean
 	@echo $(CYAN)"executable suppression..."$(RESET)
