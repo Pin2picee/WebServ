@@ -26,21 +26,21 @@ int main(int ac, char **av)
 			          << YELLOW << conf.listen[i].second << RESET << "\n";
 
 		// Root
-		std::cout << BOLD YELLOW << "* Root : " RESET << MAGENTA << conf.root << RESET << "\n";
+		std::cout << BOLD YELLOW << "\n* Root : " RESET << MAGENTA << conf.root << RESET << "\n";
 
 		// Client max body size
-		std::cout << BOLD YELLOW << "* Client max body size : " RESET 
+		std::cout << BOLD YELLOW << "\n* Client max body size : " RESET 
 		          << MAGENTA << conf.client_max_body_size << CYAN " bytes\n" << RESET;
 
 		// Error pages
-		std::cout << BOLD YELLOW << "* Error pages :" RESET "\n";
+		std::cout << BOLD YELLOW << "\n* Error pages :" RESET "\n";
 		for (std::map<int, std::string>::const_iterator it = conf.error_pages.begin();
 			 it != conf.error_pages.end(); ++it)
 			std::cout << "  " << RED << it->first << RESET << CYAN " -> " 
 			          << MAGENTA << it->second << RESET << "\n";
 
 		// Locations
-		std::cout << BOLD YELLOW << "* Locations :" RESET "\n";
+		std::cout << BOLD YELLOW << "\n* Locations :" RESET "\n";
 		for (size_t i = 0; i < conf.locations.size(); ++i)
 		{
 			const LocationConf &loc = conf.locations[i];
@@ -65,7 +65,7 @@ int main(int ac, char **av)
 			else
 				for (size_t j = 0; j < loc.index_files.size(); ++j)
 					std::cout << MAGENTA << loc.index_files[j] << RESET << " ";
-			std::cout << "\n";
+			std::cout << "\n\n";
 		}
 
 		std::cout << BOLD CYAN << "================================" RESET << "\n";
