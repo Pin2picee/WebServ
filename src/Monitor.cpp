@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 11:12:02 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/09/27 13:41:15 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/09/27 17:10:37 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,17 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port)
 
 int     Monitor::deconnexion(int i)
 {
-	
+	/**
+	 * deconnexion cote map client + affichage du log
+	 * fermeture du socket
+	 * remplacement par le dernier
+	 * actualisation du nb de socket
+	 */
+	clients[all_socket[i].fd].deconected();
+	close(all_socket[i].fd);
+	all_socket[i] = all_socket[nb_socket - 1];
+	all_socket[nb_socket - 1].fd = -1;//poll ne le surveillera plus
+	nb_socket--;
 	return (0);
 }
 
@@ -114,7 +124,7 @@ int     Monitor::test_read(int i, ssize_t count)
 		else// alors deconnexion
 			return (deconnexion(i));
 	}
-	else if (count == 0)//deco
+	else//(count == 0)//deco
 		return (deconnexion(i));
 }
 
@@ -123,19 +133,15 @@ int		Monitor::new_request(int i)
 	ssize_t count;
 	char buf[1024];
 	std::string buf_final;
-	int test;
+	
 	while (42)
 	{
 		count = read(all_socket[i].fd, buf, sizeof(buf));
-		test = test_read(i, count);
 		if (!test_read(i, count))//client deco
 			break;
-		else if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return (perror("ERROR: APPEND REQUEST READ\n"), 1);
 		buf_final.append(buf, count);
 	}
 	clients[all_socket[i].fd].setRequest(buf_final);
-	std::cout << "new request functions" << std::endl;
 	return (0);
 }
 
@@ -165,13 +171,9 @@ void    Monitor::Monitoring()
 
 	while (42)
 	{
-		std::cout << "nb_connexion_client : " << nb_socket - nb_socket_server  << "\n nb_socket server :" << nb_socket_server << std::endl;
 		poll_return = poll(this->all_socket, nb_socket, 15);
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
-		{
-			std::cout << "Any Socket are ready ..." << std::endl;
 			continue ;
-		}
 		else if (poll_return < 0)//ERROR
 			throw MonitorError();
 		else if (poll_return > 0)//un ou plusieurs socket pret
@@ -192,7 +194,6 @@ void    Monitor::Monitoring()
 					
 					reponse =  clients[all_socket[i].fd].getReponse();
 					nb_send = write(all_socket[i].fd, reponse.c_str(), reponse.length());
-					std::cout << clients[all_socket[i].fd].getRequest() << std::endl;
 					if (nb_send <= 0)
 						perror("ERROR : SEND FAILED \n");
 				}
