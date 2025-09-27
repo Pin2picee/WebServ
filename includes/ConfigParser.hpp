@@ -8,8 +8,17 @@
 #include <sstream>
 #include <stdexcept>
 #include "Webserv.hpp"
+#include <sstream>
 
 #define RED     "\033[31m"
+
+template<typename T>
+std::string ft_to_string(T value)
+{
+    std::ostringstream oss;
+    oss << value;
+    return oss.str();
+}
 
 struct LocationConf
 {
@@ -47,5 +56,28 @@ public:
 	ConfigParser(const std::string &file);
 	ServerConf	 parse();
 };
+
+struct Request
+{
+	std::string							method;
+    std::string							uri;
+	std::string							path;
+    std::string							body;
+    std::map<std::string, std::string>	headers;
+
+	Request() {};
+};
+
+struct Response
+{
+	int			status_code;
+	std::string	content_type;
+	std::string	body;
+
+	Response() {};
+};
+
+Response handlePost(const LocationConf &loc, const Request &req, const ServerConf &conf);
+Response handleDelete(const LocationConf &loc, const Request &req);
 
 #endif
