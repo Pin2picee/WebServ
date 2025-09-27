@@ -7,16 +7,26 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include "Webserv.hpp"
+
+#define RED     "\033[31m"
 
 struct LocationConf
 {
-	std::string					path;
-	std::vector<std::string>	methods;
-	std::string					root;
+	bool						cgi;
 	bool						autoindex;
+	std::string					root;
+	std::string					path;
 	std::string					upload_dir;
-	bool						cgi_enabled;
+	std::string					cgi_extension;
+	std::vector<std::string>	methods;
+	std::vector<std::string>	index_files;
+	
+	LocationConf() : cgi(false), autoindex(false),
+					 root(RED "none"), path(RED "none"),
+					 upload_dir(RED "none"), cgi_extension(RED "none") {};
 };
+
 
 struct ServerConf
 {

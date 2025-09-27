@@ -5,6 +5,7 @@ HDRS			= ./includes
 FLAGS			= -Wall -Wextra -Werror -std=c++98 -g -I $(HDRS)
 
 SRCS			=	main.cpp \
+					srcs/utils.cpp \
 					srcs/ConfigParser.cpp
 SRC_O			= $(SRCS:.cpp=.o)
 

@@ -1,22 +1,8 @@
 #include "ConfigParser.hpp"
-#include "Webserv.hpp"
+#include "utils.hpp"
 #include <cstdlib>
 
 ConfigParser::ConfigParser(const std::string &file) : _file(file) {}
-
-void init_default_errors(ServerConf &conf)
-{
-	conf.error_pages[400] = conf.root + "/errors/400.html";
-	conf.error_pages[401] = conf.root + "/errors/401.html";
-	conf.error_pages[403] = conf.root + "/errors/403.html";
-	conf.error_pages[404] = conf.root + "/errors/404.html";
-	conf.error_pages[405] = conf.root + "/errors/405.html";
-	conf.error_pages[413] = conf.root + "/errors/413.html";
-	conf.error_pages[500] = conf.root + "/errors/500.html";
-	conf.error_pages[501] = conf.root + "/errors/501.html";
-	conf.error_pages[502] = conf.root + "/errors/502.html";
-	conf.error_pages[503] = conf.root + "/errors/503.html";
-}
 
 ServerConf ConfigParser::parse(void)
 {
@@ -26,16 +12,13 @@ ServerConf ConfigParser::parse(void)
 
 	std::vector<std::string> tokens = tokenize(ifs);
 	ServerConf conf;
-	conf.client_max_body_size = 1000000;
-	conf.root = "/config/www/html";
+	LocationConf loc;
 
-	for (size_t i = 0; i < tokens.size(); ++i)
+	for (size_t i = 0; i < tokens.size() && i + 1 < tokens.size(); ++i)
 	{
-		if (tokens[i] == "listen" && i + 1 < tokens.size())
+		if (tokens[i] == "listen")
 		{
-			std::string ip_port = tokens[i + 1];
-			if (!ip_port.empty() && ip_port[ip_port.size() - 1] == ';')
-				ip_port.resize(ip_port.size() - 1);
+			std::string ip_port = strip_semicolon(tokens[i + 1]);
 			size_t colon = ip_port.find(':');
 			if (colon == std::string::npos)
 				throw std::runtime_error("Invalid listen format : " + ip_port);
@@ -43,7 +26,53 @@ ServerConf ConfigParser::parse(void)
 			std::string ip = ip_port.substr(0, colon);
 			int port = atoi(ip_port.substr(colon + 1).c_str());
 			conf.listen.push_back(std::make_pair(ip, port));
-			break ;
+		}
+		else if (tokens[i] == "root")
+			conf.root = strip_semicolon(tokens[i + 1]);
+		else if (tokens[i] == "error_page")
+    		conf.error_pages[atoi(tokens[i + 1].c_str())] = conf.root + strip_semicolon(tokens[i + 2]);
+		else if (tokens[i] == "client_max_body_size")
+			conf.client_max_body_size = atoi(tokens[i + 1].c_str());
+		else if (tokens[i] == "location")
+		{
+			LocationConf loc;
+
+			loc.path = tokens[i + 1];
+			i += 2;
+			while (i < tokens.size() && tokens[i] != "}")
+			{
+				if (tokens[i] == "methods")
+				{
+					loc.methods.clear();
+					while (++i < tokens.size() && tokens[i][tokens[i].size() - 1] != ';')
+						loc.methods.push_back(tokens[i]);
+					if (tokens[i][tokens[i].size() - 1] == ';')
+						loc.methods.push_back(strip_semicolon(tokens[i]));
+				}
+				else if (tokens[i] == "index")
+				{
+					loc.index_files.clear();
+					while (++i < tokens.size() && tokens[i][tokens[i].size() - 1] != ';')
+						loc.index_files.push_back(tokens[i]);
+					if (tokens[i][tokens[i].size() - 1] == ';')
+						loc.index_files.push_back(strip_semicolon(tokens[i]));
+				}
+				else if (tokens[i] == "autoindex")
+					loc.autoindex = (strip_semicolon(tokens[++i]) == "on");
+				else if (tokens[i] == "upload_dir")
+					loc.upload_dir = strip_semicolon(tokens[++i]);
+				else if (tokens[i] == "cgi")
+					loc.cgi = (strip_semicolon(tokens[++i]) == "on");
+				else if (tokens[i] == "cgi_extension")
+					loc.cgi_extension = strip_semicolon(tokens[++i]);
+				else if (tokens[i] == "root")
+					loc.root = strip_semicolon(tokens[++i]);
+				++i;
+			}
+			if (loc.root.empty())
+				loc.root = conf.root;
+
+			conf.locations.push_back(loc);
 		}
 	}
 	init_default_errors(conf);
