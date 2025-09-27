@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 12:59:54 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/09/26 19:40:46 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/09/27 16:22:09 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include <iostream>
 # include <string>
+# include <sys/time.h>
 
 class Client
 {
@@ -28,6 +29,10 @@ class Client
 
         std::string ip;
         std::string port;
+        timeval start;
+        timeval end;
+        bool    connected;
+        
     public :
         Client();
         ~Client();
@@ -41,6 +46,9 @@ class Client
     public:
         std::string    &getRequest();
         std::string    &getReponse();
+    public:
+        void    view_log();//affiche les temps de connexions avec l'ip et port + socket serveur
+        void    deconected();//met a false + view_log()
 };
 
 #endif
