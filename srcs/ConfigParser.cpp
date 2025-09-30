@@ -50,7 +50,6 @@ ServerConf ConfigParser::parse(void)
 	std::ifstream ifs(_file.c_str());
 	if (!ifs.is_open())
 		throw std::runtime_error("Cannot open config file: " + _file);
-
 	std::vector<std::string> tokens = tokenize(ifs);
 	ServerConf conf;
 	LocationConf loc;
@@ -115,11 +114,12 @@ Response handlePost(const LocationConf &loc, const Request &req, const ServerCon
 		res.body = "Request body too large";
 		return res;
 	}
-	if (!loc.upload_dir.empty() && loc.path == "/upload")
+	if (!loc.upload_dir.empty())
 	{
-		std::string filename = loc.upload_dir + "/uploaded_file";
+		std::string filename = loc.upload_dir + "/testfile.txt";
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
-		if (!ofs) {
+		if (!ofs)
+		{
 			res.status_code = 500;
 			res.body = "Cannot create file";
 			return res;
@@ -146,6 +146,7 @@ Response handleDelete(const LocationConf &loc, const Request &req)
 {
 	Response	resp;
 
+	resp.content_type = MIME_TEXT_PLAIN;
 	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
 	{
 		resp.status_code = 405;
@@ -153,7 +154,7 @@ Response handleDelete(const LocationConf &loc, const Request &req)
 		return resp;
 	}
 
-	std::string file_path = loc.root + req.path;
+	std::string file_path = req.path;
 
 	if (std::remove(file_path.c_str()) != 0)
 	{
