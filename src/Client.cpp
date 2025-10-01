@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 13:41:00 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/09/27 17:20:43 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/01 21:13:52 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 
 Client::Client() : connected(true)
 {
+    request_finish = false;
+    offset = 0;
     gettimeofday(&this->start, nullptr);
 }
 
@@ -54,7 +56,9 @@ void Client::setbasic(std::string ip_address, std::string port_address)
 
 void    Client::setRequest(std::string buf)
 {
-    this->request = buf;
+    this->request += buf;
+    if (request.find("\r\n\r\n") != std::string::npos)
+        request_finish = true;
 }
 
 void    Client::setReponse(std::string buf)
@@ -67,9 +71,24 @@ std::string    &Client::getRequest()
     return (this->request);
 }
 
+size_t &Client::getOffset()
+{
+    return (this->offset);
+}
+
+bool    &Client::getFinishRequest()
+{
+    return (request_finish);
+}
+
 std::string &Client::getReponse()
 {
     return (this->reponse);
+}
+
+void            Client::AddOffset(size_t nb)
+{
+    this->offset += nb;
 }
 
 void    Client::view_log()
