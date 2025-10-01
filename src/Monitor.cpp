@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 11:12:02 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/01 15:22:58 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/01 21:11:01 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,8 @@ Monitor::Monitor(const Monitor &copy)
 		nb_socket = copy.nb_socket;
 		nb_socket_server = copy.nb_socket_server;
 		clients = copy.clients;
-		all_socket[5000] = copy.all_socket[5000];
+		for (int i = 0; i < nb_socket; i++)
+			all_socket[i] = copy.all_socket[i];
 	}
 }
 
@@ -54,7 +55,7 @@ void   Monitor::add_fd(int &fd)
 	all_socket[this->nb_socket].fd = fd; 
 	all_socket[this->nb_socket].events = POLLIN;
 	this->nb_socket++;
-	this->nb_socket_server;
+	this->nb_socket_server++;
 }
 
 Monitor::Monitor(std::vector<int> tab)
@@ -74,8 +75,6 @@ Monitor::Monitor(std::vector<int> tab)
 /*AJOUT DU CLIENT DANS LA MAP FD:CLIENT*/
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port)
 {
-	std::cout << "fd = " << fd << ", map size = " << clients.size() << std::endl;
-	std::cout << "\033[31m" <<"nombre d'entre dans add_client" << "\033[0m"<< std::endl;
 	Client  nouveau;
 	uint32_t    ip_adress = ntohl(ip);
 	uint16_t    port_adress = ntohs(port);
@@ -146,7 +145,8 @@ int		Monitor::new_request(int i)
 			return (deconnexion(i));
 		else if (result == 2)
 			break;
-		buf_final.append(buf, count);
+		if (count > 0)
+			buf_final.append(buf, count);
 	}
 	clients[all_socket[i].fd].setRequest(buf_final);
 	return (1);
@@ -180,9 +180,6 @@ void    Monitor::Monitoring()
 
 	while (42)
 	{
-		std::cout << "La taille du nombre de client vector_client : "<< this->clients.size() << std::endl;
-		std::cout << "nb_socket_server : "<< this->nb_socket_server << std::endl;
-		std::cout << "nb_socket_total : "<< this->nb_socket<< std::endl;
 		poll_return = poll(this->all_socket, nb_socket, 15);
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;
@@ -192,25 +189,69 @@ void    Monitor::Monitoring()
 		{
 			for (int i = 0; i < nb_socket;)//parcours les socket
 			{
-				if (all_socket[i].revents & POLLIN)// read ready
+				bool client_disconnected = false;
+				//deja deconnecte en general le dernier car deconnexion switch
+				if (all_socket[i].fd < 0 || all_socket[i].revents & POLLNVAL)
 				{
-					if (i < nb_socket_server && new_clients(i))//true == accept echoue
+					i++;
+					continue;
+				}
+				//ERROR socket
+				if (all_socket[i].revents & POLLERR)
+				{
+					if (i >= nb_socket_server)
+					{
+						deconnexion(i);
+						continue;
+					}
+					else
+					{
+						std::cout << "Problem socket server" << std::endl;
+						i++;
+					}
+				}
+				//deconnexion du client
+				if (all_socket[i].revents & POLLHUP)
+				{
+					if (i >= nb_socket_server)
+					{
+						if (all_socket[i].revents & POLLIN)
+							client_disconnected = new_request(i);//lit les derniers donne
+						if (client_disconnected)
+							deconnexion(i);//on deconnecte + affiche le log//met a jour i
+						continue;
+					}
+					else
 					{
 						i++;
+						continue;
+					}
+				}
+				//lecture
+				if (all_socket[i].revents & POLLIN)
+				{
+					if (i < nb_socket_server)
+					{
+						new_clients(i++);
 						continue;
 					}
 					else if (i >= nb_socket_server && !new_request(i))//client/deconnexion
 							continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
 				}
-				if (all_socket[i].revents & POLLOUT && i >= nb_socket_server)//cote client je peux ecrire
+				//ecriture
+				if (all_socket[i].revents & POLLOUT && i >= nb_socket_server && clients[all_socket[i].fd].getFinishRequest())//cote client je peux ecrire
 				{
 					std::string reponse;
 					size_t      nb_send;
+					size_t		offset;
 					
-					reponse =  clients[all_socket[i].fd].getReponse();
-					nb_send = write(all_socket[i].fd, reponse.c_str(), reponse.length());
-					if (nb_send <= 0)
+					reponse = clients[all_socket[i].fd].getReponse();
+					offset = clients[all_socket[i].fd].getOffset();
+					nb_send = write(all_socket[i].fd, reponse.c_str() + offset, reponse.length() - offset);
+					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 						perror("ERROR : SEND FAILED \n");
+					if (nb_send > 0)
+						clients[all_socket[i].fd].AddOffset(nb_send);
 				}
 				i++;
 			}
