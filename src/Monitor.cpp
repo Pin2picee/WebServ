@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 11:12:02 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/01 21:11:01 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/01 23:52:45 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -245,6 +245,12 @@ void    Monitor::Monitoring()
 					size_t      nb_send;
 					size_t		offset;
 					
+					//objet REQUEST_HANDLER qui fait appel a l'objet ParsingHttp et SendHttp
+					/**
+					 * Mon request Handler fait appel a parsingHTTP si pas bon request handler requete false
+					 * si bon savoir si POST, delete, GET
+					 * SENDhttp s'occupe de generer la requete reponse
+					 */
 					reponse = clients[all_socket[i].fd].getReponse();
 					offset = clients[all_socket[i].fd].getOffset();
 					nb_send = write(all_socket[i].fd, reponse.c_str() + offset, reponse.length() - offset);
