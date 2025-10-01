@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 10:48:18 by abelmoha@st       #+#    #+#             */
-/*   Updated: 2025/10/01 14:23:31 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/01 21:24:48 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,6 @@ class Monitor
 		size_t				nb_socket;
 		size_t				nb_socket_server;
 		std::map<int, Client>	clients;
-		std::vector<Client>		log_clients;
 		struct  pollfd		all_socket[20000];// dois tout avoir dans ce meme tab connexion for read & write
 	private :
 		Monitor();
