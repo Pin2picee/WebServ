@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 12:59:54 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/09/27 16:22:09 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/01 15:23:20 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ class Client
         std::string request;
         std::string reponse ="HTTP/1.1 200 OK\r\n"
                             "Content-Length: 5\r\n"
+                            "Connection: keep-alive\r\n"
                             "Content-Type: text/plain\r\n"
                             "\r\n"
                             "SALUT";
