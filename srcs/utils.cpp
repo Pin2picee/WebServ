@@ -2,9 +2,9 @@
 
 std::string strip_semicolon(const std::string &s)
 {
-    if (!s.empty() && s[s.size() - 1] == ';')
-        return s.substr(0, s.size() - 1);
-    return s;
+	if (!s.empty() && s[s.size() - 1] == ';')
+		return s.substr(0, s.size() - 1);
+	return s;
 };
 
 void	init_default_errors(ServerConf &conf)

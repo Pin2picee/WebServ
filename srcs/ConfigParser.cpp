@@ -102,70 +102,41 @@ Response handlePost(const LocationConf &loc, const Request &req, const ServerCon
 {
 	Response res;
 
-	if (std::find(loc.methods.begin(), loc.methods.end(), std::string("POST")) == loc.methods.end())
-	{
-		res.status_code = 405;
-		res.body = "POST not allowed on this location";
-		return res;
-	}
-	if (req.body.size() > server.client_max_body_size)
-	{
-		res.status_code = 413;
-		res.body = "Request body too large";
-		return res;
-	}
-	if (!loc.upload_dir.empty())
+	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
+		makeResponse(res, 405, "POST not allowed on this location", MIME_TEXT_PLAIN);
+	else if (req.body.size() > server.client_max_body_size)
+		makeResponse(res, 413, "Request body too large", MIME_TEXT_PLAIN);
+	else if (loc.upload_dir != RED "none")
 	{
 		std::string filename = loc.upload_dir + "/testfile.txt";
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
 		{
-			res.status_code = 500;
-			res.body = "Cannot create file";
+			makeResponse(res, 500, "Cannot create file", MIME_TEXT_PLAIN);
 			return res;
 		}
 		ofs.write(req.body.c_str(), req.body.size());
 		ofs.close();
-
-		res.status_code = 201;
-		res.body = "File uploaded successfully";
-		return res;
+		makeResponse(res, 201, "File uploaded successfully", MIME_TEXT_PLAIN);
 	}
-	if (loc.cgi)
-	{
-		res.status_code = 200;
-		res.body = "CGI executed";
-		return res;
-	}
-	res.status_code = 200;
-	res.body = "POST handled";
+	else if (loc.cgi)
+		makeResponse(res, 200, "CGI executed", MIME_TEXT_PLAIN);
+	else
+		makeResponse(res, 200, "POST handled", MIME_TEXT_PLAIN);
 	return res;
 }
 
 Response handleDelete(const LocationConf &loc, const Request &req)
 {
-	Response	resp;
+	Response	res;
 
-	resp.content_type = MIME_TEXT_PLAIN;
 	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
-	{
-		resp.status_code = 405;
-		resp.body = "DELETE not allowed on this location";
-		return resp;
-	}
-
-	std::string file_path = req.path;
-
-	if (std::remove(file_path.c_str()) != 0)
-	{
-		resp.status_code = 404;
-		resp.body = "File not found or cannot delete";
-	} 
+		makeResponse(res, 405, "DELETE not allowed on this location", MIME_TEXT_PLAIN);
+	else if (req.path.empty() || req.path == RED "none")
+		makeResponse(res, 400, "Invalid file path", MIME_TEXT_PLAIN);
+	else if (std::remove(req.path.c_str()) != 0)
+		makeResponse(res, 404, "File not found or cannot delete", MIME_TEXT_PLAIN);
 	else 
-	{
-		resp.status_code = 200;
-		resp.body = "File deleted successfully";
-	}
-
-	return resp;
+		makeResponse(res, 200, "File deleted successfully", MIME_TEXT_PLAIN);
+	return res;
 }
