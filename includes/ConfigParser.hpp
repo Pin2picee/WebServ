@@ -25,11 +25,11 @@ struct LocationConf
 	bool						cgi;			// Whether CGI scripts are enabled
 	bool						autoindex;		// Whether directory listing is enabled
 	std::string					root;			// Root directory for this location
-	std::string					path;			// URI path of this location (e.g., "/upload")
+	std::string					path;			// URI path of this location (cf. "/upload")
 	std::string					upload_dir;		// Directory where uploaded files are stored
-	std::string					cgi_extension;	// File extension for CGI scripts (e.g., ".py")
+	std::string					cgi_extension;	// File extension for CGI scripts (cf. ".py")
 	std::vector<std::string>	methods;		// Allowed HTTP methods (GET, POST, DELETE, etc.)
-	std::vector<std::string>	index_files;	// Default index files for this location (e.g., "index.html")
+	std::vector<std::string>	index_files;	// Default index files for this location (cf. "index.html")
 	
 	LocationConf() : cgi(false), autoindex(false),
 					 root(RED "none"), path(RED "none"),
@@ -68,35 +68,10 @@ struct Request
 	Request() {};
 };
 
-//=== MIME (Multipurpose Internet Mail Extensions) content types ===//
-// Text types
-# define MIME_TEXT_PLAIN       "text/plain"
-# define MIME_TEXT_HTML        "text/html"
-# define MIME_TEXT_CSS         "text/css"
-# define MIME_TEXT_JAVASCRIPT  "application/javascript"
-
-// Data / JSON
-# define MIME_APPLICATION_JSON "application/json"
-# define MIME_APPLICATION_XML  "application/xml"
-
-// Images
-# define MIME_IMAGE_PNG        "image/png"
-# define MIME_IMAGE_JPEG       "image/jpeg"
-# define MIME_IMAGE_GIF        "image/gif"
-# define MIME_IMAGE_SVG        "image/svg+xml"
-
-// Fonts
-# define MIME_FONT_WOFF        "font/woff"
-# define MIME_FONT_WOFF2       "font/woff2"
-# define MIME_FONT_TTF         "font/ttf"
-
-// Binary / Misc
-# define MIME_APPLICATION_OCTET_STREAM "application/octet-stream"
-
 struct Response
 {
 	int			status_code;	// HTTP status code, 200, 404, 500
-	std::string	content_type;	// MIME content type ("text/html", "application/json", …)
+	std::string	content_type;	// MIME content type (cf utils.hpp)
 	std::string	body;			// response content (HTML, text, JSON, binary file, …)
 
 	Response() {};
