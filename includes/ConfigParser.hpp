@@ -36,7 +36,6 @@ struct LocationConf
 					 upload_dir(RED "none"), cgi_extension(RED "none") {};
 };
 
-
 struct ServerConf
 {
 	std::vector<std::pair<std::string, int> >	listen;					// IPs and ports the server listens on
@@ -77,6 +76,19 @@ struct Response
 	Response() {};
 };
 
+/* class Resp_HTTP
+{
+private:
+	ServerConf	servConf;
+	Request		Req;
+
+	Response handlePost(const LocationConf &loc, const Request &req, const ServerConf &conf);
+	Response handleDelete(const LocationConf &loc, const Request &req);
+public:
+	Response	handleRequest(std::string request);//a remplacer par objet client
+}; */
+
+Response handleGet(const LocationConf &loc, const Request &req);
 Response handlePost(const LocationConf &loc, const Request &req, const ServerConf &conf);
 Response handleDelete(const LocationConf &loc, const Request &req);
 
