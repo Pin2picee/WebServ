@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 13:41:00 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/15 14:24:16 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/15 17:09:34 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,14 @@ Client::Client() : connected(true)
     gettimeofday(&this->start, nullptr);
 }
 
-Client::~Client() {}
+Client::~Client()
+{
+    this->reponse ="HTTP/1.1 200 OK\r\n"
+                            "Content-Length: 5\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "\r\n"
+                            "SALUT\r\n\r\n";
+}
 
 Client::Client(const Client &copy)
 {
