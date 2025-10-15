@@ -1,9 +1,14 @@
 #ifndef RESPONSE_HANDLER_HPP
 # define RESPONSE_HANDLER_HPP
 
-# include "Server.hpp"
 # include "Utils.hpp"
 
+/**
+ * @brief
+ * The class that respond to `Requests`.
+ * 
+ * @param _server				The `Server` that sends a `Request`.
+ */
 class ResponseHandler
 {
 private:
@@ -17,6 +22,7 @@ public:
 	~ResponseHandler();
 
 	//handle requests
+
 	Response		handleRequest(const Request &req);
 };
 

@@ -1,9 +1,14 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include "Includes.hpp"
 # include "Server.hpp"
 
+/**
+ * @brief
+ * The class that Contains all the configuration file informations.
+ * 
+ * @param Servers				The list of servers in the configuration file.
+ */
 class Config : public Server
 {
 private:
@@ -16,9 +21,11 @@ public:
 	~Config();
 
 	//parsing
+
 	void						parseAllServerFiles(const std::string &configFile);
 
 	//getter
+
 	const std::vector<Server>&	getServers() const;
 };
 

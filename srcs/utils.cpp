@@ -1,5 +1,13 @@
 #include "utils.hpp"
 
+/**
+ * @brief
+ * Remove the semicolon at the end of the data string.
+ * 
+ * @param s The token that contains a semicolon.
+ * 
+ * @return The string without semicolon.
+ */
 std::string strip_semicolon(const std::string &s)
 {
 	if (!s.empty() && s[s.size() - 1] == ';')
@@ -7,6 +15,12 @@ std::string strip_semicolon(const std::string &s)
 	return s;
 };
 
+/**
+ * @brief
+ * Initialise the errors in conf (can be changed by extracting the datas of HTML error files)
+ * 
+ * @param conf The `Server` configuration.
+ */
 void	init_default_errors(Server &conf)
 {
 	std::map<int, std::string> &errors = conf.getErrorPagesRef();
@@ -24,19 +38,25 @@ void	init_default_errors(Server &conf)
 	errors[503] = root + "/errors/503.html";
 };
 
+/**
+ * @param path The request path
+ *  
+ * @return
+ * Return the MIME (Multipurpose Internet Mail Extensions) content type that have `Response` when responding to a `Request`.
+ */
 std::string getMimeType(const std::string &path)
 {
 	if (path.find(".html") != std::string::npos)
-		return "text/html";
+		return MIME_TEXT_HTML;
 	if (path.find(".css") != std::string::npos)
-		return "text/css";
+		return MIME_TEXT_CSS;
 	if (path.find(".js") != std::string::npos)
-		return "application/javascript";
+		return MIME_TEXT_JAVASCRIPT;
 	if (path.find(".jpg") != std::string::npos || path.find(".jpeg") != std::string::npos)
-		return "image/jpeg";
+		return MIME_IMAGE_JPEG;
 	if (path.find(".png") != std::string::npos)
-		return "image/png";
+		return MIME_IMAGE_PNG;
 	if (path.find(".gif") != std::string::npos)
-		return "image/gif";
-	return "text/plain";
+		return MIME_IMAGE_GIF;
+	return MIME_TEXT_PLAIN;
 }

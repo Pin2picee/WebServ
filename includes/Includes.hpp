@@ -27,6 +27,9 @@
 # include <fstream>
 # include <sstream>
 # include <stdexcept>
+# include <algorithm>
+# include <cstdlib>
+
 
 // Text colors
 # define RESET   "\033[0m"

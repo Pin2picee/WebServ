@@ -1,9 +1,19 @@
 #include "Response.hpp"
 
+/* constructor */
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
+/* destructor */
 ResponseHandler::~ResponseHandler() {}
 
+/**
+ * @brief
+ * Handle any `Request`.
+ * 
+ * @param req The `Request` struct that will be processed.
+ * 
+ * @return a `Response` structure that will answer in adequation to the `Request`.
+ */
 Response ResponseHandler::handleRequest(const Request &req)
 {
 	Response	res;
@@ -28,9 +38,15 @@ Response ResponseHandler::handleRequest(const Request &req)
 	return res;
 }
 
-
-#include <algorithm>
-
+/**
+ * @brief
+ * Handle the get `Request`.
+ * 
+ * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
+ * @param req The `Request` struct of `handleRequest` that will be processed.
+ * 
+ * @return a `Response` structure that will answer in adequation to the get `Request`.
+ */
 Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 {
 	Response	res;
@@ -102,6 +118,15 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 	return res;
 }
 
+/**
+ * @brief
+ * Handle the post `Request`.
+ * 
+ * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
+ * @param req The `Request` struct of `handleRequest` that will be processed.
+ * 
+ * @return a `Response` structure that will answer in adequation to the post `Request`.
+ */
 Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 {
 	Response res;
@@ -130,6 +155,15 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 	return res;
 }
 
+/**
+ * @brief
+ * Handle the delete `Request`.
+ * 
+ * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
+ * @param req The `Request` struct of `handleRequest` that will be processed.
+ * 
+ * @return a `Response` structure that will answer in adequation to the delete `Request`.
+ */
 Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
 {
 	Response	res;
