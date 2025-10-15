@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 11:12:02 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/01 23:52:45 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/15 14:57:23 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,11 @@ Monitor::Monitor(const Monitor &copy)
 {
 	if (this != &copy)
 	{
-		nb_socket = copy.nb_socket;
-		nb_socket_server = copy.nb_socket_server;
+		nb_fd = copy.nb_fd;
+		nb_fd_server = copy.nb_fd_server;
 		clients = copy.clients;
-		for (int i = 0; i < nb_socket; i++)
-			all_socket[i] = copy.all_socket[i];
+		for (int i = 0; i < nb_fd; i++)
+			all_fd[i] = copy.all_fd[i];
 	}
 }
 
@@ -42,38 +42,47 @@ Monitor &Monitor::operator=(const Monitor &copy)
 {
 	if (this != &copy)
 	{
-		nb_socket = copy.nb_socket;
-		nb_socket_server = copy.nb_socket_server;
+		nb_fd = copy.nb_fd;
+		nb_fd_server = copy.nb_fd_server;
 		clients = copy.clients;
-		all_socket[5000] = copy.all_socket[5000];
+		all_fd[5000] = copy.all_fd[5000];
 	}
 	return (*this);
 }
 
 void   Monitor::add_fd(int &fd)
 {
-	all_socket[this->nb_socket].fd = fd; 
-	all_socket[this->nb_socket].events = POLLIN;
-	this->nb_socket++;
-	this->nb_socket_server++;
+	all_fd[this->nb_fd].fd = fd; 
+	all_fd[this->nb_fd].events = POLLIN;
+	this->nb_fd++;
+	this->nb_fd_server++;
 }
 
-Monitor::Monitor(std::vector<int> tab)
+Monitor::Monitor(std::vector<Socket *> tab)
 {
-	this->nb_socket = 0;
-	while (nb_socket < tab.size())
+	this->nb_fd = 0;
+	std::vector<Socket *>::iterator	it = tab.begin();
+	for (size_t i = nb_fd; i < 200000; i++)
+    {
+        all_fd[i].fd = -1;
+        all_fd[i].events = 0;
+        all_fd[i].revents = 0;
+    }
+	while (nb_fd < tab.size() && it != tab.end())
 	{
-		all_socket[nb_socket].fd = tab[nb_socket]; 
-		all_socket[nb_socket].events = POLLIN;
-		nb_socket++;
+		all_fd[nb_fd].fd = (*it)->getFd();
+		all_fd[nb_fd].events = POLLIN;
+		all_socket.insert(std::make_pair((*it)->getFd(), *it));
+		nb_fd++;
+		it++;
 	}
-	nb_socket_server = nb_socket;
+	nb_fd_server = nb_fd;
 }
 
 /*</Construction>*/
 
 /*AJOUT DU CLIENT DANS LA MAP FD:CLIENT*/
-void Monitor::add_client(int fd, in_addr_t ip, in_port_t port)
+void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
 	Client  nouveau;
 	uint32_t    ip_adress = ntohl(ip);
@@ -95,6 +104,7 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port)
 			ip_str += '.';
 	}
 	nouveau.setbasic(ip_str, port_str);
+	nouveau.set_socket(all_socket.at(fd_server));
 	clients[fd] = nouveau;
 }
 
@@ -106,12 +116,12 @@ int     Monitor::deconnexion(int i)
 	 * remplacement par le dernier
 	 * actualisation du nb de socket
 	 */
-	clients[all_socket[i].fd].deconected();
-	close(all_socket[i].fd);
-	clients.erase(all_socket[i].fd);
-	all_socket[i] = all_socket[nb_socket - 1];
-	all_socket[nb_socket - 1].fd = -1;//poll ne le surveillera plus
-	nb_socket--;
+	clients[all_fd[i].fd].deconected();
+	close(all_fd[i].fd);
+	clients.erase(all_fd[i].fd);
+	all_fd[i] = all_fd[nb_fd - 1];
+	all_fd[nb_fd - 1].fd = -1;//poll ne le surveillera plus
+	nb_fd--;
 	return (0);
 }
 
@@ -139,7 +149,7 @@ int		Monitor::new_request(int i)
 	
 	while (42)
 	{
-		count = read(all_socket[i].fd, buf, sizeof(buf));
+		count = read(all_fd[i].fd, buf, sizeof(buf));
 		result = test_read(count);
 		if (!result)//client deco
 			return (deconnexion(i));
@@ -148,25 +158,25 @@ int		Monitor::new_request(int i)
 		if (count > 0)
 			buf_final.append(buf, count);
 	}
-	clients[all_socket[i].fd].setRequest(buf_final);
+	clients[all_fd[i].fd].setRequest(buf_final);
 	return (1);
 }
 
-int	Monitor::new_clients(int i)
+int	Monitor::	new_clients(int i)
 {
 	struct sockaddr_in address;
 	socklen_t addrlen = sizeof(address);
-	all_socket[nb_socket].fd = accept(all_socket[i].fd, (sockaddr *)&address, &addrlen);
-	all_socket[nb_socket].events = POLLIN | POLLOUT;
-	if (all_socket[nb_socket].fd < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+	all_fd[nb_fd].fd = accept(all_fd[i].fd, (sockaddr *)&address, &addrlen);
+	all_fd[nb_fd].events = POLLIN;
+	if (all_fd[nb_fd].fd < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 		return (std::cout << "RIEN A ACCEPTER"<< std::endl, 1) ;
-	else if (all_socket[nb_socket].fd < 0)
+	else if (all_fd[nb_fd].fd < 0)
 		return (std::cout << "ERROR ressources accept" << std::endl, 1);
-	add_client(all_socket[nb_socket].fd, address.sin_addr.s_addr, address.sin_port);// on l'ajoute dans ma map de clients
+	add_client(all_fd[nb_fd].fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);// on l'ajoute dans ma map de clients avec le fd du server
 	
-	int ancien_flags = fcntl (all_socket[nb_socket].fd, F_GETFL);
-	fcntl(all_socket[nb_socket].fd, F_SETFL, ancien_flags | O_NONBLOCK);
-	nb_socket++;
+	int ancien_flags = fcntl (all_fd[nb_fd].fd, F_GETFL);
+	fcntl(all_fd[nb_fd].fd, F_SETFL, ancien_flags | O_NONBLOCK);
+	nb_fd++;
 	return (0);
 }
 
@@ -178,28 +188,36 @@ void    Monitor::Monitoring()
 {
 	int poll_return;
 
-	while (42)
+	std::cout << "Lancement du server" << std::endl;
+	int	poll_reveil = 0;
+	while (on)
 	{
-		poll_return = poll(this->all_socket, nb_socket, 15);
+		
+		poll_return = poll(this->all_fd, nb_fd, 15);
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;
 		else if (poll_return < 0)//ERROR
+		{
+			if (errno == EINTR)//signal recu donc erreur poll
+				break;
 			throw MonitorError();
+		}
 		else if (poll_return > 0)//un ou plusieurs socket pret
 		{
-			for (int i = 0; i < nb_socket;)//parcours les socket
+			poll_reveil++;
+			for (int i = 0; i < nb_fd;)//parcours les socket
 			{
 				bool client_disconnected = false;
 				//deja deconnecte en general le dernier car deconnexion switch
-				if (all_socket[i].fd < 0 || all_socket[i].revents & POLLNVAL)
+				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
 				{
 					i++;
 					continue;
 				}
 				//ERROR socket
-				if (all_socket[i].revents & POLLERR)
+				if (all_fd[i].revents & POLLERR)
 				{
-					if (i >= nb_socket_server)
+					if (i >= nb_fd_server)
 					{
 						deconnexion(i);
 						continue;
@@ -211,11 +229,11 @@ void    Monitor::Monitoring()
 					}
 				}
 				//deconnexion du client
-				if (all_socket[i].revents & POLLHUP)
+				if (all_fd[i].revents & POLLHUP)
 				{
-					if (i >= nb_socket_server)
+					if (i >= nb_fd_server)
 					{
-						if (all_socket[i].revents & POLLIN)
+						if (all_fd[i].revents & POLLIN)
 							client_disconnected = new_request(i);//lit les derniers donne
 						if (client_disconnected)
 							deconnexion(i);//on deconnecte + affiche le log//met a jour i
@@ -228,18 +246,21 @@ void    Monitor::Monitoring()
 					}
 				}
 				//lecture
-				if (all_socket[i].revents & POLLIN)
+				if (all_fd[i].revents & POLLIN)
 				{
-					if (i < nb_socket_server)
+					std::cout << ".";
+					if (i < nb_fd_server)
 					{
 						new_clients(i++);
 						continue;
 					}
-					else if (i >= nb_socket_server && !new_request(i))//client/deconnexion
+					else if (i >= nb_fd_server && !new_request(i))//client/deconnexion
 							continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
 				}
 				//ecriture
-				if (all_socket[i].revents & POLLOUT && i >= nb_socket_server && clients[all_socket[i].fd].getFinishRequest())//cote client je peux ecrire
+				if (clients[all_fd[i].fd].getFinishRequest())
+					all_fd[i].events |= POLLOUT;
+				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server)//cote client je peux ecrire
 				{
 					std::string reponse;
 					size_t      nb_send;
@@ -251,13 +272,15 @@ void    Monitor::Monitoring()
 					 * si bon savoir si POST, delete, GET
 					 * SENDhttp s'occupe de generer la requete reponse
 					 */
-					reponse = clients[all_socket[i].fd].getReponse();
-					offset = clients[all_socket[i].fd].getOffset();
-					nb_send = write(all_socket[i].fd, reponse.c_str() + offset, reponse.length() - offset);
+					reponse = clients[all_fd[i].fd].getReponse();
+					offset = clients[all_fd[i].fd].getOffset();
+					nb_send = write(all_fd[i].fd, reponse.c_str() + offset, reponse.length() - offset);
 					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 						perror("ERROR : SEND FAILED \n");
 					if (nb_send > 0)
-						clients[all_socket[i].fd].AddOffset(nb_send);
+						clients[all_fd[i].fd].AddOffset(nb_send);
+					if (clients[all_fd[i].fd].getOffset() >= reponse.length())
+						all_fd[i].events = POLLIN;
 				}
 				i++;
 			}

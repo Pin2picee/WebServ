@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/25 10:48:18 by abelmoha@st       #+#    #+#             */
-/*   Updated: 2025/10/01 21:24:48 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/15 15:05:51 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,17 +14,10 @@
 
 # define MONITOR_HPP
 
-# include <vector>
-# include <map>
-# include <iostream>
-# include <poll.h>
-# include <errno.h>
-# include <string.h>
-# include <unistd.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
+# include "Webserv.hpp"
 # include "Client.hpp"
-# include <fcntl.h>
+
+extern volatile sig_atomic_t	on;
 
 /**
  * @brief = FUTUR instance qui va permettre de poll mes socket serveurs et client car on a le droit a un seul poll
@@ -34,19 +27,20 @@
 class Monitor
 {
 	private :
-		size_t				nb_socket;
-		size_t				nb_socket_server;
+		size_t				nb_fd;
+		size_t				nb_fd_server;
 		std::map<int, Client>	clients;
-		struct  pollfd		all_socket[20000];// dois tout avoir dans ce meme tab connexion for read & write
+		std::map<int, Socket *>	all_socket;//ma map avec cle = fd, valeur = obj Socket;
+		struct  pollfd		all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
 	private :
 		Monitor();
-		void	add_client(int fd, in_addr_t ip, in_port_t port);// ajoute un client  dans mon vecteur de client
+		void 	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);// ajoute un client  dans mon vecteur de client
 		int		new_clients(int i);//ajoute un nouveau socket non bloquant pour le client
 		int		new_request(int i);// RECUP la requete + verif test_read
 		int		test_read(ssize_t count);
 		int		deconnexion(int i);//SUPPRIME LA CONNEXION SOCKET CLIENT IF !TEST_READ
 	public :
-		Monitor(std::vector<int> tab);
+		Monitor(std::vector<Socket *> tab);
 		~Monitor();
 		Monitor(const Monitor &copy);
 		Monitor &operator=(const Monitor &copy);
