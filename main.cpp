@@ -1,6 +1,4 @@
 #include "Webserv.hpp"
-#include "ConfigParser.hpp"
-#include "utils.hpp"
 
 int main(int ac, char **av)
 {
@@ -14,86 +12,72 @@ int main(int ac, char **av)
 
 	try
 	{
-		ConfigParser parser(configFile);
-		ServerConf conf = parser.parse();
+		std::cout << CYAN BOLD << "📄 Chargement du fichier de configuration : " 
+				  << configFile << RESET << std::endl;
 
-		std::cout << BOLD CYAN << "===== Server Configuration =====" RESET << "\n";
+		Config parser;
+		parser.parseAllServerFiles(configFile);
 
-		std::cout << BOLD YELLOW << "* Listen on : " RESET "\n";
-		for (size_t i = 0; i < conf.listen.size(); ++i)
-			std::cout << "  " << GREEN << conf.listen[i].first << RESET << CYAN " : " 
-					  << YELLOW << conf.listen[i].second << RESET << "\n";
+		const std::vector<Server> &servers = parser.getServers();
 
-		std::cout << BOLD YELLOW << "\n* Root : " RESET << MAGENTA << conf.root << RESET << "\n";
+		std::cout << GREEN BOLD << "\n🌐 Nombre de serveurs configurés : " 
+				  << servers.size() << RESET << std::endl;
 
-		std::cout << BOLD YELLOW << "\n* Client max body size : " RESET 
-				  << MAGENTA << conf.client_max_body_size << CYAN " bytes\n" << RESET;
-
-		std::cout << BOLD YELLOW << "\n* Error pages :" RESET "\n";
-		for (std::map<int, std::string>::const_iterator it = conf.error_pages.begin(); it != conf.error_pages.end(); ++it)
-			std::cout << "  " << RED << it->first << RESET << CYAN " -> " 
-					  << MAGENTA << it->second << RESET << "\n";
-
-		std::cout << BOLD YELLOW << "\n* Locations :" RESET "\n";
-		for (size_t i = 0; i < conf.locations.size(); ++i)
+		// --- Affichage du contenu de chaque serveur ---
+		for (size_t s = 0; s < servers.size(); ++s)
 		{
-			const LocationConf &loc = conf.locations[i];
-			std::cout << YELLOW "- Path : " RESET << CYAN << loc.path << RESET << "\n";
-			std::cout << "    " YELLOW "Root : " RESET << MAGENTA << loc.root << RESET << "\n";
-			std::cout << "    " YELLOW "Upload dir : " RESET << MAGENTA << loc.upload_dir << RESET << "\n";
-			std::cout << "    " YELLOW "CGI : " RESET << (loc.cgi ? GREEN "on" RESET : RED "off" RESET) << "\n";
-			std::cout << "    " YELLOW "CGI extension : " RESET << MAGENTA << loc.cgi_extension << RESET << "\n";
-			std::cout << "    " YELLOW "Autoindex : " RESET << (loc.autoindex ? GREEN "on" RESET : RED "off" RESET) << "\n";
+			const Server &serv = servers[s];
+			std::cout << MAGENTA BOLD << "\n==============================" << RESET << std::endl;
+			std::cout << YELLOW BOLD << "🖥️  Serveur #" << s + 1 << RESET << std::endl;
 
-			std::cout << "    " YELLOW "Methods : " RESET;
-			if (loc.methods.empty())
-				std::cout << RED "none" RESET;
-			else
-				for (size_t j = 0; j < loc.methods.size(); ++j)
-					std::cout << GREEN << loc.methods[j] << RESET << " ";
-			std::cout << "\n";
+			// ROOT
+			std::cout << BOLD BLUE "Root: " RESET << serv.getRoot() << std::endl;
 
-			std::cout << "    " YELLOW "Index files : " RESET;
-			if (loc.index_files.empty())
-				std::cout << RED "none" RESET;
-			else
-				for (size_t j = 0; j < loc.index_files.size(); ++j)
-					std::cout << MAGENTA << loc.index_files[j] << RESET << " ";
-			std::cout << "\n\n";
+			// LISTEN
+			std::cout << BOLD GREEN "Listen: " RESET;
+			for (size_t j = 0; j < serv.getListen().size(); ++j)
+			{
+				std::cout << serv.getListen()[j].first << ":" 
+						  << serv.getListen()[j].second << RESET;
+				if (j + 1 < serv.getListen().size())
+					std::cout << ", ";
+			}
+			std::cout << std::endl;
+
+			// MAX BODY SIZE
+			std::cout << BOLD YELLOW "Max body size: " RESET 
+					  << serv.getClientMaxBodySize() << std::endl;
+
+			// ERROR PAGES
+			std::cout << BOLD RED "Error pages:" RESET << std::endl;
+			for (std::map<int, std::string>::const_iterator it = serv.getErrorPages().begin();
+				 it != serv.getErrorPages().end(); ++it)
+			{
+				std::cout << "  " << it->first << " => " << it->second << std::endl;
+			}
+			std::cout << std::endl;
+
+			// LOCATIONS
+			std::cout << BOLD MAGENTA "Locations: " RESET << serv.getLocations().size() << std::endl;
+			for (size_t l = 0; l < serv.getLocations().size(); ++l)
+			{
+				const Locations &loc = serv.getLocations()[l];
+				std::cout << "  " CYAN "- Location #" << l + 1 << RESET << std::endl;
+				std::cout << "    " BOLD "Path: " RESET << BLUE << loc.path << RESET << std::endl;
+				std::cout << "    " BOLD "Root: " RESET << BLUE << loc.root << RESET << std::endl;
+				std::cout << "    " BOLD "Autoindex: " RESET 
+						  << (loc.autoindex ? GREEN "on" RESET : RED "off" RESET) 
+						  << std::endl;
+			}
 		}
 
-		std::cout << BOLD CYAN << "================================" RESET << "\n";
-		std::cout << BOLD MAGENTA << "===== Testing Handlers =====" RESET << "\n";
-
-		// Créer une requête POST factice
-		Request postReq;
-		postReq.method = "POST";
-		postReq.uri = "/upload/testfile.txt";
-		postReq.body = "Hello Webserv!";
-		postReq.headers["Content-Length"] = ft_to_string(postReq.body.size());
-
-		// On prend la location /upload
-		const LocationConf &uploadLoc = conf.locations[1]; // normalement /upload
-		Response postResp = handlePost(uploadLoc, postReq, conf);
-
-		std::cout << GREEN << "POST Response code : " << RESET << postResp.status_code << "\n";
-		std::cout << GREEN << "POST Response body : " << RESET << postResp.body << "\n\n";
-
-		// Créer une requête DELETE factice
-		Request delReq;
-		delReq.method = "DELETE";
-		delReq.uri = "/upload/testfile.txt";
-		delReq.path = "./config/www/uploads/testfile.txt";
-
-		Response delResp = handleDelete(uploadLoc, delReq);
-
-		std::cout << GREEN << "DELETE Response code : " << RESET << delResp.status_code << "\n";
-		std::cout << GREEN << "DELETE Response body : " << RESET << delResp.body << "\n\n";
-
+		std::cout << GREEN BOLD 
+				  << "\n✅ Test de configuration terminé avec succès.\n" 
+				  << RESET << std::endl;
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << RED BOLD << "Error : " << e.what() << RESET << std::endl;
+		std::cerr << RED BOLD << "❌ Erreur : " << e.what() << RESET << std::endl;
 		return 1;
 	}
 
