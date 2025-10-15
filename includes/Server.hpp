@@ -23,11 +23,11 @@ struct Locations
 class Server
 {
 private:
-	std::string									root;
-	std::vector<std::pair<std::string, int> >	listen;
-	std::vector<Locations>						locations;
-	std::map<int, std::string>					error_pages;
-	size_t										client_max_body_size;
+	std::string											root;
+	std::vector<std::pair<std::string, int> >			listen;
+	std::vector<Locations>								locations;
+	std::map<int, std::string>							error_pages;
+	size_t												client_max_body_size;
 
 public:
 	Server();
