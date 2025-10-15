@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 12:59:54 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/15 15:06:45 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/15 17:08:39 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,12 +20,7 @@ class Client
 {
     private :
         std::string request;
-        std::string reponse ="HTTP/1.1 200 OK\r\n"
-                            "Content-Length: 5\r\n"
-                            "Content-Type: text/plain\r\n"
-                            "\r\n"
-                            "SALUT\r\n\r\n";
-
+        std::string reponse;
         std::string ip;
         std::string port;
         timeval start;
