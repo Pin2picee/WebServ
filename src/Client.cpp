@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 13:41:00 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/01 21:13:52 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/15 14:24:16 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Client::Client() : connected(true)
 {
-    request_finish = false;
+    request_finish = true;
     offset = 0;
     gettimeofday(&this->start, nullptr);
 }
@@ -30,6 +30,7 @@ Client::Client(const Client &copy)
         request = copy.request;
         reponse = copy.reponse;
         connected = copy.connected;
+        my_socket = copy.my_socket;
     }
 }
 
@@ -42,6 +43,7 @@ Client &Client::operator=(const Client &copy)
         request = copy.request;
         reponse = copy.reponse;
         connected = copy.connected;
+        my_socket = copy.my_socket;
     }
     return (*this);
 }
@@ -86,10 +88,21 @@ std::string &Client::getReponse()
     return (this->reponse);
 }
 
+Socket *Client::getMySocket()
+{
+    return (this->my_socket);
+}
+
 void            Client::AddOffset(size_t nb)
 {
     this->offset += nb;
 }
+
+void    Client::set_socket(Socket *the_socket)
+{
+    this->my_socket = the_socket;
+}
+
 
 void    Client::view_log()
 {

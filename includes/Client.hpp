@@ -6,16 +6,15 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 12:59:54 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/01 21:14:05 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/15 15:06:45 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
-# include <iostream>
-# include <string>
-# include <sys/time.h>
+# include "Webserv.hpp"
+# include "Socket.hpp"
 
 class Client
 {
@@ -34,6 +33,7 @@ class Client
         bool    connected;
         bool    request_finish;
         size_t  offset;
+        Socket  *my_socket;
     public :
         Client();
         ~Client();
@@ -43,14 +43,17 @@ class Client
         
     public:
         void    setRequest(std::string buf);
+        int     parseRequest(void);//appelez par setReponse
         void    setReponse(std::string buf);
+        void    set_socket(Socket *the_socket);
     public:
         std::string     &getRequest();
         std::string     &getReponse();
         size_t          &getOffset();
         bool            &getFinishRequest();
-        void            AddOffset(size_t nb);
+        Socket          *getMySocket();
     public:
+        void            AddOffset(size_t nb);
         void    view_log();//affiche les temps de connexions avec l'ip et port + socket serveur
         void    deconected();//met a false + view_log()
 };
