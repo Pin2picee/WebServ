@@ -1,21 +1,9 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Monitor.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/25 10:48:18 by abelmoha@st       #+#    #+#             */
-/*   Updated: 2025/10/15 15:05:51 by abelmoha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef MONITOR_HPP
 
 # define MONITOR_HPP
 
-# include "Webserv.hpp"
 # include "Client.hpp"
+# include "Socket.hpp"
 
 extern volatile sig_atomic_t	on;
 

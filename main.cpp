@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.cpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/26 15:58:59 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/22 17:34:15 by marvin           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 /* int main(int ac, char **av)
 {
 	if (ac > 2)
@@ -73,9 +61,9 @@
 			{
 				const Locations &loc = serv.getLocations()[l];
 				std::cout << "  " CYAN "- Location #" << l + 1 << RESET << std::endl;
-				std::cout << "    " BOLD "Path : " RESET << BLUE << loc.path << RESET << std::endl;
-				std::cout << "    " BOLD "Root : " RESET << BLUE << loc.root << RESET << std::endl;
-				std::cout << "    " BOLD "Autoindex : " RESET 
+				std::cout << "	" BOLD "Path : " RESET << BLUE << loc.path << RESET << std::endl;
+				std::cout << "	" BOLD "Root : " RESET << BLUE << loc.root << RESET << std::endl;
+				std::cout << "	" BOLD "Autoindex : " RESET 
 						  << (loc.autoindex ? GREEN "on" RESET : RED "off" RESET) 
 						  << std::endl;
 			}
@@ -96,31 +84,32 @@
  */
 #include "Webserv.hpp"
 
-Socket *socket_a_close = nullptr;
+Socket *socket_a_close = NULL;
 volatile sig_atomic_t	on = 1;
 
-void    handle_sigint(int signum)
+void	handle_sigint(int signum)
 {
-    if (socket_a_close)
-        close(socket_a_close->getFd());
-    on = 0;
+	(void)signum;
+	if (socket_a_close)
+		close(socket_a_close->getFd());
+	on = 0;
 }
 int main(void)
 {
-    std::signal(SIGINT, handle_sigint);
-    ServerBlock *ptr;
-    Socket  *server = new Socket(std::string("127.0.0.1"), 8080, ptr);
-    
-    socket_a_close = server;
-    std::vector<Socket *>    all_fd;
-    
-    all_fd.push_back(server);
+	std::signal(SIGINT, handle_sigint);
+	Server *ptr = NULL;
+	Socket  *server = new Socket(std::string("127.0.0.1"), 8080, ptr);
+	
+	socket_a_close = server;
+	std::vector<Socket *>	all_fd;
+	
+	all_fd.push_back(server);
 
-    Monitor Moniteur(all_fd);
-    Moniteur.Monitoring();
-    for (std::vector<Socket *>::iterator it = all_fd.begin(); it < all_fd.end(); it++)
-    {
-        std::cout << "Suppression d'un socket server utiliser" << std::endl;
-        delete(*it);
-    }
+	Monitor Moniteur(all_fd);
+	Moniteur.Monitoring();
+	for (std::vector<Socket *>::iterator it = all_fd.begin(); it < all_fd.end(); it++)
+	{
+		std::cout << "Suppression d'un socket server utiliser" << std::endl;
+		delete(*it);
+	}
 }
