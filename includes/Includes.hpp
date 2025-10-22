@@ -29,7 +29,7 @@
 # include <stdexcept>
 # include <algorithm>
 # include <cstdlib>
-
+# include <csignal>
 
 // Text colors
 # define RESET   "\033[0m"

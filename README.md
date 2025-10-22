@@ -1,10 +1,19 @@
 # Webserv
 
-Ce projet **Webserv** fait partie du cursus de l'école 42.  
-Il consiste à créer un serveur web fonctionnel à partir de zéro, en **C++98**, ce qui implique de gérer la mémoire et les structures de données de manière manuelle.
+Le projet **Webserv** fait partie du cursus de l'école 42.  
+Il consiste à créer un serveur web fonctionnel **from scratch** en **C++98**, ce qui implique de gérer manuellement la mémoire et les structures de données sans recourir aux abstractions modernes.
 
-Nous sommes **trois étudiants** à travailler sur ce projet. La collaboration et la répartition des tâches sont essentielles pour atteindre les objectifs, qui incluent la gestion des requêtes HTTP, le service de fichiers statiques et dynamiques, et la création d’un serveur performant et robuste.
+Nous sommes deux étudiants à collaborer sur ce projet. La répartition claire des tâches et la communication sont essentielles pour atteindre les objectifs : gestion des requêtes HTTP, service de fichiers statiques et dynamiques, et développement d'un serveur performant et robuste.
 
+## Répartition des tâches
+
+### abelmoha (Lead)
+- La partie **connexion du serveur** avec `poll()`, les **sockets** et la gestion des clients  
+- Le **parsing des requêtes HTTP** à l'aide des différents **blocs serveur** issus du fichier de configuration
+
+### locagnio
+- Le **parsing du fichier de configuration**  
+- La gestion des **CGI** (Common Gateway Interface)
 
 # 📖 Référence des fonctions système autorisées (Webserv)
 
