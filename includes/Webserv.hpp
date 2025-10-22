@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/15 15:04:35 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/15 15:09:55 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/17 18:34:34 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@
 # include <sys/time.h>
 # include <unistd.h>
 # include <vector>
+# include <stdio.h>
 # include "Locations.hpp"
 
 #endif

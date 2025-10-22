@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 15:58:59 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/15 14:43:45 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/17 16:58:26 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,23 @@
 
 # include <csignal>
 
-Socket *socket_a_close = nullptr;
+Socket *socket_a_close = NULL;
 volatile sig_atomic_t	on = 1;
 
 void    handle_sigint(int signum)
 {
-    if (socket_a_close)
-        close(socket_a_close->getFd());
-    on = 0;
+    if (signum == SIGINT)
+    {
+        if (socket_a_close)
+            close(socket_a_close->getFd());
+        on = 0;
+    }
 }
+
 int main(void)
 {
     std::signal(SIGINT, handle_sigint);
-    ServerBlock *ptr;
+    ServerBlock *ptr = NULL;
     Socket  *server = new Socket(std::string("127.0.0.1"), 8080, ptr);
     
     socket_a_close = server;

@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/26 13:41:00 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/15 17:09:34 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/10/17 18:08:56 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ Client::Client() : connected(true)
 {
     request_finish = true;
     offset = 0;
-    gettimeofday(&this->start, nullptr);
+    gettimeofday(&this->start, NULL);
 }
 
 Client::~Client()
@@ -131,6 +131,6 @@ void    Client::view_log()
 void    Client::deconected()
 {
     this->connected = false;
-    gettimeofday(&this->end, nullptr);
+    gettimeofday(&this->end, NULL);
     view_log();
 }

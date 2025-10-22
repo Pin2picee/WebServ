@@ -4,7 +4,7 @@ C++				= c++
 HDRS			= ./includes
 FLAGS			= -Wall -Wextra -Werror -std=c++98 -g -I $(HDRS)
 
-SRCS			=  main.cpp
+SRCS			=  src/Client.cpp src/Socket.cpp src/Monitor.cpp main.cpp
 SRC_O			= $(SRCS:.cpp=.o)
 
 NAME			= webserv
