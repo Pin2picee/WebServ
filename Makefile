@@ -4,7 +4,14 @@ C++				= c++
 HDRS			= ./includes
 FLAGS			= -Wall -Wextra -Werror -std=c++98 -g -I $(HDRS)
 
-SRCS			=  main.cpp
+SRCS			=	main.cpp \
+					srcs/utils.cpp \
+					srcs/Cient.cpp \
+					srcs/Server.cpp \
+					srcs/Config.cpp \
+					srcs/Socket.cpp \
+					srcs/Monitor.cpp \
+					srcs/Response.cpp 
 SRC_O			= $(SRCS:.cpp=.o)
 
 NAME			= webserv
@@ -28,7 +35,7 @@ $(NAME): $(SRC_O)
 
 clean:
 	@echo $(CYAN)"objets files suppression..."$(RESET)
-	@$(RM) *.o
+	@find . -name "*.o" -type f -exec $(RM) {} \;
 
 fclean: clean
 	@echo $(CYAN)"executable suppression..."$(RESET)
