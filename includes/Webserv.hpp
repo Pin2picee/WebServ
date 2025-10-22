@@ -1,19 +1,10 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Webserv.hpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/15 15:04:35 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/22 17:32:31 by marvin           ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
 # include "Config.hpp"
 # include "Response.hpp"
+# include "Client.hpp"
+# include "Monitor.hpp"
+# include "Socket.hpp"
 
 #endif

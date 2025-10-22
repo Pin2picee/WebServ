@@ -1,16 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Monitor.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/25 11:12:02 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/10/15 14:57:23 by abelmoha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../includes/Monitor.hpp"
+#include "Monitor.hpp"
 
 /*<Exception>*/
 const char *Monitor::MonitorError::what() const throw()
@@ -33,7 +21,7 @@ Monitor::Monitor(const Monitor &copy)
 		nb_fd = copy.nb_fd;
 		nb_fd_server = copy.nb_fd_server;
 		clients = copy.clients;
-		for (int i = 0; i < nb_fd; i++)
+		for (size_t i = 0; i < nb_fd; i++)
 			all_fd[i] = copy.all_fd[i];
 	}
 }
@@ -63,11 +51,11 @@ Monitor::Monitor(std::vector<Socket *> tab)
 	this->nb_fd = 0;
 	std::vector<Socket *>::iterator	it = tab.begin();
 	for (size_t i = nb_fd; i < 200000; i++)
-    {
-        all_fd[i].fd = -1;
-        all_fd[i].events = 0;
-        all_fd[i].revents = 0;
-    }
+	{
+		all_fd[i].fd = -1;
+		all_fd[i].events = 0;
+		all_fd[i].revents = 0;
+	}
 	while (nb_fd < tab.size() && it != tab.end())
 	{
 		all_fd[nb_fd].fd = (*it)->getFd();
@@ -85,30 +73,35 @@ Monitor::Monitor(std::vector<Socket *> tab)
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
 	Client  nouveau;
-	uint32_t    ip_adress = ntohl(ip);
-	uint16_t    port_adress = ntohs(port);
+	uint32_t	ip_adress = ntohl(ip);
+	uint16_t	port_adress = ntohs(port);
+	std::ostringstream	oss;
 	std::string ip_str;
 	std::string port_str;
 	unsigned char bytes[4];
 
-	port_str = std::to_string(port_adress);
+	oss << port_adress;
+	port_str = oss.str();//permet de le transformer en string
 	bytes[0] = ip_adress >> 24 & 0xFF; 
 	bytes[1] = ip_adress >> 16 & 0xFF;
 	bytes[2] = ip_adress >> 8 & 0xFF;
 	bytes[3] = ip_adress & 0xFF;
 
+	oss.str("");//remet a zero le flux
+	oss.clear();//reset flags aussi
 	for (int i = 0; i < 4; i++)
 	{
-		ip_str += std::to_string(bytes[i]);
+		oss << bytes[i];//concatenation
 		if (i < 3)
-			ip_str += '.';
+			oss << ".";
 	}
+	ip_str = oss.str();// ip en string grace a ostringstream .
 	nouveau.setbasic(ip_str, port_str);
 	nouveau.set_socket(all_socket.at(fd_server));
 	clients[fd] = nouveau;
 }
 
-int     Monitor::deconnexion(int i)
+int	 Monitor::deconnexion(int i)
 {
 	/**
 	 * deconnexion cote map client + affichage du log
@@ -125,7 +118,7 @@ int     Monitor::deconnexion(int i)
 	return (0);
 }
 
-int     Monitor::test_read(ssize_t count)
+int	 Monitor::test_read(ssize_t count)
 {
 	if (count > 0)
 		return (1);
@@ -184,7 +177,7 @@ int	Monitor::	new_clients(int i)
  * @brief = Une boucle poll qui verifie chaque socket server et qui accept les connexions
  */
 
-void    Monitor::Monitoring()
+void	Monitor::Monitoring()
 {
 	int poll_return;
 
@@ -205,7 +198,7 @@ void    Monitor::Monitoring()
 		else if (poll_return > 0)//un ou plusieurs socket pret
 		{
 			poll_reveil++;
-			for (int i = 0; i < nb_fd;)//parcours les socket
+			for (size_t i = 0; i < nb_fd;)//parcours les socket
 			{
 				bool client_disconnected = false;
 				//deja deconnecte en general le dernier car deconnexion switch
@@ -263,7 +256,7 @@ void    Monitor::Monitoring()
 				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server)//cote client je peux ecrire
 				{
 					std::string reponse;
-					size_t      nb_send;
+					int	  nb_send;
 					size_t		offset;
 					
 					//objet REQUEST_HANDLER qui fait appel a l'objet ParsingHttp et SendHttp
