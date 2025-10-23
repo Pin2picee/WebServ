@@ -251,9 +251,9 @@ void	Monitor::Monitoring()
 							continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
 				}
 				//ecriture
-				if (clients[all_fd[i].fd].getFinishRequest())
+				if (i >= this->nb_fd_server && all_fd[i].fd > 0 && clients.find(all_fd[i].fd) != clients.end() && clients[all_fd[i].fd].getFinishRequest())
 					all_fd[i].events |= POLLOUT;
-				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server)//cote client je peux ecrire
+				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && clients.find(all_fd[i].fd) != clients.end())//cote client je peux ecrire
 				{
 					std::string reponse;
 					int	  nb_send;
