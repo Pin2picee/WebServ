@@ -5,28 +5,19 @@ Client::Client() : connected(true)
 	request_finish = true;
 	offset = 0;
 	gettimeofday(&this->start, NULL);
+	this->reponse ="HTTP/1.1 200 OK\r\n"
+						"Content-Length: 5\r\n"
+						"Content-Type: text/plain\r\n"
+						"\r\n"
+						"SALUT\r\n\r\n";
 }
 
-Client::~Client()
-{
-	this->reponse ="HTTP/1.1 200 OK\r\n"
-							"Content-Length: 5\r\n"
-							"Content-Type: text/plain\r\n"
-							"\r\n"
-							"SALUT\r\n\r\n";
-}
+Client::~Client() {}
 
 Client::Client(const Client &copy)
 {
 	if (this != &copy)
-	{
-		ip = copy.ip;
-		port = copy.port;
-		request = copy.request;
-		reponse = copy.reponse;
-		connected = copy.connected;
-		my_socket = copy.my_socket;
-	}
+		*this = copy;
 }
 
 Client &Client::operator=(const Client &copy)
@@ -39,6 +30,10 @@ Client &Client::operator=(const Client &copy)
 		reponse = copy.reponse;
 		connected = copy.connected;
 		my_socket = copy.my_socket;
+		offset = copy.offset;
+		start = copy.start;
+		request_finish = copy.request_finish;
+		//pas de end car init dans deconnected;
 	}
 	return (*this);
 }

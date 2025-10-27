@@ -37,7 +37,7 @@ class Client
 		Socket			*getMySocket();
 	public:
 		void			AddOffset(size_t nb);
-		void	view_log();//affiche les temps de connexions avec l'ip et port + socket serveur
+		void	view_log();//utiliser seulement par deconected car end pas encore init;affiche les temps de connexions avec l'ip et port + socket serveur
 		void	deconected();//met a false + view_log()
 };
 
