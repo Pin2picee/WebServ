@@ -17,17 +17,7 @@ Client::~Client() {}
 Client::Client(const Client &copy)
 {
 	if (this != &copy)
-	{
-		ip = copy.ip;
-		port = copy.port;
-		request = copy.request;
-		reponse = copy.reponse;
-		connected = copy.connected;
-		my_socket = copy.my_socket;
-		offset = copy.offset;
-		start = copy.start;
-		request_finish = copy.request_finish;
-	}
+		*this = copy;
 }
 
 Client &Client::operator=(const Client &copy)
