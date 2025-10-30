@@ -7,6 +7,38 @@ Config::Config() {}
 /* destructor */
 Config::~Config() {}
 
+Config::Config(const Config &copy)
+{
+	if (this != &copy)
+		*this = copy;
+}
+
+Config						&Config::operator=(const Config &assignement)
+{
+	if (this != &assignement)
+	{
+		Servers = assignement.Servers;
+		Sockets = assignement.Sockets;
+	}
+	return (*this);
+}
+/**
+ * @brief : La fonction creer tous les sockets mentionne dans le fichier de config
+**/
+void	Config::CreateSocket(void)
+{
+	for (std::vector<Server>::iterator it = Servers.begin(); it != Servers.end(); it++)
+	{
+		std::vector<std::pair<std::string, int>> CurrentListen = it->getListen();//on recup le vector de ip/port a bind pour le serverblock actuelle 
+		for (std::vector<std::pair<std::string, int>>::iterator it_current = CurrentListen.begin(); it_current != CurrentListen.end(); it_current++)//parcour le vector listen
+		{
+			Socket	*new_socket = new Socket(it_current->first, it_current->second, &(*it));
+			this->Sockets.push_back(new_socket);
+			//it = iterator SERVERBLOCK
+			//it_current = iterator listen du serverblock
+		}
+	}
+}
 /**
  * @brief
  * Get the servers.
@@ -16,6 +48,11 @@ Config::~Config() {}
 const std::vector<Server>&	Config::getServers() const
 {
 	return Servers;
+}
+
+const std::vector<Socket *>&	Config::getSocket() const
+{
+	return (Sockets);
 }
 
 /**
@@ -104,6 +141,9 @@ void Config::parseAllServerFiles(const std::string &configFile)
 			}
 		}
 	}
+	//une fois la boucle finie avec tout les blocks servers
+	// creer les socket avec un pointeur vers leurs servers blocks
+	CreateSocket();
 }
 
 /**
