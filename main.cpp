@@ -113,21 +113,27 @@ volatile sig_atomic_t	on = 1;
 void	handle_sigint(int signum)
 {
 	(void)signum;
-for (std::vector<Socket * >::iterator it = all_socket.begin(); it != all_socket.begin(); it++)
+for (std::vector<Socket * >::iterator it = all_socket.begin(); it != all_socket.end(); it++)
 {
 		if (*it)
-	close((*it)->getFd());
+		{
+			close((*it)->getFd());
+			delete((*it));
+		}
+	
 }
 	on = 0;
 }
 int main (int argc, char **argv)
 {
+	std::string ConfigFileName;
+	signal(SIGINT, handle_sigint);
 	if (argc > 2)
 	{
 		std::cerr << RED BOLD << "Usage : ./webserv [configuration file]" RESET << std::endl;
 		return 1;
 	}
-	std::string ConfigFileName;
+	
 	ConfigFileName = (argc == 2) ? argv[1] : "config/default.conf";
 	try
 	{
@@ -135,6 +141,7 @@ int main (int argc, char **argv)
 		parser.parseAllServerFiles(ConfigFileName);
 		all_socket = parser.getSocket();
 		Monitor	Moniteur(all_socket);
+		Moniteur.Monitoring();
 	}
 	catch (std::exception &e)
 	{
