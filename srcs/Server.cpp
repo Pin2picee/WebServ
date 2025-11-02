@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Config.hpp"
+#include "Response.hpp"
 
 /* Constructor */
 Server::Server() : client_max_body_size(0) {}
@@ -159,12 +160,63 @@ void	Server::addLocation(const Locations& loc)
 
 /**
  * @brief
- * Handle CGI.
+ * Transform the output of handleCGI in Response struct.
+ * 
+ * @param output The output of handleCGI.
+ * 
+ * @return a Response struct.
+ */
+Response parseCGIOutput(const std::string &output)
+{
+	Response res;
+	res.status_code = 200; // default value
+	res.content_type = "text/html"; // default value
+
+	// Separate headers from body
+	size_t header_end = output.find("\r\n\r\n");
+	if (header_end == std::string::npos)
+		header_end = output.find("\n\n"); // case where the script only use \n
+
+	std::string header_part = output.substr(0, header_end);
+	std::string body_part;
+	if (header_end != std::string::npos)
+	{
+		if (!output.compare(header_end, 4, "\r\n\r\n"))
+			body_part = output.substr(header_end + 4);
+		else
+			body_part = output.substr(header_end + 2);
+	}
+
+	std::istringstream headers(header_part);
+	std::string line;
+	while (std::getline(headers, line))
+	{
+		if (!line.find("Content-Type:", 0))
+		{
+			res.content_type = line.substr(13);
+			res.content_type.erase(0, res.content_type.find_first_not_of(" \t"));
+		}
+		else if (!line.find("Status:", 0))
+		{
+			std::string status_str = line.substr(7);
+			res.status_code = std::atoi(status_str.c_str());
+		}
+	}
+
+	res.body = body_part;
+	return res;
+}
+
+/**
+ * @brief
+ * Handle the server's CGI according to the request given.
  * 
  * @param req The corresponding request.
  * @param loc The location struct of the corresponding server.
+ * 
+ * @return A Response struct.
  */
-std::string handleCGI(const Request &req, const Locations &loc)
+Response Server::handleCGI(const Request &req, const Locations &loc) const
 {
 	std::string script_path = loc.root + req.uri.substr(loc.path.size());
 	std::string output;
@@ -178,17 +230,18 @@ std::string handleCGI(const Request &req, const Locations &loc)
 	if (pid == -1)
 		throw std::runtime_error("Fork failed");
 
-	if (pid == 0) {
-		// --- Processus enfant ---
-		close(pipe_out[0]); // on n’écoute pas la sortie
-		close(pipe_in[1]);  // on n’écrit pas dans le body
+	if (!pid)
+	{
+		// --- Child process ---
+		close(pipe_out[0]);
+		close(pipe_in[1]);
 
-		dup2(pipe_out[1], STDOUT_FILENO); // stdout -> pipe_out
-		dup2(pipe_in[0], STDIN_FILENO);   // stdin  <- pipe_in
+		dup2(pipe_out[1], STDOUT_FILENO);
+		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_out[1]);
 		close(pipe_in[0]);
 
-		// --- Variables d’environnement CGI ---
+		// --- CGI environnement variables ---
 		std::vector<std::string> env_vars;
 
 		env_vars.push_back("REQUEST_METHOD=" + req.method);
@@ -197,7 +250,9 @@ std::string handleCGI(const Request &req, const Locations &loc)
 											   ? req.uri.substr(req.uri.find('?') + 1)
 											   : ""));
 		env_vars.push_back("SERVER_PROTOCOL=HTTP/1.1");
-		env_vars.push_back("CONTENT_LENGTH=" + std::to_string(req.body.size()));
+		std::ostringstream oss;
+		oss << req.body.size();
+		env_vars.push_back("CONTENT_LENGTH=" + oss.str());
 		env_vars.push_back("CONTENT_TYPE=" + (req.headers.count("Content-Type")
 												? req.headers.at("Content-Type")
 												: "text/plain"));
@@ -212,35 +267,46 @@ std::string handleCGI(const Request &req, const Locations &loc)
 			env_vars.push_back(key + "=" + it->second);
 		}
 
-		// Conversion en char**
+		// Char** conversion
 		std::vector<char*> envp;
 		for (size_t i = 0; i < env_vars.size(); ++i)
 			envp.push_back(const_cast<char*>(env_vars[i].c_str()));
 		envp.push_back(NULL);
 
-		// Arguments du CGI
+		std::string cgi_path;
+
+		if (loc.cgi_extension == ".py")
+			cgi_path = "/usr/bin/python3";
+		else if (loc.cgi_extension == ".php")
+			cgi_path = "/usr/bin/php-cgi";
+		else
+			throw std::runtime_error("Unsupported CGI extension");
+
+		// CGI arguments
 		char *argv[] = {
-			const_cast<char*>(loc.cgi_path.c_str()),  // ex: /usr/bin/python3
-			const_cast<char*>(script_path.c_str()),   // script à exécuter
+			const_cast<char*>(cgi_path.c_str()),  // ex: /usr/bin/python3
+			const_cast<char*>(script_path.c_str()),   // script to execute
 			NULL
 		};
 
-		execve(loc.cgi_path.c_str(), argv, envp.data());
-		exit(1); // si exec échoue
+		execve(cgi_path.c_str(), argv, envp.data());
+		exit(1); // If exec fails
 	}
-	else {
-		// --- Processus parent ---
+	else
+	{
+		// --- Parent process ---
 		close(pipe_out[1]);
 		close(pipe_in[0]);
 
-		// Si méthode POST → envoyer le body au CGI
+		// If POST method → send body to CGI
 		if (req.method == "POST" && !req.body.empty())
 			write(pipe_in[1], req.body.c_str(), req.body.size());
 		close(pipe_in[1]);
 
-		// Lire la sortie CGI
+		// Read CGI output
 		char buffer[4096];
 		ssize_t bytes;
+
 		while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)
 			output.append(buffer, bytes);
 		close(pipe_out[0]);
@@ -248,5 +314,5 @@ std::string handleCGI(const Request &req, const Locations &loc)
 		waitpid(pid, NULL, 0);
 	}
 
-	return output;
+	return parseCGIOutput(output);
 }

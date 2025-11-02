@@ -1,6 +1,7 @@
 #include "Response.hpp"
 
 /* constructor */
+
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
 /* destructor */
@@ -106,7 +107,7 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 			makeResponse(res, 404, "File not found", getMimeType(full_path));
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
-			makeResponse(res, 200, "CGI executed", getMimeType(full_path));
+			 res = _server.handleCGI(req, loc);
 		else
 		{
 			std::ostringstream buf;
@@ -149,7 +150,7 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 		makeResponse(res, 201, "File uploaded successfully", getMimeType(req.path));
 	}
 	else if (loc.cgi)
-		makeResponse(res, 200, "CGI executed", getMimeType(req.path));
+		res = _server.handleCGI(req, loc);
 	else
 		makeResponse(res, 200, "POST handled", getMimeType(req.path));
 	return res;
