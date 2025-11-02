@@ -80,6 +80,7 @@ public:
 	void 												addLocation(const Locations& loc);
 	void 												addListen(const std::string& ip, int port);
 	void 												addErrorPage(int code, const std::string& path);
+	void												handleCGI(Request req, Location loc);
 };
 
 #endif
