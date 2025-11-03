@@ -22,6 +22,7 @@ Config						&Config::operator=(const Config &assignement)
 	}
 	return (*this);
 }
+
 /**
  * @brief : La fonction creer tous les sockets mentionne dans le fichier de config
 **/
@@ -34,11 +35,10 @@ void	Config::CreateSocket(void)
 		{
 			Socket	*new_socket = new Socket(it_current->first, it_current->second, &(*it));
 			this->Sockets.push_back(new_socket);
-			//it = iterator SERVERBLOCK
-			//it_current = iterator listen du serverblock
 		}
 	}
 }
+
 /**
  * @brief
  * Get the servers.
@@ -141,8 +141,7 @@ void Config::parseAllServerFiles(const std::string &configFile)
 			}
 		}
 	}
-	//une fois la boucle finie avec tout les blocks servers
-	// creer les socket avec un pointeur vers leurs servers blocks
+	//@brief : une fois la boucle finie avec tout les blocks servers: creer les socket avec un pointeur vers leurs servers blocks
 	CreateSocket();
 }
 
