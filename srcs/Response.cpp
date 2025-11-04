@@ -179,3 +179,67 @@ Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
 		makeResponse(res, 200, "File deleted successfully", getMimeType(req.path));
 	return res;
 }
+
+//utils
+/**
+ * @brief
+ * Get the reason phrase of a corresponding status code.
+ * 
+ * @param status_code The status code that will get a corresponding reason phrase.
+ * 
+ * @return
+ * The corresponding reason phrase.
+ */
+static std::string getReasonPhrase(int status_code)
+{
+	switch (status_code)
+	{
+		case 100: return "Continue";
+		case 101: return "Switching Protocols";
+		case 200: return "OK";
+		case 201: return "Created";
+		case 202: return "Accepted";
+		case 204: return "No Content";
+		case 301: return "Moved Permanently";
+		case 302: return "Found";
+		case 304: return "Not Modified";
+		case 400: return "Bad Request";
+		case 401: return "Unauthorized";
+		case 403: return "Forbidden";
+		case 404: return "Not Found";
+		case 405: return "Method Not Allowed";
+		case 408: return "Request Timeout";
+		case 500: return "Internal Server Error";
+		case 501: return "Not Implemented";
+		case 502: return "Bad Gateway";
+		case 503: return "Service Unavailable";
+		default:  return "Unknown";
+	}
+}
+
+std::string	ResponseHandler::responseToString(const Response &res)
+{
+	std::ostringstream oss;
+
+	oss << res.version << res.status_code << " " << getReasonPhrase(res.status_code) << "\r\n";
+	if (!res.content_type.empty())
+		oss << "Content-Type: " << res.content_type << "\r\n";
+	oss << "Content-Length: " << res.body.size() << "\r\n";
+	for (std::map<std::string, std::string>::const_iterator it = res.headers.begin();
+		 it != res.headers.end(); ++it)
+		oss << it->first << ": " << it->second << "\r\n";
+	oss << "\r\n" << res.body;
+	return oss.str();
+}
+
+std::string	ResponseHandler::requestToString(const Request &req)
+{
+	std::ostringstream oss;
+
+	oss << req.method << " " << req.path << " " << req.version << "\r\n";
+	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin();
+		 it != req.headers.end(); ++it)
+		oss << it->first << ": " << it->second << "\r\n";
+	oss << "\r\n" << req.body;
+	return oss.str();
+}
