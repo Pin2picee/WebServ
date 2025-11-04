@@ -217,6 +217,15 @@ static std::string getReasonPhrase(int status_code)
 	}
 }
 
+/**
+ * @brief
+ * Convert a Response struct into a string in standard HTTP format.
+ * 
+ * @param res The Response struct that will be converted.
+ * 
+ * @return
+ * The string HTTP message.
+ */
 std::string	ResponseHandler::responseToString(const Response &res)
 {
 	std::ostringstream oss;
@@ -232,6 +241,15 @@ std::string	ResponseHandler::responseToString(const Response &res)
 	return oss.str();
 }
 
+/**
+ * @brief
+ * Convert a Request struct into a string in standard HTTP format.
+ * 
+ * @param res The Request struct that will be converted.
+ * 
+ * @return
+ * The string HTTP message.
+ */
 std::string	ResponseHandler::requestToString(const Request &req)
 {
 	std::ostringstream oss;
