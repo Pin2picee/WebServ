@@ -245,7 +245,7 @@ std::string	ResponseHandler::responseToString(const Response &res)
  * @brief
  * Convert a Request struct into a string in standard HTTP format.
  * 
- * @param res The Request struct that will be converted.
+ * @param req The Request struct that will be converted.
  * 
  * @return
  * The string HTTP message.
