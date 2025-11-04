@@ -109,7 +109,7 @@ int	 Monitor::deconnexion(int i)
 	 * remplacement par le dernier
 	 * actualisation du nb de socket
 	 */
-	clients[all_fd[i].fd].deconected();
+	clients[all_fd[i].fd].disconnected();
 	close(all_fd[i].fd);
 	clients.erase(all_fd[i].fd);
 	all_fd[i] = all_fd[nb_fd - 1];

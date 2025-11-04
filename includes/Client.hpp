@@ -38,7 +38,7 @@ class Client
 	public:
 		void			AddOffset(size_t nb);
 		void	view_log();//utiliser seulement par deconected car end pas encore init;affiche les temps de connexions avec l'ip et port + socket serveur
-		void	deconected();//met a false + view_log()
+		void	disconnected();//met a false + view_log()
 };
 
 #endif

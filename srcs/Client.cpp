@@ -104,10 +104,10 @@ void	Client::view_log()
 
 	std::cout << RED <<"the Client " << this->ip << " connected at " << start_h << "h" << start_m;
 	std::cout << " and disconnected at " << end_h << "h" << end_m << " on port: " << port << RESET << std::endl;
-	std::cout << "The requete is :\n" << GREEN << request << RESET << std::endl;
+	std::cout << "The request is :\n" << GREEN << request << RESET << std::endl;
 }
 
-void	Client::deconected()
+void	Client::disconnected()
 {
 	this->connected = false;
 	gettimeofday(&this->end, NULL);
