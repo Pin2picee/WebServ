@@ -33,6 +33,9 @@ struct Locations
 		  upload_dir(RED "none"), cgi_extension(RED "none") {}
 };
 
+struct Response;
+struct Request;
+
 /**
  * @brief
  * The class that contains all the `Server` datas.
@@ -80,6 +83,7 @@ public:
 	void 												addLocation(const Locations& loc);
 	void 												addListen(const std::string& ip, int port);
 	void 												addErrorPage(int code, const std::string& path);
+	Response 											handleCGI(const Request &req, const Locations &loc) const;
 };
 
 #endif
