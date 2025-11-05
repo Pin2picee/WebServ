@@ -15,13 +15,11 @@ class ResponseHandler
 		const Server	&_server;
 
 	//methods
-
 	Response		handleGet(const Locations &loc, const Request &req);
 	Response		handlePost(const Locations &loc, const Request &req);
 	Response		handleDelete(const Locations &loc, const Request &req);
 
 	//utils
-
 	std::string		requestToString(const Request &req);
 	std::string		responseToString(const Response &res);
 public:
