@@ -7,6 +7,7 @@
  * @brief
  * Contains all the request infos.
  * 
+ * @param version The HTTP version.
  * @param method The HTTP methods allowed (GET, POST, DELETE).
  * @param uri The client path to the resource (as sent in the HTTP request).
  * @param path The full local path on the server (uri + location root).
@@ -15,6 +16,7 @@
  */
 struct Request
 {
+	std::string							version;
 	std::string							method;
 	std::string							uri;
 	std::string							path;
@@ -28,12 +30,14 @@ struct Request
  * @brief
  * Contains all infos to reply to a request.
  * 
+ * @param version The HTTP version, deflaut to 1.1 version.
  * @param status_code The HTTP status code (200, 404, 500, ...).
  * @param content_type The MIME content type (cf utils.hpp).
  * @param body The response content (HTML, text, JSON, binary file, …).
  */
 struct Response
 {
+	std::string	version = "HTTP/1.1";
 	int			status_code;
 	std::string	content_type;
 	std::string	body;
