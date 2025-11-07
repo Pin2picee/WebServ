@@ -84,6 +84,9 @@
 
 
 
+
+
+
 int main(void)
 {
 	std::signal(SIGINT, handle_sigint);
@@ -94,6 +97,7 @@ int main(void)
 	std::vector<Socket *>	all_fd;
 	
 	all_fd.push_back(server);
+	
 	
 	Monitor Moniteur(all_fd);
 	Moniteur.Monitoring();
