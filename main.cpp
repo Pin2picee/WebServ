@@ -135,11 +135,24 @@ int main (int argc, char **argv)
 	ConfigFileName = (argc == 2) ? argv[1] : "config/default.conf";
 	try
 	{
+		Client	test;
+
+		test.setRequest("GET /api/users HTTP/1.1\r\nHost: localhost \r\nUser-Agent:\r\n\r\n");
+		Request nv = test.ExtractRequest();
+		std::cout << "Methode :" << nv.method << std::endl;
+		std::cout << "uri :" << nv.uri << std::endl;
+		std::cout << "path :" << nv.path << std::endl;
+		std::cout << "Version :" << nv.version << std::endl;
+		for (std::map<std::string, std::string>::iterator it = nv.headers.begin(); it != nv.headers.end(); it++ )
+			std::cout << "HEADERS :" << it->first << ":" << it->second << std::endl;
+		std::cout << "body :" << nv.body << std::endl;
+		/*
 		Config parser;
 		parser.parseAllServerFiles(ConfigFileName);
 		all_socket = parser.getSocket();
 		Monitor	Moniteur(all_socket);
 		Moniteur.Monitoring();
+		*/
 	}
 	catch (std::exception &e)
 	{

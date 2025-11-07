@@ -19,6 +19,7 @@ struct Request
 	std::string							uri;
 	std::string							path;
 	std::string							body;
+	std::string							version;
 	std::map<std::string, std::string>	headers;
 
 	Request() {};
@@ -44,6 +45,7 @@ struct Response
 std::string	getMimeType(const std::string &path);
 std::string	strip_semicolon(const std::string &s);
 void		init_default_errors(Server &conf);
+
 /**
  * @brief
  * Fill the different variables of a request structure.
@@ -53,6 +55,7 @@ void		init_default_errors(Server &conf);
  * @param body The response content (HTML, text, JSON, binary file, …).
  * @param content_type The MIME content type (sed by default as text plain).
  */
+
 inline void	makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_PLAIN)
 {
 	res.status_code = status;

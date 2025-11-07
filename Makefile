@@ -11,7 +11,7 @@ SRCS			=	main.cpp \
 					srcs/Config.cpp \
 					srcs/Socket.cpp \
 					srcs/Monitor.cpp \
-					srcs/Response.cpp 
+					srcs/ResponseHandler.cpp 
 SRC_O			= $(SRCS:.cpp=.o)
 
 NAME			= webserv

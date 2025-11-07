@@ -255,24 +255,25 @@ void	Monitor::Monitoring()
 					all_fd[i].events |= POLLOUT;
 				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && clients.find(all_fd[i].fd) != clients.end())//cote client je peux ecrire
 				{
-					std::string reponse;
+					std::string response;
+					Response	test;
 					int	  nb_send;
 					size_t		offset;
 					
-					//objet REQUEST_HANDLER qui fait appel a l'objet ParsingHttp et SendHttp
-					/**
-					 * Mon request Handler fait appel a parsingHTTP si pas bon request handler requete false
-					 * si bon savoir si POST, delete, GET
-					 * SENDhttp s'occupe de generer la requete reponse
-					 */
-					reponse = clients[all_fd[i].fd].getReponse();
-					offset = clients[all_fd[i].fd].getOffset();
-					nb_send = write(all_fd[i].fd, reponse.c_str() + offset, reponse.length() - offset);
+
+					if (clients[all_fd[i].fd].ParseRequest())
+					{
+						Request request = clients[all_fd[i].fd].ExtractRequest();
+						test = clients[all_fd[i].fd].handler.handleRequest(request);
+						clients[all_fd[i].fd].handler.
+						offset = clients[all_fd[i].fd].getOffset();// le nombre de caracteres envoyer: garder en memoire
+					}
+					nb_send = write(all_fd[i].fd, response.c_str() + offset, response.length() - offset);
 					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 						perror("ERROR : SEND FAILED \n");
 					if (nb_send > 0)
 						clients[all_fd[i].fd].AddOffset(nb_send);
-					if (clients[all_fd[i].fd].getOffset() >= reponse.length())
+					if (clients[all_fd[i].fd].getOffset() >= response.length())
 						all_fd[i].events = POLLIN;
 				}
 				i++;
