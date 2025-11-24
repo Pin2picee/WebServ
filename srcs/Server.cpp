@@ -1,6 +1,6 @@
 #include "Server.hpp"
 #include "Config.hpp"
-#include "Response.hpp"
+#include "ResponseHandler.hpp"
 
 /* Constructor */
 Server::Server() : client_max_body_size(0) {}
@@ -315,4 +315,24 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 	}
 
 	return parseCGIOutput(output);
+}
+
+
+Server::Server(const Server &copy)
+{
+	if (this != &copy)
+		*this = copy;
+}
+
+Server &Server::operator=(const Server &assignement)
+{
+	if (this != &assignement)
+	{
+		root = assignement.root;
+		listen = assignement.listen;
+		locations = assignement.locations;
+		error_pages = assignement.error_pages;
+		client_max_body_size = assignement.client_max_body_size;
+	}
+	return (*this);
 }

@@ -1,8 +1,9 @@
 # include "Client.hpp"
 
-Client::Client() : connected(true), handler(*(my_socket->getBlockServ()))
+Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServ()))
 {
 	request_finish = false;
+	correct_syntax = true;
 	offset = 0;
 	gettimeofday(&this->start, NULL);
 	this->reponse ="HTTP/1.1 200 OK\r\n"
@@ -10,11 +11,12 @@ Client::Client() : connected(true), handler(*(my_socket->getBlockServ()))
 						"Content-Type: text/plain\r\n"
 						"\r\n"
 						"SALUT\r\n\r\n";
+
 }
 
 Client::~Client() {}
 
-Client::Client(const Client &copy)
+Client::Client(const Client &copy) : handler(copy.handler)
 {
 	if (this != &copy)
 		*this = copy;
@@ -33,6 +35,9 @@ Client &Client::operator=(const Client &copy)
 		offset = copy.offset;
 		start = copy.start;
 		request_finish = copy.request_finish;
+		handler = copy.handler;
+		struct_request = copy.struct_request;
+		correct_syntax = copy.correct_syntax;
 		//pas de end car init dans deconnected;
 	}
 	return (*this);
@@ -44,13 +49,54 @@ void Client::setbasic(std::string ip_address, std::string port_address)
 	port = port_address;
 }
 
+//Reset tout les donnes reutilisable pour la prochaine requete du meme client
+void	Client::resetInf()
+{
+		this->request_finish = false;
+		this->correct_syntax = true;
+		this->offset = 0;
+}
+
 /*SET-GET*/
 
+//SET + parsing
 void	Client::setRequest(std::string buf)
 {
-	this->request += buf;
-	if (request.find("\r\n\r\n") != std::string::npos)
+	size_t	pos;
+	std::string	line;
+	if (!this->request_finish)
+		this->request += buf;
+	else
+	{
+		this->request = buf;
+		resetInf();
+	}
+	Request tmp = ExtractRequest();
+	// si GET & autres alors pas de body par contre si POST alors body
+	// Le but est de mettre le request_finish a true si la requete est fini
+	pos = request.find("\r\n");
+	line = request.substr(0, pos);
+	if (line.find("  ") != std::string::npos)
+		correct_syntax = false;
+	if (tmp.method != "POST" && request.find("\r\n\r\n") != std::string::npos)
+	{
 		request_finish = true;
+		this->struct_request = tmp;
+	}
+	else if (tmp.method == "POST")
+	{
+		std::map<std::string, std::string>::iterator temp_it = tmp.headers.find("Content-Length");
+		size_t pos_end = this->request.find("\r\n\r\n") + 4;
+		int	nb_caracters_body = -1;
+		if (temp_it != tmp.headers.end())
+			nb_caracters_body = std::atoi(temp_it->second.c_str());
+		if (nb_caracters_body < 0 || (size_t)nb_caracters_body != this->request.size() - pos_end)
+		{
+			correct_syntax = false;
+			return ;
+		}
+		request_finish = true;
+	}
 }
 
 void	Client::setReponse(std::string buf)
@@ -73,6 +119,11 @@ bool	&Client::getFinishRequest()
 	return (request_finish);
 }
 
+bool	&Client::getSyntax()
+{
+	return (this->correct_syntax);
+}
+
 std::string &Client::getReponse()
 {
 	return (this->reponse);
@@ -88,10 +139,6 @@ void			Client::AddOffset(size_t nb)
 	this->offset += nb;
 }
 
-void	Client::set_socket(Socket *the_socket)
-{
-	this->my_socket = the_socket;
-}
 
 
 void	Client::view_log()
@@ -104,7 +151,7 @@ void	Client::view_log()
 
 	std::cout << RED <<"the Client " << this->ip << " connected at " << start_h << "h" << start_m;
 	std::cout << " and disconnected at " << end_h << "h" << end_m << " on port: " << port << RESET << std::endl;
-	std::cout << "The request is :\n" << GREEN << request << RESET << std::endl;
+	//affichage de la requete qui vient du client :  std::cout << "The request is :\n" << GREEN << request << RESET << std::endl;
 }
 
 void	Client::disconnected()
@@ -113,10 +160,16 @@ void	Client::disconnected()
 	gettimeofday(&this->end, NULL);
 	view_log();
 }
-
-int	Client::ParseRequest()
+//plus besoin je vais suppr
+int	Client::ParseSyntaxRequest()
 {
-	if (request.find("  "))
+	//si erreur syntax error 400 bad REquest
+	size_t	pos;
+	std::string	line;
+
+	pos = request.find("\r\n");
+	line = request.substr(0, pos);
+	if (line.find("  ") != std::string::npos)
 		return(Syntax);
 	return (42);
 }

@@ -58,7 +58,8 @@ private:
 public:
 	Server();
 	~Server();
-
+	Server &operator=(const Server &assignement);
+	Server(const Server &copy);
 	// Getters
 
 	const std::string&									getRoot() const;

@@ -7,7 +7,7 @@ Config::Config() {}
 /* destructor */
 Config::~Config() {}
 
-Config::Config(const Config &copy)
+Config::Config(const Config &copy) : Server(copy)
 {
 	if (this != &copy)
 		*this = copy;

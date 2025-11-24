@@ -14,7 +14,9 @@ enum
 class Client
 {
 	private :
+		Socket  *my_socket;
 		std::string request;
+		Request		struct_request;
 		std::string reponse;
 		std::string ip;
 		std::string port;
@@ -22,13 +24,14 @@ class Client
 		timeval end;
 		bool	connected;
 		bool	request_finish;
+		bool	correct_syntax;
 		size_t  offset;
-		Socket  *my_socket;
-		
+
+		Client();
 	public :// a changer
 		ResponseHandler	handler;
 	//base
-		Client();
+		Client(Socket *the_socket);
 		~Client();
 		Client(const Client &copy);
 		Client &operator=(const Client &assignement);
@@ -36,16 +39,17 @@ class Client
 		
 	//set
 		void			setRequest(std::string buf);
-		int				ParseRequest(void);
+		int				ParseSyntaxRequest(void);
 		void			setReponse(std::string buf);
-		void			set_socket(Socket *the_socket);
 	//get
 		std::string		&getRequest();
 		std::string		&getReponse();
 		size_t			&getOffset();
 		bool			&getFinishRequest();
 		Socket			*getMySocket();
+		bool			&getSyntax();
 	//method
+		void			resetInf();
 		Request			ExtractRequest();
 		void			AddOffset(size_t nb);
 		void			view_log();//utiliser seulement par deconected car end pas encore init;affiche les temps de connexions avec l'ip et port + socket serveur

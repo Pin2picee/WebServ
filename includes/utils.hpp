@@ -21,7 +21,6 @@ struct Request
 	std::string							uri;
 	std::string							path;
 	std::string							body;
-	std::string							version;
 	std::map<std::string, std::string>	headers;
 
 	Request() {};
@@ -38,7 +37,7 @@ struct Request
  */
 struct Response
 {
-	std::string	version = "HTTP/1.1";
+	std::string	version;
 	int			status_code;
 	std::string	content_type;
 	std::string	body;
@@ -65,6 +64,8 @@ inline void	makeResponse(Response &res, int status, const std::string &body, con
 	res.status_code = status;
 	res.body = body;
 	res.content_type = content_type;
+	res.version = "HTTP/1.1";
+
 }
 
 #endif

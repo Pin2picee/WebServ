@@ -1,7 +1,6 @@
-#include "Response.hpp"
+#include "ResponseHandler.hpp"
 
 /* constructor */
-
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
 /* destructor */
@@ -23,7 +22,7 @@ Response ResponseHandler::handleRequest(const Request &req)
 
 	for (size_t i = 0; i < locs.size(); ++i)
 	{
-		if (!req.uri.find(locs[i].path))
+		if (!req.path.find(locs[i].path))
 			target = &locs[i];
 	}
 	if (!target)
@@ -230,13 +229,10 @@ std::string	ResponseHandler::responseToString(const Response &res)
 {
 	std::ostringstream oss;
 
-	oss << res.version << res.status_code << " " << getReasonPhrase(res.status_code) << "\r\n";
+	oss << res.version << " " << res.status_code << " " << getReasonPhrase(res.status_code) << "\r\n";
 	if (!res.content_type.empty())
 		oss << "Content-Type: " << res.content_type << "\r\n";
 	oss << "Content-Length: " << res.body.size() << "\r\n";
-	for (std::map<std::string, std::string>::const_iterator it = res.headers.begin();
-		 it != res.headers.end(); ++it)
-		oss << it->first << ": " << it->second << "\r\n";
 	oss << "\r\n" << res.body;
 	return oss.str();
 }
@@ -261,3 +257,16 @@ std::string	ResponseHandler::requestToString(const Request &req)
 	oss << "\r\n" << req.body;
 	return oss.str();
 }
+
+ResponseHandler::ResponseHandler(const ResponseHandler &copy) : _server(copy._server)
+{
+	if (this != &copy)
+		*this = copy;
+}
+
+ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
+{
+	(void)assignement;
+	return (*this);// rien a mettre egal a l'assignement car la seule variable est const donc deja init
+}
+	//handle requests
