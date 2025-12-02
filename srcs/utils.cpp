@@ -60,3 +60,20 @@ std::string getMimeType(const std::string &path)
 		return MIME_IMAGE_GIF;
 	return MIME_TEXT_PLAIN;
 }
+
+std::vector<Socket *>all_socket;
+volatile sig_atomic_t	on = 1;
+
+void	handle_sigint(int signum)
+{
+	(void)signum;
+	for (std::vector<Socket * >::iterator it = all_socket.begin(); it != all_socket.end(); it++)
+	{
+		if (*it)
+		{
+			close((*it)->getFd());
+			delete((*it));
+		}
+	}
+	on = 0;
+}

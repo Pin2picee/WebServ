@@ -2,6 +2,7 @@
 # define UTILS_HPP
 
 # include "Server.hpp"
+# include "Socket.hpp"
 
 /**
  * @brief
@@ -37,17 +38,23 @@ struct Request
  */
 struct Response
 {
-	std::string	version = "HTTP/1.1";
+	std::string	version;
 	int			status_code;
 	std::string	content_type;
 	std::string	body;
 
-	Response() {};
+	Response() : version("HTTP/1.1") {};
 };
 
 std::string	getMimeType(const std::string &path);
 std::string	strip_semicolon(const std::string &s);
 void		init_default_errors(Server &conf);
+
+extern std::vector<Socket *>all_socket;
+extern volatile sig_atomic_t	on;
+
+void	handle_sigint(int signum);
+
 /**
  * @brief
  * Fill the different variables of a request structure.

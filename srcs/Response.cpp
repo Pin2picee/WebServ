@@ -51,7 +51,7 @@ Response ResponseHandler::handleRequest(const Request &req)
 Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 {
 	Response	res;
-	std::string	full_path = req.path;
+	std::string	full_path = _server.getRoot() + req.path;
 	struct stat	s;
 
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
@@ -233,11 +233,7 @@ std::string	ResponseHandler::responseToString(const Response &res)
 	oss << res.version << res.status_code << " " << getReasonPhrase(res.status_code) << "\r\n";
 	if (!res.content_type.empty())
 		oss << "Content-Type: " << res.content_type << "\r\n";
-	oss << "Content-Length: " << res.body.size() << "\r\n";
-	for (std::map<std::string, std::string>::const_iterator it = res.headers.begin();
-		 it != res.headers.end(); ++it)
-		oss << it->first << ": " << it->second << "\r\n";
-	oss << "\r\n" << res.body;
+	oss << "Content-Length: " << res.body.size() << "\r\n\r\n" << res.body;
 	return oss.str();
 }
 
