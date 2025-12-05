@@ -6,28 +6,13 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/11/07 20:33:26 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/12/02 19:11:19 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Webserv.hpp"
 
-std::vector<Socket *>all_socket;
-volatile sig_atomic_t	on = 1;
 
-void	handle_sigint(int signum)
-{
-	(void)signum;
-	for (std::vector<Socket * >::iterator it = all_socket.begin(); it != all_socket.end(); it++)
-	{
-		if (*it)
-		{
-			close((*it)->getFd());
-			delete((*it));
-		}
-	}
-	on = 0;
-}
 int main (int argc, char **argv)
 {
 	std::string ConfigFileName;

@@ -2,6 +2,7 @@
 # define UTILS_HPP
 
 # include "Server.hpp"
+# include "Socket.hpp"
 
 /**
  * @brief
@@ -42,7 +43,7 @@ struct Response
 	std::string	content_type;
 	std::string	body;
 
-	Response() {};
+	Response() : version("HTTP/1.1"){};
 };
 
 std::string	getMimeType(const std::string &path);
@@ -68,4 +69,8 @@ inline void	makeResponse(Response &res, int status, const std::string &body, con
 
 }
 
+extern std::vector<Socket *>all_socket;
+extern volatile sig_atomic_t	on;
+
+void	handle_sigint(int signum);
 #endif

@@ -5,8 +5,6 @@
 # include "Client.hpp"
 # include "Socket.hpp"
 
-extern volatile sig_atomic_t	on;
-
 /**
  * @brief = FUTUR instance qui va permettre de poll mes socket serveurs et client car on a le droit a un seul poll
  * @example = si monitoring lancer on ne add_fd plus et on ne rajoute plus de socket server

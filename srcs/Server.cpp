@@ -218,11 +218,12 @@ Response parseCGIOutput(const std::string &output)
  */
 Response Server::handleCGI(const Request &req, const Locations &loc) const
 {
-	std::string script_path = loc.root + req.uri.substr(loc.path.size());
+	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
 	std::string output;
 
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
 
+	//std::cerr << "SALUT" << std::endl;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 
@@ -288,7 +289,6 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 			const_cast<char*>(script_path.c_str()),   // script to execute
 			NULL
 		};
-
 		execve(cgi_path.c_str(), argv, envp.data());
 		exit(1); // If exec fails
 	}

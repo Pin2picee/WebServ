@@ -50,7 +50,7 @@ Response ResponseHandler::handleRequest(const Request &req)
 Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 {
 	Response	res;
-	std::string	full_path = req.path;
+	std::string	full_path =  _server.getRoot() + req.path;
 	struct stat	s;
 
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
@@ -96,21 +96,22 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 			}
 			if (!found)
 				makeResponse(res, 403, "Directory listing denied", getMimeType(full_path));
+			
 		}
 		return res;
 	}
 	else
 	{
 		std::ifstream end_ifs(full_path.c_str(), std::ios::binary);
+		//std::cerr << full_path.c_str() << std::endl;//AFFICHAGE DU PATH
 		if (!end_ifs)
 			makeResponse(res, 404, "File not found", getMimeType(full_path));
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
-			 res = _server.handleCGI(req, loc);
+				res = _server.handleCGI(req, loc);
 		else
 		{
 			std::ostringstream buf;
-	
 			buf << end_ifs.rdbuf();
 			makeResponse(res, 200, buf.str(), getMimeType(full_path));
 		}
