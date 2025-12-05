@@ -11,7 +11,7 @@ Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), han
 						"Content-Type: text/plain\r\n"
 						"\r\n"
 						"SALUT\r\n\r\n";
-
+	
 }
 
 Client::~Client() {}
@@ -143,10 +143,10 @@ void			Client::AddOffset(size_t nb)
 
 void	Client::view_log()
 {
-	long	start_h = (start.tv_sec / 3600) % 24 + 2;
+	long	start_h = (start.tv_sec / 3600) % 24 + 1;
 	long	start_m = (start.tv_sec / 60) % 60;
 
-	long	end_h = (end.tv_sec / 3600) % 24 + 2;
+	long	end_h = (end.tv_sec / 3600) % 24 + 1;
 	long	end_m = (end.tv_sec / 60) % 60;
 
 	std::cout << RED <<"the Client " << this->ip << " connected at " << start_h << "h" << start_m;

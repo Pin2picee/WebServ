@@ -91,14 +91,14 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 	oss.clear();//reset flags aussi
 	for (int i = 0; i < 4; i++)
 	{
-		oss << bytes[i];//concatenation
+		oss << (int)bytes[i];//concatenation
 		if (i < 3)
 			oss << ".";
 	}
 	ip_str = oss.str();// ip en string grace a ostringstream .
 	nouveau.setbasic(ip_str, port_str);
 		clients.insert(std::pair<int, Client>(fd, nouveau));
-	}
+}
 
 int	 Monitor::deconnexion(int i)
 {

@@ -66,14 +66,31 @@ Socket::~Socket()
 
 uint32_t Socket::ParseIp(std::string ip)
 {
-	std::stringstream iss(ip);
-	int a, b, c, d;
-	char point;
-	uint32_t res;
+    std::stringstream ss(ip);
+    int a, b, c, d;
+    char dot1, dot2, dot3;
 
-	iss >> a >> point >> b >> point >> c >> point >> d;
-	res = a << 24 | b << 16 | c << 8 | d;
-	return (res);
+    if (!(ss >> a >> dot1 >> b >> dot2 >> c >> dot3 >> d))
+        return 0;
+
+    if (dot1 != '.' || dot2 != '.' || dot3 != '.')
+        return 0;
+
+    if (a < 0 || a > 255 || b < 0 || b > 255
+        || c < 0 || c > 255 || d < 0 || d > 255)
+        return 0;
+
+    char extra;
+    if (ss >> extra)
+        return 0;
+
+    uint32_t res =
+        (static_cast<uint32_t>(a) << 24) |
+        (static_cast<uint32_t>(b) << 16) |
+        (static_cast<uint32_t>(c) << 8 ) |
+        (static_cast<uint32_t>(d));
+
+    return res;
 }
 
 void	Socket::set_socket_addr()
