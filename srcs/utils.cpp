@@ -89,3 +89,16 @@ void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> 
         dest.push_back(strip_semicolon(tokens[i]));
 }
 
+std::string readFile(const std::string& filepath)
+{
+    struct stat s;
+    if (stat(filepath.c_str(), &s) != 0)
+        throw std::runtime_error("File not found: " + filepath);
+    std::ifstream ifs(filepath.c_str());
+    if (!ifs)
+        throw std::runtime_error("Cannot open file: " + filepath);
+
+    std::ostringstream buf;
+    buf << ifs.rdbuf();
+    return buf.str();
+}

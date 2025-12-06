@@ -22,13 +22,33 @@ const std::string&	Server::getRoot() const
 
 /**
  * @brief
- * Get the locations.
+ * Get the error_pages.
  * 
- * @return the locations.
+ * @return the error_pages.
  */
 const std::map<int, std::string>& Server::getErrorPages() const
 {
 	return error_pages;
+}
+
+/**
+ * @brief
+ * Get the error_page you want.
+ * 
+ * @param code the error code to find.
+ * 
+ * @return the corresponding error_page.
+ */
+const std::string& Server::getErrorPage(int code) const
+{
+	std::map<int, std::string>::const_iterator it = error_pages.find(code);
+    if (it != error_pages.end())
+        return it->second;
+    else
+	{
+        static std::string default_page = "<html><body><h1>Error</h1></body></html>";
+        return default_page;
+    }
 }
 
 /**
