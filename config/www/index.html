@@ -1,10 +1,46 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Webserv test</title>
-  </head>
-  <body>
-    <h1>Bienvenue sur Webserv 🎉</h1>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webserv Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;  /* Center horizontally */
+      align-items: center;      /* Center vertically */
+      text-align: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      background: linear-gradient(to right, #00c6ff, #0072ff); /* nice blue gradient */
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      display: inline-block;
+      animation: float 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-15px); }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Webserv 🎉</h1>
+</body>
 </html>

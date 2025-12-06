@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>405 Method Not Allowed</title>
+  <meta charset="UTF-8">
+  <title>405 Method Not Allowed</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      height:100vh; display:flex; justify-content:center; align-items:center; text-align:center;
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color:white; background: linear-gradient(135deg,#ff7e5f,#feb47b); padding:20px;
+    }
+    .container { max-width:500px; width:100%; }
+    h1 { font-size:4rem; margin-bottom:20px; text-shadow:2px 2px 5px rgba(0,0,0,0.3); }
+    img { width:150px; margin-bottom:20px; animation:float 2s ease-in-out infinite alternate; }
+    @keyframes float { from{transform:translateY(0);} to{transform:translateY(-15px);} }
+    p { font-size:1.5rem; margin-bottom:20px; }
+    a.button { display:inline-block; padding:10px 25px; background-color:#fff; color:#ff7e5f; border-radius:5px; text-decoration:none; font-weight:bold; transition:0.3s; }
+    a.button:hover { background-color:#ff7e5f; color:white; }
+    @media(max-width:600px){ h1{font-size:2.5rem;} p{font-size:1rem;} img{width:100px;} }
+  </style>
 </head>
 <body>
-	<h1>405 Method Not Allowed</h1>
-	<p>The requested HTTP method is not supported for this URL.</p>
+  <div class="container">
+    <h1>405 Method Not Allowed</h1>
+    <img src="https://cdn-icons-png.flaticon.com/512/565/565547.png" alt="Method not allowed illustration">
+    <p>The HTTP method used is not allowed for this resource.</p>
+    <a class="button" href="/">Back to Home</a>
+  </div>
 </body>
 </html>

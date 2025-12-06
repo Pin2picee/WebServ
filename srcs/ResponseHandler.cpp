@@ -25,7 +25,6 @@ Response ResponseHandler::handleRequest(const Request &req)
 		if (!req.path.find(locs[i].path))
 			target = &locs[i];
 	}
-	std::cout << req.path << std::endl;
 	if (!target)
 		makeResponse(res, 404, readFile(_server.getErrorPage(404)), getMimeType(req.path));
 	else if (req.method == "GET")
