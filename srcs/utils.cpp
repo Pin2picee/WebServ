@@ -77,3 +77,12 @@ void	handle_sigint(int signum)
 	}
 	on = 0;
 }
+
+void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
+{
+    dest.clear();
+    while (++(*i) < tokens.size() && tokens[*i].back() != ';')
+        dest.push_back(tokens[*i]);
+    if (*i < tokens.size() && tokens[*i].back() == ';')
+        dest.push_back(strip_semicolon(tokens[*i]));
+}

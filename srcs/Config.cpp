@@ -74,21 +74,9 @@ Locations	parse_loc(size_t *i, std::vector<std::string> tokens, std::string root
 	while (*i < tokens.size() && tokens[*i] != "}")
 	{
 		if (tokens[*i] == "methods")
-		{
-			loc.methods.clear();
-			while (++(*i) < tokens.size() && tokens[*i][tokens[*i].size() - 1] != ';')
-				loc.methods.push_back(tokens[*i]);
-			if (tokens[*i][tokens[*i].size() - 1] == ';')
-				loc.methods.push_back(strip_semicolon(tokens[*i]));
-		}
+			fill_tokens(loc.methods, tokens, i);
 		else if (tokens[*i] == "index")
-		{
-			loc.index_files.clear();
-			while (++(*i) < tokens.size() && tokens[*i][tokens[*i].size() - 1] != ';')
-				loc.index_files.push_back(tokens[*i]);
-			if (tokens[*i][tokens[*i].size() - 1] == ';')
-				loc.index_files.push_back(strip_semicolon(tokens[*i]));
-		}
+			fill_tokens(loc.index_files, tokens, i);
 		else if (tokens[*i] == "autoindex")
 			loc.autoindex = (strip_semicolon(tokens[++(*i)]) == "on");
 		else if (tokens[*i] == "upload_dir")
@@ -165,25 +153,28 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
 			++bracketCount;
 		else if (tokens[i] == "}")
 			--bracketCount;
-		else if (tokens[i] == "listen" && i + 1 < tokens.size())
+		else if (i + 1 < tokens.size())
 		{
-			std::string ip_port = strip_semicolon(tokens[i + 1]);
-			size_t colon = ip_port.find(':');
-			if (colon == std::string::npos)
-				throw std::runtime_error("Invalid listen format : " + ip_port);
-
-			std::string ip = ip_port.substr(0, colon);
-			int port = atoi(ip_port.substr(colon + 1).c_str());
-			conf.addListen(ip, port);
+			if (tokens[i] == "listen")
+			{
+				std::string ip_port = strip_semicolon(tokens[i + 1]);
+				size_t colon = ip_port.find(':');
+				if (colon == std::string::npos)
+					throw std::runtime_error("Invalid listen format : " + ip_port);
+	
+				std::string ip = ip_port.substr(0, colon);
+				int port = atoi(ip_port.substr(colon + 1).c_str());
+				conf.addListen(ip, port);
+			}
+			else if (tokens[i] == "root")
+				conf.setRoot(strip_semicolon(tokens[i + 1]));
+			else if (tokens[i] == "error_page" && i + 2 < tokens.size())
+				conf.addErrorPage(atoi(tokens[i + 1].c_str()), conf.getRoot() + strip_semicolon(tokens[i + 2]));
+			else if (tokens[i] == "client_max_body_size")
+				conf.setClientMaxBodySize(atoi(tokens[i + 1].c_str()));
+			else if (tokens[i] == "location")
+				conf.addLocation(parse_loc(&i, tokens, conf.getRoot()));
 		}
-		else if (tokens[i] == "root" && i + 1 < tokens.size())
-			conf.setRoot(strip_semicolon(tokens[i + 1]));
-		else if (tokens[i] == "error_page" && i + 2 < tokens.size())
-			conf.addErrorPage(atoi(tokens[i + 1].c_str()), conf.getRoot() + strip_semicolon(tokens[i + 2]));
-		else if (tokens[i] == "client_max_body_size" && i + 1 < tokens.size())
-			conf.setClientMaxBodySize(atoi(tokens[i + 1].c_str()));
-		else if (tokens[i] == "location")
-			conf.addLocation(parse_loc(&i, tokens, conf.getRoot()));
 	}
 	init_default_errors(conf);
 	return conf;
