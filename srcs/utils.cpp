@@ -58,7 +58,7 @@ std::string getMimeType(const std::string &path)
 		return MIME_IMAGE_PNG;
 	if (path.find(".gif") != std::string::npos)
 		return MIME_IMAGE_GIF;
-	return MIME_TEXT_PLAIN;
+	return MIME_TEXT_HTML;
 }
 
 std::vector<Socket *>all_socket;
