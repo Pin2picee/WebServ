@@ -50,7 +50,7 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 	set_socket_addr();// initialisation de la structure sock_addr_in puis convertit en (const sock_adrr *)
 	if (bind(this->Fd, (const sockaddr *)&this->address1, sizeof(address1)) != 0)
 		throw SocketError();
-	else if (listen(this->Fd, 10000) < 0)// 2emeparam= backlog file d'attente dont la connexion n'est pas encore accepter
+	else if (listen(this->Fd, SOMAXCONN) < 0)// 2emeparam= backlog file d'attente dont la connexion n'est pas encore accepter
 		throw SocketError();
 	int ancien_flags = fcntl(this->Fd, F_GETFL);
 	fcntl(this->Fd, ancien_flags | O_NONBLOCK);
