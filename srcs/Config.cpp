@@ -65,29 +65,29 @@ const std::vector<Socket *>&	Config::getSocket() const
  * 
  * @return A `Location` structure that will be autmatically added to the corresponding `Server` structure.
  */
-Locations	parse_loc(size_t *i, std::vector<std::string> tokens, std::string root)
+Locations	parse_loc(size_t &i, std::vector<std::string> tokens, std::string root)
 {
 	Locations loc;
 
-	loc.path = tokens[*i + 1];
-	*i += 2;
-	while (*i < tokens.size() && tokens[*i] != "}")
+	loc.path = tokens[i + 1];
+	i += 2;
+	while (i < tokens.size() && tokens[i] != "}")
 	{
-		if (tokens[*i] == "methods")
+		if (tokens[i] == "methods")
 			fill_tokens(loc.methods, tokens, i);
-		else if (tokens[*i] == "index")
+		else if (tokens[i] == "index")
 			fill_tokens(loc.index_files, tokens, i);
-		else if (tokens[*i] == "autoindex")
-			loc.autoindex = (strip_semicolon(tokens[++(*i)]) == "on");
-		else if (tokens[*i] == "upload_dir")
-			loc.upload_dir = strip_semicolon(tokens[++(*i)]);
-		else if (tokens[*i] == "cgi")
-			loc.cgi = (strip_semicolon(tokens[++(*i)]) == "on");
-		else if (tokens[*i] == "cgi_extension")
-			loc.cgi_extension = strip_semicolon(tokens[++(*i)]);
-		else if (tokens[*i] == "root")
-			loc.root = strip_semicolon(tokens[++(*i)]);
-		++(*i);
+		else if (tokens[i] == "autoindex")
+			loc.autoindex = (strip_semicolon(tokens[++(i)]) == "on");
+		else if (tokens[i] == "upload_dir")
+			loc.upload_dir = strip_semicolon(tokens[++(i)]);
+		else if (tokens[i] == "cgi")
+			loc.cgi = (strip_semicolon(tokens[++(i)]) == "on");
+		else if (tokens[i] == "cgi_extension")
+			loc.cgi_extension = strip_semicolon(tokens[++(i)]);
+		else if (tokens[i] == "root")
+			loc.root = strip_semicolon(tokens[++(i)]);
+		++(i);
 	}
 	if (loc.root.empty())
 		loc.root = root;
@@ -173,7 +173,7 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(atoi(tokens[i + 1].c_str()));
 			else if (tokens[i] == "location")
-				conf.addLocation(parse_loc(&i, tokens, conf.getRoot()));
+				conf.addLocation(parse_loc(i, tokens, conf.getRoot()));
 		}
 	}
 	init_default_errors(conf);
