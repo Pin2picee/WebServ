@@ -1,0 +1,3 @@
+[submodule "libs"]
+	path = libs
+	url = https://github.com/Sung-Jinw00/Ultimate_libft_CPP.git
