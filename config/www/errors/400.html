@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>400 Bad Request</title>
+  <meta charset="UTF-8">
+  <title>400 Bad Request</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      height:100vh; display:flex; justify-content:center; align-items:center; text-align:center;
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color:white; background: linear-gradient(135deg,#ff5f6d,#ffc371); padding:20px;
+    }
+    .container { max-width:500px; width:100%; }
+    h1 { font-size:4rem; margin-bottom:20px; text-shadow:2px 2px 5px rgba(0,0,0,0.3); }
+    img { width:150px; margin-bottom:20px; animation:float 2s ease-in-out infinite alternate; }
+    @keyframes float { from{transform:translateY(0);} to{transform:translateY(-15px);} }
+    p { font-size:1.5rem; margin-bottom:20px; }
+    a.button { display:inline-block; padding:10px 25px; background-color:#fff; color:#ff5f6d; border-radius:5px; text-decoration:none; font-weight:bold; transition:0.3s; }
+    a.button:hover { background-color:#ff5f6d; color:white; }
+    @media(max-width:600px){ h1{font-size:2.5rem;} p{font-size:1rem;} img{width:100px;} }
+  </style>
 </head>
 <body>
-	<h1>400 Bad Request</h1>
-	<p>The server could not understand the request.</p>
+  <div class="container">
+    <h1>400 Bad Request</h1>
+    <img src="https://cdn-icons-png.flaticon.com/512/564/564619.png" alt="Bad request illustration">
+    <p>The server could not understand the request.</p>
+    <a class="button" href="/">Back to Home</a>
+  </div>
 </body>
 </html>

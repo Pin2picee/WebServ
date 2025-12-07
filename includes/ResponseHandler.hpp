@@ -13,23 +13,24 @@ class ResponseHandler
 {
 	private:
 		const Server	&_server;
-
 	//methods
-
-	Response		handleGet(const Locations &loc, const Request &req);
-	Response		handlePost(const Locations &loc, const Request &req);
-	Response		handleDelete(const Locations &loc, const Request &req);
+		Response		handleGet(const Locations &loc, const Request &req);
+		Response		handlePost(const Locations &loc, const Request &req);
+		Response		handleDelete(const Locations &loc, const Request &req);
 
 	//utils
 
-	std::string		requestToString(const Request &req);
-	std::string		responseToString(const Response &res);
+
 public:
 	ResponseHandler(const Server &server);
 	~ResponseHandler();
+	ResponseHandler(const ResponseHandler &copy);
+	ResponseHandler &operator=(const ResponseHandler &assignement);
 
 	//handle requests
 	Response		handleRequest(const Request &req);
+	std::string		requestToString(const Request &req);
+	std::string		responseToString(const Response &res);
 };
 
 #endif

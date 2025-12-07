@@ -58,12 +58,14 @@ private:
 public:
 	Server();
 	~Server();
-
+	Server &operator=(const Server &assignement);
+	Server(const Server &copy);
 	// Getters
 
 	const std::string&									getRoot() const;
 	const std::vector<std::pair<std::string, int> >&	getListen() const;
 	const std::vector<Locations>&						getLocations() const;
+	const std::string&									getErrorPage(int code) const;
 	const std::map<int, std::string>&					getErrorPages() const;
 	size_t												getClientMaxBodySize() const;
 

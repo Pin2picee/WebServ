@@ -72,7 +72,7 @@ Monitor::Monitor(std::vector<Socket *> tab)
 /*AJOUT DU CLIENT DANS LA MAP FD:CLIENT*/
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
-	Client  nouveau;
+	Client  nouveau(all_socket.at(fd_server));
 	uint32_t	ip_adress = ntohl(ip);
 	uint16_t	port_adress = ntohs(port);
 	std::ostringstream	oss;
@@ -91,14 +91,13 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 	oss.clear();//reset flags aussi
 	for (int i = 0; i < 4; i++)
 	{
-		oss << bytes[i];//concatenation
+		oss << (int)bytes[i];//concatenation
 		if (i < 3)
 			oss << ".";
 	}
 	ip_str = oss.str();// ip en string grace a ostringstream .
 	nouveau.setbasic(ip_str, port_str);
-	nouveau.set_socket(all_socket.at(fd_server));
-	clients[fd] = nouveau;
+		clients.insert(std::pair<int, Client>(fd, nouveau));
 }
 
 int	 Monitor::deconnexion(int i)
@@ -109,7 +108,9 @@ int	 Monitor::deconnexion(int i)
 	 * remplacement par le dernier
 	 * actualisation du nb de socket
 	 */
-	clients[all_fd[i].fd].disconnected();
+	std::map<int, Client>::iterator it = clients.find(all_fd[i].fd);
+	if (it != clients.end())
+	it->second.disconnected();
 	close(all_fd[i].fd);
 	clients.erase(all_fd[i].fd);
 	all_fd[i] = all_fd[nb_fd - 1];
@@ -142,7 +143,7 @@ int		Monitor::new_request(int i)
 	
 	while (42)
 	{
-		count = read(all_fd[i].fd, buf, sizeof(buf));
+		count = recv(all_fd[i].fd, buf, sizeof(buf), 0);
 		result = test_read(count);
 		if (!result)//client deco
 			return (deconnexion(i));
@@ -151,7 +152,9 @@ int		Monitor::new_request(int i)
 		if (count > 0)
 			buf_final.append(buf, count);
 	}
-	clients[all_fd[i].fd].setRequest(buf_final);
+	std::map<int, Client>::iterator it = clients.find(all_fd[i].fd);
+	if (it != clients.end())
+		it->second.setRequest(buf_final);
 	return (1);
 }
 
@@ -200,6 +203,7 @@ void	Monitor::Monitoring()
 			poll_reveil++;
 			for (size_t i = 0; i < nb_fd;)//parcours les socket
 			{
+				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
 				//deja deconnecte en general le dernier car deconnexion switch
 				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
@@ -241,39 +245,53 @@ void	Monitor::Monitoring()
 				//lecture
 				if (all_fd[i].revents & POLLIN)
 				{
-					std::cout << ".";
 					if (i < nb_fd_server)
 					{
 						new_clients(i++);
 						continue;
 					}
 					else if (i >= nb_fd_server && !new_request(i))//client/deconnexion
-							continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
+						continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
 				}
 				//ecriture
-				if (i >= this->nb_fd_server && all_fd[i].fd > 0 && clients.find(all_fd[i].fd) != clients.end() && clients[all_fd[i].fd].getFinishRequest())
+				if (i >= this->nb_fd_server && all_fd[i].fd > 0 && it_client != clients.end() && it_client->second.getFinishRequest())
 					all_fd[i].events |= POLLOUT;
-				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && clients.find(all_fd[i].fd) != clients.end())//cote client je peux ecrire
+				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && it_client != clients.end())//cote client je peux ecrire
 				{
-					std::string reponse;
 					int	  nb_send;
 					size_t		offset;
+
+					offset = it_client->second.getOffset();// le nombre de caracteres envoyer: garder en memoire
 					
-					//objet REQUEST_HANDLER qui fait appel a l'objet ParsingHttp et SendHttp
-					/**
-					 * Mon request Handler fait appel a parsingHTTP si pas bon request handler requete false
-					 * si bon savoir si POST, delete, GET
-					 * SENDhttp s'occupe de generer la requete reponse
-					 */
-					reponse = clients[all_fd[i].fd].getReponse();
-					offset = clients[all_fd[i].fd].getOffset();
-					nb_send = write(all_fd[i].fd, reponse.c_str() + offset, reponse.length() - offset);
+					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0)
+					{
+						
+						//Il faudrait avoir la struct request directement dans le corp du client puis extraire et parser la request seulement si setrequest a fini et que le booleen est = true
+						/*
+						
+						std::cout << "Method :" << request.method << std::endl;
+						std::cout << "uri :" << request.uri << std::endl;
+						std::cout << "path :" << request.path << std::endl;
+						std::cout << "version :" << request.version << std::endl;
+						std::cout << RED << "Headers : " << RESET << std::endl;
+						
+						for (std::map<std::string, std::string>::iterator it = request.headers.begin(); it != request.headers.end(); it++)
+						{
+							std::cout << it->first << ":" << it->second << std::endl;
+						}
+						*/
+						Request request = it_client->second.ExtractRequest();
+						Response	structResponse = it_client->second.handler.handleRequest(request);
+						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
+					}
+					nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
 					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 						perror("ERROR : SEND FAILED \n");
 					if (nb_send > 0)
-						clients[all_fd[i].fd].AddOffset(nb_send);
-					if (clients[all_fd[i].fd].getOffset() >= reponse.length())
+						it_client->second.AddOffset(nb_send);
+					if (it_client->second.getOffset() >= it_client->second.getReponse().length())
 						all_fd[i].events = POLLIN;
+						
 				}
 				i++;
 			}

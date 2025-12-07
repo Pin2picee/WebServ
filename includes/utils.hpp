@@ -2,6 +2,7 @@
 # define UTILS_HPP
 
 # include "Server.hpp"
+# include "Socket.hpp"
 
 /**
  * @brief
@@ -37,17 +38,21 @@ struct Request
  */
 struct Response
 {
-	std::string	version = "HTTP/1.1";
+	std::string	version;
 	int			status_code;
 	std::string	content_type;
 	std::string	body;
 
-	Response() {};
+	Response() : version("HTTP/1.1"){};
 };
 
 std::string	getMimeType(const std::string &path);
 std::string	strip_semicolon(const std::string &s);
 void		init_default_errors(Server &conf);
+void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
+std::string readFile(const std::string& filepath);
+long long	convertSize(const std::string &input);
+
 /**
  * @brief
  * Fill the different variables of a request structure.
@@ -57,11 +62,18 @@ void		init_default_errors(Server &conf);
  * @param body The response content (HTML, text, JSON, binary file, …).
  * @param content_type The MIME content type (sed by default as text plain).
  */
+
 inline void	makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_PLAIN)
 {
 	res.status_code = status;
 	res.body = body;
 	res.content_type = content_type;
+	res.version = "HTTP/1.1";
+
 }
 
+extern std::vector<Socket *>all_socket;
+extern volatile sig_atomic_t	on;
+
+void	handle_sigint(int signum);
 #endif

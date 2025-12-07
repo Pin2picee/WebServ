@@ -1,6 +1,6 @@
 #include "Server.hpp"
 #include "Config.hpp"
-#include "Response.hpp"
+#include "ResponseHandler.hpp"
 
 /* Constructor */
 Server::Server() : client_max_body_size(0) {}
@@ -22,13 +22,33 @@ const std::string&	Server::getRoot() const
 
 /**
  * @brief
- * Get the locations.
+ * Get the error_pages.
  * 
- * @return the locations.
+ * @return the error_pages.
  */
 const std::map<int, std::string>& Server::getErrorPages() const
 {
 	return error_pages;
+}
+
+/**
+ * @brief
+ * Get the error_page you want.
+ * 
+ * @param code the error code to find.
+ * 
+ * @return the corresponding error_page.
+ */
+const std::string& Server::getErrorPage(int code) const
+{
+	std::map<int, std::string>::const_iterator it = error_pages.find(code);
+   	if (it != error_pages.end())
+		return it->second;
+	else
+	{
+		static std::string default_page = "<html><body><h1>Error</h1></body></html>";
+		return default_page;
+	}
 }
 
 /**
@@ -218,11 +238,12 @@ Response parseCGIOutput(const std::string &output)
  */
 Response Server::handleCGI(const Request &req, const Locations &loc) const
 {
-	std::string script_path = loc.root + req.uri.substr(loc.path.size());
+	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
 	std::string output;
 
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
 
+	//std::cerr << "SALUT" << std::endl;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 
@@ -288,7 +309,6 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 			const_cast<char*>(script_path.c_str()),   // script to execute
 			NULL
 		};
-
 		execve(cgi_path.c_str(), argv, envp.data());
 		exit(1); // If exec fails
 	}
@@ -315,4 +335,24 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 	}
 
 	return parseCGIOutput(output);
+}
+
+
+Server::Server(const Server &copy)
+{
+	if (this != &copy)
+		*this = copy;
+}
+
+Server &Server::operator=(const Server &assignement)
+{
+	if (this != &assignement)
+	{
+		root = assignement.root;
+		listen = assignement.listen;
+		locations = assignement.locations;
+		error_pages = assignement.error_pages;
+		client_max_body_size = assignement.client_max_body_size;
+	}
+	return (*this);
 }

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload File</title>
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+    }
+
+    form {
+      background: rgba(255,255,255,0.15);
+      padding: 20px 30px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    input[type="file"] {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Upload a File</h2>
+
+  <form action="/uploads" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <button type="submit">Upload</button>
+  </form>
+
+</body>
+</html>

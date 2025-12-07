@@ -14,7 +14,7 @@ class Config : public Server
 {
 private:
 	std::vector<Server>			Servers;
-	std::vector<Socket * >			Sockets;
+	std::vector<Socket * >		Sockets;
 
 	std::vector<std::string>	tokenize(std::istream &ifs);
 	Server						parse(const std::vector<std::string> &tokens, size_t &i);
