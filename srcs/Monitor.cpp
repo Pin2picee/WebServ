@@ -143,7 +143,7 @@ int		Monitor::new_request(int i)
 	
 	while (42)
 	{
-		count = read(all_fd[i].fd, buf, sizeof(buf));
+		count = recv(all_fd[i].fd, buf, sizeof(buf), 0);
 		result = test_read(count);
 		if (!result)//client deco
 			return (deconnexion(i));
@@ -284,7 +284,7 @@ void	Monitor::Monitoring()
 						Response	structResponse = it_client->second.handler.handleRequest(request);
 						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
 					}
-					nb_send = write(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset);
+					nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
 					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
 						perror("ERROR : SEND FAILED \n");
 					if (nb_send > 0)

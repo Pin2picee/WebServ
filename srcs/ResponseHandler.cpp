@@ -156,7 +156,6 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 			makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req.path));
 			return res;
 		}
-
 		// Chercher le début et la fin du fichier
 		std::size_t fileStart = req.body.find("filename=\"");
 		if (fileStart == std::string::npos)
