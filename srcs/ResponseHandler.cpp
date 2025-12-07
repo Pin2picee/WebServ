@@ -128,21 +128,69 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 {
 	Response res;
 
+	std::cout << "path = " << req.path << "\nbody = " << req.body << std::endl;
+
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
 		makeResponse(res, 405, readFile(_server.getErrorPage(405)), getMimeType(req.path));
 	else if (req.body.size() > _server.getClientMaxBodySize())
 		makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req.path));
 	else if (loc.upload_dir != RED "none")
 	{
-		std::string filename = loc.upload_dir + "/testfile.txt";
+		// Récupérer le boundary depuis Content-Type
+		std::string contentType;
+		std::map<std::string, std::string>::const_iterator it = req.headers.find("Content-Type");
+		if (it != req.headers.end())
+			contentType = it->second;
+		else
+		{
+			makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req.path));
+			return res;
+		}
+		std::string boundary;
+		std::size_t pos = contentType.find("boundary=");
+		if (pos != std::string::npos)
+			boundary = "--" + contentType.substr(pos + 9); // ajouter "--" comme dans le body
+
+		if (boundary.empty())
+		{
+			makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req.path));
+			return res;
+		}
+
+		// Chercher le début et la fin du fichier
+		std::size_t fileStart = req.body.find("filename=\"");
+		if (fileStart == std::string::npos)
+		{
+			makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req.path));
+			return res;
+		}
+		fileStart = req.body.find("\r\n\r\n", fileStart);
+		if (fileStart == std::string::npos)
+		{
+			makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req.path));
+			return res;
+		}
+		fileStart += 4; // sauter "\r\n\r\n"
+
+		std::size_t fileEnd = req.body.find(boundary, fileStart);
+		if (fileEnd == std::string::npos)
+		{
+			makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req.path));
+			return res;
+		}
+		fileEnd -= 2; // retirer "\r\n" avant le boundary
+
+		std::string filename = loc.upload_dir + "/uploaded_file"; // ou extraire le vrai nom du fichier
+
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
 		{
 			makeResponse(res, 500, readFile(_server.getErrorPage(500)), getMimeType(req.path));
 			return res;
 		}
-		ofs.write(req.body.c_str(), req.body.size());
+		ofs.write(req.body.c_str() + fileStart, fileEnd - fileStart);
 		ofs.close();
+
 		makeResponse(res, 201, readFile(_server.getErrorPage(201)), getMimeType(req.path));
 	}
 	else if (loc.cgi)

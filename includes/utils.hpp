@@ -51,6 +51,7 @@ std::string	strip_semicolon(const std::string &s);
 void		init_default_errors(Server &conf);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 std::string readFile(const std::string& filepath);
+long long	convertSize(const std::string &input);
 
 /**
  * @brief

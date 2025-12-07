@@ -42,13 +42,13 @@ const std::map<int, std::string>& Server::getErrorPages() const
 const std::string& Server::getErrorPage(int code) const
 {
 	std::map<int, std::string>::const_iterator it = error_pages.find(code);
-    if (it != error_pages.end())
-        return it->second;
-    else
+   	if (it != error_pages.end())
+		return it->second;
+	else
 	{
-        static std::string default_page = "<html><body><h1>Error</h1></body></html>";
-        return default_page;
-    }
+		static std::string default_page = "<html><body><h1>Error</h1></body></html>";
+		return default_page;
+	}
 }
 
 /**

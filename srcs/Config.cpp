@@ -171,7 +171,7 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
 			else if (tokens[i] == "error_page" && i + 2 < tokens.size())
 				conf.addErrorPage(atoi(tokens[i + 1].c_str()), conf.getRoot() + strip_semicolon(tokens[i + 2]));
 			else if (tokens[i] == "client_max_body_size")
-				conf.setClientMaxBodySize(atoi(tokens[i + 1].c_str()));
+				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
 			else if (tokens[i] == "location")
 				conf.addLocation(parse_loc(i, tokens, conf.getRoot()));
 		}
