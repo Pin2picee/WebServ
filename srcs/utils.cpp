@@ -164,7 +164,6 @@ std::string parseMultipartFormData(const std::string &body, std::string &filenam
     std::istringstream stream(body);
     std::string line;
 
-    // Récupérer la première ligne comme boundary
     if (!std::getline(stream, line))
         return "";
     if (!line.empty() && line[line.size() - 1] == '\r') line.erase(line.size() - 1);
