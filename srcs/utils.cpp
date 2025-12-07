@@ -165,13 +165,13 @@ std::string parseMultipartFormData(const std::string &body, std::string &filenam
 
 	if (!std::getline(stream, line))
 		return "";
-	if (!line.empty() && line[line.size() - 1] == '\r')
-		line.erase(line.size() - 1);
+	if (!line.empty())
+		stripe(line, '\r', RIGHT);
 	std::string boundary = line;
 	if (std::getline(stream, line))
 	{
-		if (!line.empty() && line[line.size() - 1] == '\r')
-			line.erase(line.size() - 1);
+		if (!line.empty())
+			stripe(line, '\r', RIGHT);
 		if (line == boundary + "--")
 			return "";
 		std::string contentDisposition;
@@ -179,8 +179,7 @@ std::string parseMultipartFormData(const std::string &body, std::string &filenam
 		{
 			if (!line.empty() && line.find("Content-Disposition:") != std::string::npos)
 				contentDisposition = line;
-			if (contentDisposition[contentDisposition.size() - 1] == '\r')
-				contentDisposition.erase(contentDisposition.size() - 1);
+			stripe(contentDisposition, '\r', RIGHT);
 		}
 		size_t fnamePos = contentDisposition.find("filename=\"");
 		if (fnamePos != std::string::npos)
@@ -202,8 +201,7 @@ std::string parseMultipartFormData(const std::string &body, std::string &filenam
 			contentStream << line << "\n";
 		}
 		content = contentStream.str();
-		if (!content.empty() && content[content.size() - 1] == '\n')
-			content.erase(content.size() - 1);
+		stripe(content, '\n', RIGHT);
 	}
 	return content;
 }

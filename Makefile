@@ -10,6 +10,7 @@ SRCS			=	main.cpp \
 					srcs/Server.cpp \
 					srcs/Config.cpp \
 					srcs/Socket.cpp \
+					srcs/stripe.cpp \
 					srcs/Monitor.cpp \
 					srcs/ResponseHandler.cpp
 SRC_O			= $(SRCS:.cpp=.o)

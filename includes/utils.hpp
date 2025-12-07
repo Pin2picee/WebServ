@@ -54,6 +54,12 @@ std::string readFile(const std::string& filepath);
 long long	convertSize(const std::string &input);
 std::string parseMultipartFormData(const std::string &body, std::string &filename);
 
+enum StripSide { LEFT, RIGHT, BOTH };
+
+void stripe(std::string &s, StripSide side = BOTH);
+void stripe(std::string &s, char c, StripSide side = BOTH);
+void stripe(std::string &s, const std::string &set, StripSide side = BOTH);
+
 /**
  * @brief
  * Fill the different variables of a request structure.
