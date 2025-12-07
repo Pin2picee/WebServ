@@ -158,57 +158,52 @@ long long convertSize(const std::string &input)
 
 std::string parseMultipartFormData(const std::string &body, std::string &filename)
 {
-    std::string content;
-    filename.clear();
+	std::string content;
 
-    std::istringstream stream(body);
-    std::string line;
+	std::istringstream stream(body);
+	std::string line;
 
-    if (!std::getline(stream, line))
-        return "";
-    if (!line.empty() && line[line.size() - 1] == '\r') line.erase(line.size() - 1);
-    std::string boundary = line;
-
-    while (std::getline(stream, line)) {
-        if (!line.empty() && line[line.size() - 1] == '\r') line.erase(line.size() - 1);
-
-        // Si on rencontre le boundary final, on arrête
-        if (line == boundary + "--") break;
-        if (line != boundary) continue; // sinon, on cherche le début d'une partie
-
-        // Lire les headers de la partie
-        std::string contentDisposition;
-        while (std::getline(stream, line) && line != "\r" && !line.empty()) {
-            if (!line.empty() && line[line.size() - 1] == '\r') line.erase(line.size() - 1);
-            if (line.find("Content-Disposition:") != std::string::npos)
-                contentDisposition = line;
-        }
-
-        // Extraire le filename
-        size_t fnamePos = contentDisposition.find("filename=\"");
-        if (fnamePos != std::string::npos) {
-            fnamePos += 10; // longueur de 'filename="'
-            size_t endPos = contentDisposition.find("\"", fnamePos);
-            if (endPos != std::string::npos)
-                filename = contentDisposition.substr(fnamePos, endPos - fnamePos);
-        }
-
-        // Si pas de nom de fichier, ignorer cette partie
-        if (filename.empty())
-            return "";
-
-        // Lire le contenu jusqu'au prochain boundary
-        std::ostringstream contentStream;
-        while (std::getline(stream, line)) {
-            if (!line.empty() && line[line.size() - 1] == '\r') line.erase(line.size() - 1);
-            if (line == boundary || line == boundary + "--") break;
-            contentStream << line << "\n";
-        }
-
-        content = contentStream.str();
-        if (!content.empty() && content[content.size() - 1] == '\n') content.erase(content.size() - 1); // enlever le dernier \n
-        break; // on ne gère qu'un fichier à la fois
-    }
-
-    return content;
+	if (!std::getline(stream, line))
+		return "";
+	if (!line.empty() && line[line.size() - 1] == '\r')
+		line.erase(line.size() - 1);
+	std::string boundary = line;
+	if (std::getline(stream, line))
+	{
+		if (!line.empty() && line[line.size() - 1] == '\r')
+			line.erase(line.size() - 1);
+		if (line == boundary + "--")
+			return "";
+		std::string contentDisposition;
+		while (std::getline(stream, line) && line != "\r" && !line.empty())
+		{
+			if (!line.empty() && line.find("Content-Disposition:") != std::string::npos)
+				contentDisposition = line;
+			if (contentDisposition[contentDisposition.size() - 1] == '\r')
+				contentDisposition.erase(contentDisposition.size() - 1);
+		}
+		size_t fnamePos = contentDisposition.find("filename=\"");
+		if (fnamePos != std::string::npos)
+		{
+			fnamePos += 10;
+			size_t endPos = contentDisposition.find("\"", fnamePos);
+			if (endPos != std::string::npos)
+				filename = contentDisposition.substr(fnamePos, endPos - fnamePos);
+		}
+		if (filename.empty())
+			return "";
+		std::ostringstream contentStream;
+		while (std::getline(stream, line))
+		{
+			if (!line.empty() && line[line.size() - 1] == '\r')
+				line.erase(line.size() - 1);
+			if (line == boundary || line == boundary + "--")
+				break;
+			contentStream << line << "\n";
+		}
+		content = contentStream.str();
+		if (!content.empty() && content[content.size() - 1] == '\n')
+			content.erase(content.size() - 1);
+	}
+	return content;
 }

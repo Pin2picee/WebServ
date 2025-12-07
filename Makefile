@@ -1,8 +1,8 @@
 MAKEFLAGS += -s  # global silence mode
 
 C++				= c++
-HDRS			= ./includes
-FLAGS			= -Wall -Wextra -Werror -std=c++98 -g -I $(HDRS)
+HDRS      = ./includes ./libs/includes
+FLAGS			= -Wall -Wextra -Werror -std=c++98 -g $(addprefix -I, $(HDRS))
 
 SRCS			=	main.cpp \
 					srcs/utils.cpp \
@@ -11,7 +11,7 @@ SRCS			=	main.cpp \
 					srcs/Config.cpp \
 					srcs/Socket.cpp \
 					srcs/Monitor.cpp \
-					srcs/ResponseHandler.cpp 
+					srcs/ResponseHandler.cpp
 SRC_O			= $(SRCS:.cpp=.o)
 
 NAME			= webserv
@@ -24,10 +24,16 @@ RESET			= "\033[0m"
 
 all: $(NAME)
 
+# $(LIBFTCPP):
+# 	@echo $(CYAN)"Building libftcpp library in submodule..."$(RESET)
+# 	@$(MAKE) -C libs
+
 $(NAME): $(SRC_O)
+	@echo $(CYAN)"Building libftcpp library in submodule..."$(RESET)
+	@$(MAKE) -C libs
 	@echo $(CYAN)"Creation of $(NAME) executable..."$(RESET)
-	@$(C++) $(FLAGS) $(SRC_O) -o $(NAME)
-	@echo $(GREEN) "\"$(NAME)\" executable created !"$(RESET)
+	@$(C++) $(FLAGS) $(SRC_O) libs/libftcpp.a -o $(NAME)
+	@echo $(GREEN)"\"$(NAME)\" executable created !"$(RESET)
 
 %.o: %.cpp
 	@echo $(CYAN)"Compilation of $<..."$(RESET)
@@ -36,10 +42,12 @@ $(NAME): $(SRC_O)
 clean:
 	@echo $(CYAN)"objets files suppression..."$(RESET)
 	@find . -name "*.o" -type f -exec $(RM) {} \;
+	@if [ -d libs ]; then $(MAKE) -C libs clean; fi
 
 fclean: clean
 	@echo $(CYAN)"executable suppression..."$(RESET)
-	@$(RM) $(NAME) 
+	@$(RM) $(NAME)
+	@if [ -d libs ]; then $(MAKE) -C libs fclean; fi
 
 re: fclean all
 

@@ -128,12 +128,17 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 {
 	Response res;
 
-	std::cout << "path = " << req.path << "\nbody = " << req.body << std::endl;
-
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
 		makeResponse(res, 405, readFile(_server.getErrorPage(405)), getMimeType(req.path));
 	else if (req.body.size() > _server.getClientMaxBodySize())
 		makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req.path));
+	std::string filename = "", content = parseMultipartFormData(req.body, filename);
+	std::cout << "body = " << req.body << std::endl;
+	if (filename.empty())
+	{
+		makeResponse(res, 204, "", getMimeType("204.html"));
+		return res;
+	}
 	else if (loc.upload_dir != RED "none")
 	{
 		// Récupérer le boundary depuis Content-Type
