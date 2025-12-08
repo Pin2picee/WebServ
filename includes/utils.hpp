@@ -20,6 +20,7 @@ struct Request
 	std::string							version;
 	std::string							method;
 	std::string							uri;
+	std::string							query;
 	std::string							path;
 	std::string							body;
 	std::map<std::string, std::string>	headers;
@@ -54,6 +55,8 @@ long long	convertSize(const std::string &input);
 std::string GetUploadFilename(const std::string &body);
 void		displayRequestInfo(const Request &req);
 std::string getFileName(const std::string &fileBody);
+std::string makeJsonError(const std::string &msg);
+std::string urlDecode(const std::string &str);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 
@@ -78,7 +81,6 @@ inline Response &makeResponse(Response &res, int status, const std::string &body
 	res.content_type = content_type;
 	res.version = "HTTP/1.1";
 	return res;
-
 }
 
 extern std::vector<Socket *>all_socket;

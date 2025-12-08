@@ -42,7 +42,7 @@
       event.preventDefault();  // Empêche le formulaire de se soumettre de manière traditionnelle
 
       const filename = document.getElementById("filename").value;
-      const url = `/delete_file?filename=${encodeURIComponent(filename)}`;  // URL de ta route de suppression avec le nom du fichier dans la query string
+      const url = `/uploads?filename=${encodeURIComponent(filename)}`;  // URL de ta route de suppression avec le nom du fichier dans la query string
 
       fetch(url, {
         method: 'DELETE',

@@ -225,29 +225,25 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
  */
 Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
 {
-    Response res;
+	Response res;
 
-    std::cout << "delete" << std::endl;
-	displayRequestInfo(req);
-    if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
-        return makeResponse(res, 405, "DELETE not allowed on this location", getMimeType(req));
-    std::string filename;
-    std::map<std::string, std::string>::const_iterator it = req.headers.find("filename");
-    if (it != req.headers.end())
-        filename = it->second;
-    else
-		filename = getFileName(req.body);
-    if (filename.empty())
-        return makeResponse(res, 400, "Filename is required", getMimeType(req));
-    std::cout << "Deleting file: " << filename << std::endl;
-    std::string deletePath = _server.getRoot() + "/" + loc.upload_dir + "/" + filename;
-    std::ifstream file(deletePath.c_str());
-    if (!file || std::remove(deletePath.c_str()) != 0)
-    {
-        std::cerr << "Failed to delete file: " << deletePath << std::endl;
-        return makeResponse(res, 404, "File not found", getMimeType(req));
-    }
-    return makeResponse(res, 200, "File deleted successfully", getMimeType(req));
+	/* std::cout << "delete" << std::endl;
+	displayRequestInfo(req); */
+	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
+		return makeResponse(res, 405, makeJsonError("DELETE not allowed on this location"), getMimeType(req));
+	std::cout << "server root = " << _server.getRoot() << "\npath = " << req.path << "\nquery = " << req.query << std::endl;
+	std::string filename = urlDecode(req.query);
+	if (filename.empty())
+		return makeResponse(res, 400, makeJsonError("Filename is required"), getMimeType(req));
+	std::cout << "Deleting file: " << filename << std::endl;
+	std::string deletePath = _server.getRoot() + "/" + loc.upload_dir + "/" + filename;
+	std::ifstream file(deletePath.c_str());
+	if (!file || std::remove(deletePath.c_str()) != 0)
+	{
+		std::cerr << "Failed to delete file: " << deletePath << std::endl;
+		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
+	}
+	return makeResponse(res, 200, makeJsonError("File deleted successfully"), getMimeType(req));
 }
 
 
@@ -351,34 +347,34 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
  */
 std::string ResponseHandler::getMimeType(const Request &req)
 {
-    std::map<std::string, std::string>::const_iterator it = req.headers.find("Content-Type");
-    if (it != req.headers.end())
+	std::map<std::string, std::string>::const_iterator it = req.headers.find("Content-Type");
+	if (it != req.headers.end())
 	{
-        std::string contentType = it->second;
-        if (contentType.find("text/html") != std::string::npos)
-            return MIME_TEXT_HTML;
-        if (contentType.find("text/css") != std::string::npos)
-            return MIME_TEXT_CSS;
-        if (contentType.find("application/javascript") != std::string::npos || contentType.find("text/javascript") != std::string::npos)
-            return MIME_TEXT_JAVASCRIPT;
-        if (contentType.find("image/jpeg") != std::string::npos)
-            return MIME_IMAGE_JPEG;
-        if (contentType.find("image/png") != std::string::npos)
-            return MIME_IMAGE_PNG;
-        if (contentType.find("image/gif") != std::string::npos)
-            return MIME_IMAGE_GIF;
-    }
-    if (req.path.find(".html") != std::string::npos)
-        return MIME_TEXT_HTML;
-    if (req.path.find(".css") != std::string::npos)
-        return MIME_TEXT_CSS;
-    if (req.path.find(".js") != std::string::npos)
-        return MIME_TEXT_JAVASCRIPT;
-    if (req.path.find(".jpg") != std::string::npos || req.path.find(".jpeg") != std::string::npos)
-        return MIME_IMAGE_JPEG;
-    if (req.path.find(".png") != std::string::npos)
-        return MIME_IMAGE_PNG;
-    if (req.path.find(".gif") != std::string::npos)
-        return MIME_IMAGE_GIF;
-    return MIME_TEXT_HTML;
+		std::string contentType = it->second;
+		if (contentType.find("text/html") != std::string::npos)
+			return MIME_TEXT_HTML;
+		if (contentType.find("text/css") != std::string::npos)
+			return MIME_TEXT_CSS;
+		if (contentType.find("application/javascript") != std::string::npos || contentType.find("text/javascript") != std::string::npos)
+			return MIME_TEXT_JAVASCRIPT;
+		if (contentType.find("image/jpeg") != std::string::npos)
+			return MIME_IMAGE_JPEG;
+		if (contentType.find("image/png") != std::string::npos)
+			return MIME_IMAGE_PNG;
+		if (contentType.find("image/gif") != std::string::npos)
+			return MIME_IMAGE_GIF;
+	}
+	if (req.path.find(".html") != std::string::npos)
+		return MIME_TEXT_HTML;
+	if (req.path.find(".css") != std::string::npos)
+		return MIME_TEXT_CSS;
+	if (req.path.find(".js") != std::string::npos)
+		return MIME_TEXT_JAVASCRIPT;
+	if (req.path.find(".jpg") != std::string::npos || req.path.find(".jpeg") != std::string::npos)
+		return MIME_IMAGE_JPEG;
+	if (req.path.find(".png") != std::string::npos)
+		return MIME_IMAGE_PNG;
+	if (req.path.find(".gif") != std::string::npos)
+		return MIME_IMAGE_GIF;
+	return MIME_TEXT_HTML;
 }

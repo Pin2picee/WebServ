@@ -174,22 +174,22 @@ std::string GetUploadFilename(const std::string &body)
 
 void displayRequestInfo(const Request &req)
 {
-    // Affichage des informations simples
-    std::cout << RED "Version: " RESET << req.version << std::endl;
-    std::cout << RED "Method: " RESET << req.method << std::endl;
-    std::cout << RED "URI: " RESET << req.uri << std::endl;
-    std::cout << RED "Path: " RESET << req.path << std::endl;
+	// Affichage des informations simples
+	std::cout << RED "Version: " RESET << req.version << std::endl;
+	std::cout << RED "Method: " RESET << req.method << std::endl;
+	std::cout << RED "URI: " RESET << req.uri << std::endl;
+	std::cout << RED "Path: " RESET << req.path << std::endl;
 
-    // Affichage des en-têtes (headers)
-    std::cout << RED "Headers:" RESET << std::endl;
-    for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
-    {
-        std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
-    }
+	// Affichage des en-têtes (headers)
+	std::cout << RED "Headers:" RESET << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
+	{
+		std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
+	}
 
-    // Affichage du corps de la requête (body)
-    std::cout << RED "Body: " RESET << std::endl;
-    std::cout << req.body << std::endl;
+	// Affichage du corps de la requête (body)
+	std::cout << RED "Body: " RESET << std::endl;
+	std::cout << req.body << std::endl;
 }
 
 std::string getFileName(const std::string &fileBody)
@@ -204,3 +204,35 @@ std::string getFileName(const std::string &fileBody)
 	}
 	return "";
 }
+
+std::string makeJsonError(const std::string &msg)
+{
+	return std::string("{\"status\":\"error\",\"message\":\"") + msg + "\"}";
+}
+
+std::string urlDecode(const std::string &str)
+{
+    std::string result;
+    for (std::string::size_type i = 0; i < str.length(); ++i)
+    {
+        if (str[i] == '%')
+        {
+            if (i + 2 < str.length())
+            {
+                std::string hexStr = str.substr(i + 1, 2);
+                char ch = static_cast<char>(std::strtol(hexStr.c_str(), NULL, 16));
+                result += ch;
+                i += 2;
+            }
+            else
+                result += '%';
+        }
+        else if (str[i] == '+')
+            result += ' ';
+        else
+            result += str[i];
+    }
+    return result;
+}
+
+
