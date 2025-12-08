@@ -119,7 +119,7 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 
 /**
  * @brief
- * Manage the GET request of a file.
+ * Manage the POST request of a file.
  * 
  * @param boundary The start and end point of the file body.
  * @param res The `Response` structure that will be returned.
@@ -160,7 +160,7 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 
 /**
  * @brief
- * Manage a GET request by finding if the content is a file or not and produce a response accordingly.
+ * Manage a POST request by finding if the content is a file or not and produce a response accordingly.
  * 
  * @param res The `Response` structure that will be returned.
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
