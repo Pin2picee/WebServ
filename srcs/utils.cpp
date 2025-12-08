@@ -40,29 +40,6 @@ void	init_default_errors(Server &conf)
 	errors[503] = root + "/errors/503.html";
 };
 
-/**
- * @param path The request path
- *  
- * @return
- * Return the MIME (Multipurpose Internet Mail Extensions) content type that have `Response` when responding to a `Request`.
- */
-std::string getMimeType(const std::string &path)
-{
-	if (path.find(".html") != std::string::npos)
-		return MIME_TEXT_HTML;
-	if (path.find(".css") != std::string::npos)
-		return MIME_TEXT_CSS;
-	if (path.find(".js") != std::string::npos)
-		return MIME_TEXT_JAVASCRIPT;
-	if (path.find(".jpg") != std::string::npos || path.find(".jpeg") != std::string::npos)
-		return MIME_IMAGE_JPEG;
-	if (path.find(".png") != std::string::npos)
-		return MIME_IMAGE_PNG;
-	if (path.find(".gif") != std::string::npos)
-		return MIME_IMAGE_GIF;
-	return MIME_TEXT_HTML;
-}
-
 std::vector<Socket *>all_socket;
 volatile sig_atomic_t	on = 1;
 
@@ -156,8 +133,9 @@ long long convertSize(const std::string &input)
 	return base * multiplier;
 }
 
-std::string parseMultipartFormData(const std::string &body, std::string &filename)
+std::string GetUploadFilename(const std::string &body)
 {
+	std::string filename;
 	std::string content;
 
 	std::istringstream stream(body);
@@ -168,40 +146,61 @@ std::string parseMultipartFormData(const std::string &body, std::string &filenam
 	if (!line.empty())
 		stripe(line, '\r', RIGHT);
 	std::string boundary = line;
-	if (std::getline(stream, line))
+	if (std::getline(stream, line) && !line.empty())
+		stripe(line, '\r', RIGHT);
+	if (line == boundary + "--")
+		return "";
+	std::string contentDisposition;
+	while (line != "\r" && !line.empty())
 	{
-		if (!line.empty())
-			stripe(line, '\r', RIGHT);
-		if (line == boundary + "--")
-			return "";
-		std::string contentDisposition;
-		while (std::getline(stream, line) && line != "\r" && !line.empty())
+		if (!line.empty() && line.find("Content-Disposition:") != std::string::npos)
 		{
-			if (!line.empty() && line.find("Content-Disposition:") != std::string::npos)
-				contentDisposition = line;
+			contentDisposition = line;
 			stripe(contentDisposition, '\r', RIGHT);
+			break ;
 		}
-		size_t fnamePos = contentDisposition.find("filename=\"");
-		if (fnamePos != std::string::npos)
-		{
-			fnamePos += 10;
-			size_t endPos = contentDisposition.find("\"", fnamePos);
-			if (endPos != std::string::npos)
-				filename = contentDisposition.substr(fnamePos, endPos - fnamePos);
-		}
-		if (filename.empty())
-			return "";
-		std::ostringstream contentStream;
-		while (std::getline(stream, line))
-		{
-			if (!line.empty() && line[line.size() - 1] == '\r')
-				line.erase(line.size() - 1);
-			if (line == boundary || line == boundary + "--")
-				break;
-			contentStream << line << "\n";
-		}
-		content = contentStream.str();
-		stripe(content, '\n', RIGHT);
+		std::getline(stream, line);
 	}
-	return content;
+	size_t fnamePos = contentDisposition.find("filename=\"");
+	if (fnamePos != std::string::npos)
+	{
+		fnamePos += 10;
+		size_t endPos = contentDisposition.find("\"", fnamePos);
+		if (endPos != std::string::npos)
+			filename = contentDisposition.substr(fnamePos, endPos - fnamePos);
+	}
+	return filename;
+}
+
+void displayRequestInfo(const Request &req)
+{
+    // Affichage des informations simples
+    std::cout << RED "Version: " RESET << req.version << std::endl;
+    std::cout << RED "Method: " RESET << req.method << std::endl;
+    std::cout << RED "URI: " RESET << req.uri << std::endl;
+    std::cout << RED "Path: " RESET << req.path << std::endl;
+
+    // Affichage des en-têtes (headers)
+    std::cout << RED "Headers:" RESET << std::endl;
+    for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
+    {
+        std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
+    }
+
+    // Affichage du corps de la requête (body)
+    std::cout << RED "Body: " RESET << std::endl;
+    std::cout << req.body << std::endl;
+}
+
+std::string getFileName(const std::string &fileBody)
+{
+	std::size_t fileStart = fileBody.find("filename=\"");
+	if (fileStart != std::string::npos)
+	{
+		fileStart += 10;
+		size_t endPos = fileBody.find("\"", fileStart);
+		if (endPos != std::string::npos)
+			return fileBody.substr(fileStart, endPos - fileStart);
+	}
+	return "";
 }

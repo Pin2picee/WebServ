@@ -46,13 +46,14 @@ struct Response
 	Response() : version("HTTP/1.1"){};
 };
 
-std::string	getMimeType(const std::string &path);
 std::string	strip_semicolon(const std::string &s);
 void		init_default_errors(Server &conf);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 std::string readFile(const std::string& filepath);
 long long	convertSize(const std::string &input);
-std::string parseMultipartFormData(const std::string &body, std::string &filename);
+std::string GetUploadFilename(const std::string &body);
+void		displayRequestInfo(const Request &req);
+std::string getFileName(const std::string &fileBody);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 
@@ -70,12 +71,13 @@ void stripe(std::string &s, const std::string &set, StripSide side = BOTH);
  * @param content_type The MIME content type (sed by default as text plain).
  */
 
-inline void	makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_PLAIN)
+inline Response &makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_PLAIN)
 {
 	res.status_code = status;
 	res.body = body;
 	res.content_type = content_type;
 	res.version = "HTTP/1.1";
+	return res;
 
 }
 
