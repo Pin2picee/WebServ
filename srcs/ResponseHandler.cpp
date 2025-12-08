@@ -55,6 +55,8 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
 		makeResponse(res, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
+	if (req.path == "/teapot")
+	    return makeResponse(res, 418, readFile(_server.getErrorPage(418)), getMimeType(req));
 	else if (full_path.empty() || full_path == RED "none")
 		makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
 	else if (stat(full_path.c_str(), &s) == 0 && S_ISDIR(s.st_mode))
@@ -146,7 +148,6 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 		fileEnd -= 2;
 		if (fileEnd - fileStart > _server.getClientMaxBodySize())
 			return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-		std::cout << "filename = " << filename << std::endl;
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
 			return makeResponse(res, 500, readFile(_server.getErrorPage(500)), getMimeType(req));
@@ -205,8 +206,6 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 {
 	Response res;
 
-	displayRequestInfo(req);
-	std::cout << "post" << std::endl;
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
 	if (req.body.size() > _server.getClientMaxBodySize())
@@ -227,11 +226,8 @@ Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
 {
 	Response res;
 
-	/* std::cout << "delete" << std::endl;
-	displayRequestInfo(req); */
 	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
 		return makeResponse(res, 405, makeJsonError("DELETE not allowed on this location"), getMimeType(req));
-	std::cout << "server root = " << _server.getRoot() << "\npath = " << req.path << "\nquery = " << req.query << std::endl;
 	std::string filename = urlDecode(req.query);
 	if (filename.empty())
 		return makeResponse(res, 400, makeJsonError("Filename is required"), getMimeType(req));

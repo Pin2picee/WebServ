@@ -25,6 +25,24 @@
     input[type="file"] {
       margin-bottom: 15px;
     }
+
+    /* Style bouton identique à la page Webserv Test */
+    a.button {
+      display: inline-block;
+      padding: 12px 25px;
+      background: white;
+      color: #0072ff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.2s ease;
+      margin-top: 15px;
+    }
+
+    a.button:hover {
+      background: #e8f2ff;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -35,6 +53,9 @@
     <input type="file" name="file">
     <button type="submit">Upload</button>
   </form>
+
+  <!-- Bouton pour revenir à l'accueil avec le même style que Webserv Test -->
+  <a href="index.html" class="button">Return to home</a>
 
 </body>
 </html>
