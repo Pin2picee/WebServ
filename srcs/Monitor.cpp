@@ -333,4 +333,3 @@ void Monitor::updateClientCookies(Client &client, const Response &resp)
             client.setCookies(name, value);
     }
 }
-
