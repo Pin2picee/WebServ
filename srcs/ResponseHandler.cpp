@@ -135,9 +135,10 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 	std::size_t fileStart = req.body.find("filename=\"");
 	if (fileStart != std::string::npos)
 	{
-		std::string filename =  _server.getRoot() + "/" + loc.upload_dir + "/" + getFileName(req.body);
-		if (filename == loc.upload_dir)
+		std::string filename = getFileName(req.body);
+		if (filename.empty())
 			return makeResponse(res, 204, "", getMimeType(req));
+		filename =  _server.getRoot() + "/" + loc.upload_dir + "/" + filename;
 		fileStart = req.body.find("\r\n\r\n", fileStart);
 		if (fileStart == std::string::npos)
 			return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
@@ -148,6 +149,7 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 		fileEnd -= 2;
 		if (fileEnd - fileStart > _server.getClientMaxBodySize())
 			return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
+		std::cout << "filename" << filename << std::endl;
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
 			return makeResponse(res, 500, readFile(_server.getErrorPage(500)), getMimeType(req));
@@ -229,6 +231,10 @@ Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
 	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
 		return makeResponse(res, 405, makeJsonError("DELETE not allowed on this location"), getMimeType(req));
 	std::string filename = urlDecode(req.query);
+	std::string::size_type pos = filename.rfind('/');
+	if (pos != std::string::npos)
+		filename = filename.substr(pos + 1);
+	std::cout << filename << std::endl;
 	if (filename.empty())
 		return makeResponse(res, 400, makeJsonError("Filename is required"), getMimeType(req));
 	std::cout << "Deleting file: " << filename << std::endl;
