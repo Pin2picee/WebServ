@@ -138,7 +138,7 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 		std::string filename = getFileName(req.body);
 		if (filename.empty())
 			return makeResponse(res, 204, "", getMimeType(req));
-		filename =  _server.getRoot() + "/" + loc.upload_dir + "/" + filename;
+		filename =  _server.getRoot() + loc.upload_dir + "/" + filename;
 		fileStart = req.body.find("\r\n\r\n", fileStart);
 		if (fileStart == std::string::npos)
 			return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
@@ -149,7 +149,7 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 		fileEnd -= 2;
 		if (fileEnd - fileStart > _server.getClientMaxBodySize())
 			return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-		std::cout << "filename" << filename << std::endl;
+		std::cout << "filename" << " \"" << filename << "\"." << std::endl;
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
 			return makeResponse(res, 500, readFile(_server.getErrorPage(500)), getMimeType(req));
