@@ -191,7 +191,11 @@ Request	Client::ExtractRequest()
 	line = request.substr(0, pos);//toute la premiere ligne
 	std::stringstream ss(line);//decoupe la premiere ligne
 	ss >> tmp.method >> tmp.uri >> tmp.version;
-	tmp.path = tmp.uri.substr(0, tmp.uri.find("?"));
+	size_t qmark = tmp.uri.find('?');
+	tmp.path = tmp.uri.substr(0, qmark);
+	tmp.query = "";
+	if (qmark != std::string::npos)
+		tmp.query = tmp.uri.substr(qmark + 10);
 
 	//extract HEADERS LINES
 	while (pos != pos_finish)

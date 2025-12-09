@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Delete File</title>
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+    }
+
+    form {
+      background: rgba(255,255,255,0.15);
+      padding: 20px 30px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+
+    input[type="text"], button {
+      margin-bottom: 15px;
+    }
+
+    /* Style identique aux boutons de Webserv Test */
+    a.button {
+      display: inline-block;
+      padding: 12px 25px;
+      background: white;
+      color: #0072ff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.2s ease;
+      margin-top: 15px;
+    }
+
+    a.button:hover {
+      background: #e8f2ff;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Delete a File</h2>
+
+  <form id="deleteForm">
+    <input type="text" id="filename" placeholder="Enter filename" required>
+    <button type="submit">Delete</button>
+  </form>
+
+  <!-- Nouveau bouton ajouté ici -->
+  <a href="index.html" class="button">Return to Home</a>
+
+  <script>
+    // JavaScript pour envoyer une requête DELETE via fetch
+    document.getElementById("deleteForm").addEventListener("submit", function(event) {
+      event.preventDefault();  // Empêche le formulaire de se soumettre de manière traditionnelle
+
+      const filename = document.getElementById("filename").value;
+      const url = `/uploads?filename=${encodeURIComponent(filename)}`;  // URL de ta route de suppression avec le nom du fichier dans la query string
+
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',  // Accepte une réponse JSON
+        },
+      })
+      .then(response => response.json())  // On attend une réponse JSON
+      .then(data => {
+        if (data.status === "success") {
+          alert("File deleted successfully!");
+        } else {
+          alert("Error: " + data.message);
+        }
+      })
+      .catch(error => {
+        alert("An error occurred: " + error);
+      });
+    });
+  </script>
+
+</body>
+</html>
