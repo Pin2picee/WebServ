@@ -43,8 +43,9 @@ struct Response
 	int			status_code;
 	std::string	content_type;
 	std::string	body;
+	std::vector<std::string> headers;
 
-	Response() : version("HTTP/1.1"){};
+	Response() : version("HTTP/1.1"), status_code(200), content_type("text/html"){};
 };
 
 std::string	strip_semicolon(const std::string &s);
