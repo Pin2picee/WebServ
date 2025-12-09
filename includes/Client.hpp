@@ -26,6 +26,7 @@ class Client
 		bool	request_finish;
 		bool	correct_syntax;
 		size_t  offset;
+		std::map<std::string, std::string>	cookies;
 
 		Client();
 	public :// a changer
@@ -39,6 +40,7 @@ class Client
 		
 	//set
 		void			setRequest(std::string buf);
+		void			setCookies(std::string name, std::string value);
 		int				ParseSyntaxRequest(void);
 		void			setReponse(std::string buf);
 	//get
@@ -48,6 +50,7 @@ class Client
 		bool			&getFinishRequest();
 		Socket			*getMySocket();
 		bool			&getSyntax();
+		std::map<std::string, std::string> &getCookies();
 	//method
 		void			resetInf();
 		Request			ExtractRequest();

@@ -186,16 +186,14 @@ void	Server::addLocation(const Locations& loc)
  * 
  * @return a Response struct.
  */
-Response parseCGIOutput(const std::string &output)
+Response Server::parseCGIOutput(const std::string &output, const Request &req) const
 {
 	Response res;
-	res.status_code = 200; // default value
-	res.content_type = "text/html"; // default value
-
-	// Separate headers from body
+	res = makeResponse(res, req, 202, readFile(getErrorPage(200)), MIME_TEXT_HTML);//202 to avoid creating a cookie too early
+	res.status_code = 200;
 	size_t header_end = output.find("\r\n\r\n");
 	if (header_end == std::string::npos)
-		header_end = output.find("\n\n"); // case where the script only use \n
+		header_end = output.find("\n\n");
 
 	std::string header_part = output.substr(0, header_end);
 	std::string body_part;
@@ -222,8 +220,9 @@ Response parseCGIOutput(const std::string &output)
 			res.status_code = std::atoi(status_str.c_str());
 		}
 	}
-
 	res.body = body_part;
+	if (res.status_code == 200 && req.cookies.find("User") == req.cookies.end())
+		setCookie(res, "User");
 	return res;
 }
 
@@ -333,8 +332,7 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 
 		waitpid(pid, NULL, 0);
 	}
-
-	return parseCGIOutput(output);
+	return parseCGIOutput(output, req);
 }
 
 

@@ -99,9 +99,14 @@ void	Client::setRequest(std::string buf)
 	}
 }
 
+void	Client::setCookies(std::string name, std::string value)
+{
+	this->cookies[name] = value;
+}
+
 void	Client::setReponse(std::string buf)
 {
-		this->reponse = buf;
+	this->reponse = buf;
 }
 
 std::string	&Client::getRequest()
@@ -132,6 +137,11 @@ std::string &Client::getReponse()
 Socket *Client::getMySocket()
 {
 	return (this->my_socket);
+}
+
+std::map<std::string, std::string> &Client::getCookies()
+{
+    return this->cookies;
 }
 
 void			Client::AddOffset(size_t nb)
@@ -219,6 +229,8 @@ Request	Client::ExtractRequest()
 			j--;
 		it->second = it->second.substr(i, (j - i) + 1);
 	}
+	tmp.cookies = this->cookies;
+	parseCookies(tmp);
 	pos += 4;
 	tmp.body = request.substr(pos);
 	return (tmp);

@@ -174,22 +174,47 @@ std::string GetUploadFilename(const std::string &body)
 
 void displayRequestInfo(const Request &req)
 {
-	// Affichage des informations simples
-	std::cout << RED "Version: " RESET << req.version << std::endl;
-	std::cout << RED "Method: " RESET << req.method << std::endl;
-	std::cout << RED "URI: " RESET << req.uri << std::endl;
-	std::cout << RED "Path: " RESET << req.path << std::endl;
+	print("displayRequestInfo :");
+    // Affichage des informations simples
+    std::cout << RED "Version: " RESET << req.version << std::endl;
+    std::cout << RED "Method: " RESET << req.method << std::endl;
+    std::cout << RED "URI: " RESET << req.uri << std::endl;
+    std::cout << RED "Path: " RESET << req.path << std::endl;
+    // Affichage des en-têtes (headers)
+    std::cout << RED "Headers:" RESET << std::endl;
+    for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
+        std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
+    // Affichage des cookies
+    if (!req.cookies.empty())
+    {
+        std::cout << RED "Cookies:" RESET << std::endl;
+        for (std::map<std::string, std::string>::const_iterator it = req.cookies.begin(); it != req.cookies.end(); ++it)
+            std::cout << "  " MAGENTA << it->first << ": " RESET << it->second << std::endl;
+    }
+    // Affichage du corps de la requête (body)
+    std::cout << RED "Body: " RESET << std::endl;
+    std::cout << req.body << std::endl;
+}
 
-	// Affichage des en-têtes (headers)
-	std::cout << RED "Headers:" RESET << std::endl;
-	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
-	{
-		std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
-	}
+void displayResponseInfo(const Response &res)
+{
+	print("displayResponseInfo :");
+    // Affichage des informations principales
+    std::cout << RED "Version: " RESET << res.version << std::endl;
+    std::cout << RED "Status Code: " RESET << res.status_code << std::endl;
+    std::cout << RED "Content-Type: " RESET << res.content_type << std::endl;
 
-	// Affichage du corps de la requête (body)
-	std::cout << RED "Body: " RESET << std::endl;
-	std::cout << req.body << std::endl;
+    // Affichage des headers
+    if (!res.headers.empty())
+    {
+        std::cout << RED "Headers:" RESET << std::endl;
+        for (std::vector<std::string>::const_iterator it = res.headers.begin(); it != res.headers.end(); ++it)
+            std::cout << "  " CYAN << *it << RESET << std::endl;
+    }
+
+    // Affichage du corps de la réponse
+    /* std::cout << RED "Body: " RESET << std::endl;
+    std::cout << res.body << std::endl; */
 }
 
 std::string getFileName(const std::string &fileBody)
@@ -212,27 +237,83 @@ std::string makeJsonError(const std::string &msg)
 
 std::string urlDecode(const std::string &str)
 {
-    std::string result;
-    for (std::string::size_type i = 0; i < str.length(); ++i)
-    {
-        if (str[i] == '%')
-        {
-            if (i + 2 < str.length())
-            {
-                std::string hexStr = str.substr(i + 1, 2);
-                char ch = static_cast<char>(std::strtol(hexStr.c_str(), NULL, 16));
-                result += ch;
-                i += 2;
-            }
-            else
-                result += '%';
-        }
-        else if (str[i] == '+')
-            result += ' ';
-        else
-            result += str[i];
-    }
-    return result;
+	std::string result;
+	for (std::string::size_type i = 0; i < str.length(); ++i)
+	{
+		if (str[i] == '%')
+		{
+			if (i + 2 < str.length())
+			{
+				std::string hexStr = str.substr(i + 1, 2);
+				char ch = static_cast<char>(std::strtol(hexStr.c_str(), NULL, 16));
+				result += ch;
+				i += 2;
+			}
+			else
+				result += '%';
+		}
+		else if (str[i] == '+')
+			result += ' ';
+		else
+			result += str[i];
+	}
+	return result;
 }
 
+void parseCookies(Request &req)
+{
+	std::map<std::string, std::string>::iterator it = req.headers.find("Cookie");
+	if (it == req.headers.end())
+		return;
 
+	std::string raw = it->second;
+	std::stringstream ss(raw);
+	std::string part;
+
+	while (std::getline(ss, part, ';'))
+	{
+		size_t eq = part.find('=');
+		if (eq != std::string::npos)
+		{
+			std::string key = part.substr(0, eq);
+			std::string value = part.substr(eq + 1);
+			stripe(key, " \t");
+			stripe(value, " \t");
+			req.cookies[key] = value;
+		}
+	}
+}
+
+std::string ft_to_string(int nb)
+{
+	std::stringstream ss;
+	ss << nb;
+	return ss.str();
+}
+
+void setCookie(Response &res, const std::string &name, int maxAgeSeconds = 3600,
+				const std::string &path = "/", bool httpOnly = true, bool secure = true)
+{
+	static int ID = 0;
+	const std::string value = "sess" + ft_to_string(++ID);
+	std::string cookie = name + "=" + value;
+	cookie += "; Path=" + path;
+	if (maxAgeSeconds > 0)
+		cookie += "; Max-Age=" + ft_to_string(maxAgeSeconds);
+	if (httpOnly)
+		cookie += "; HttpOnly";
+	if (secure)
+		cookie += "; Secure";
+	res.headers.push_back("Set-Cookie: " + cookie);
+}
+
+void setCookie(Response &res, const std::string &name)
+{
+	std::cout << "creating cookie" << std::endl;
+    setCookie(res, name, 3600, "/", true, true);
+}
+
+void print(const std::string msg)
+{
+	std::cout << "-------" << msg << std::endl;
+}

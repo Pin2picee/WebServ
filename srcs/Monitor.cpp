@@ -282,6 +282,8 @@ void	Monitor::Monitoring()
 						*/
 						Request request = it_client->second.ExtractRequest();
 						Response	structResponse = it_client->second.handler.handleRequest(request);
+						displayResponseInfo(structResponse);
+						updateClientCookies(it_client->second, structResponse);
 						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
 					}
 					nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
@@ -299,3 +301,36 @@ void	Monitor::Monitoring()
 	}
 	
 }
+
+static void parseSetCookie(const std::string &header, std::string &name, std::string &value)
+{
+    size_t start = header.find("Set-Cookie: ");
+    if (start == std::string::npos)
+        return;
+
+    start += 12; // longueur de "Set-Cookie: "
+    size_t end = header.find(';', start);
+    std::string cookie_pair = header.substr(start, end - start);
+
+    size_t eq = cookie_pair.find('=');
+    if (eq != std::string::npos)
+    {
+        name = cookie_pair.substr(0, eq);
+        value = cookie_pair.substr(eq + 1);
+    }
+}
+
+void Monitor::updateClientCookies(Client &client, const Response &resp)
+{
+    std::map<std::string, std::string> &clientCookies = client.getCookies();
+    if (!clientCookies.empty())
+        return;
+    for (std::vector<std::string>::const_iterator it = resp.headers.begin(); it != resp.headers.end(); ++it)
+    {
+        std::string name, value;
+        parseSetCookie(*it, name, value);
+        if (!name.empty() && !value.empty())
+            client.setCookies(name, value);
+    }
+}
+

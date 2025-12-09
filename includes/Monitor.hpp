@@ -38,6 +38,7 @@ class Monitor
 	{
 		const char *what() const throw();
 	};
+	void			updateClientCookies(Client &client, const Response &resp);
 };
 
 #endif

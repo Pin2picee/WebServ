@@ -24,6 +24,7 @@ struct Request
 	std::string							path;
 	std::string							body;
 	std::map<std::string, std::string>	headers;
+	std::map<std::string, std::string>	cookies;
 
 	Request() {};
 };
@@ -48,16 +49,20 @@ struct Response
 	Response() : version("HTTP/1.1"), status_code(200), content_type("text/html"){};
 };
 
-std::string	strip_semicolon(const std::string &s);
+void		parseCookies(Request &req);
+void		print(const std::string msg);
 void		init_default_errors(Server &conf);
-void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
+std::string urlDecode(const std::string &str);
 std::string readFile(const std::string& filepath);
 long long	convertSize(const std::string &input);
-std::string GetUploadFilename(const std::string &body);
-void		displayRequestInfo(const Request &req);
-std::string getFileName(const std::string &fileBody);
+std::string	strip_semicolon(const std::string &s);
 std::string makeJsonError(const std::string &msg);
-std::string urlDecode(const std::string &str);
+void		displayRequestInfo(const Request &req);
+void		displayResponseInfo(const Response &res);
+std::string getFileName(const std::string &fileBody);
+std::string GetUploadFilename(const std::string &body);
+void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
+void		setCookie(Response &res, const std::string &name);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 
@@ -70,17 +75,20 @@ void stripe(std::string &s, const std::string &set, StripSide side = BOTH);
  * Fill the different variables of a request structure.
  * 
  * @param res The `Response` structure that needs to be filled.
+ * @param req The `Request` structure that will be used to check on the cookies.
  * @param status The HTTP status code (200, 404, 500, ...).
  * @param body The response content (HTML, text, JSON, binary file, …).
  * @param content_type The MIME content type (sed by default as text plain).
  */
 
-inline Response &makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_PLAIN)
+inline Response &makeResponse(Response &res, const Request &req, int status, const std::string &body, const std::string &content_type = MIME_TEXT_HTML)
 {
 	res.status_code = status;
 	res.body = body;
 	res.content_type = content_type;
 	res.version = "HTTP/1.1";
+	if ((status == 200 || status == 201) && req.cookies.find("User") == req.cookies.end())
+		setCookie(res, "User");
 	return res;
 }
 

@@ -19,9 +19,9 @@ private:
 	Response		handleDelete(const Locations &loc, const Request &req);
 
 //utils
+	std::string		getMimeType(const Request &req);
 	Response		&getContentType(Response &res, const Locations &loc, const Request &req);
 	Response		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req);
-	std::string		getMimeType(const Request &req);
 public:
 	ResponseHandler(const Server &server);
 	~ResponseHandler();

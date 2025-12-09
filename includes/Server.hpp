@@ -55,6 +55,7 @@ private:
 	std::map<int, std::string>							error_pages;
 	size_t												client_max_body_size;
 
+	Response parseCGIOutput(const std::string &output, const Request &req) const;
 public:
 	Server();
 	~Server();
