@@ -30,6 +30,7 @@
 # include <algorithm>
 # include <cstdlib>
 # include <csignal>
+# include <ctime>
 
 // Text colors
 # define RESET   "\033[0m"

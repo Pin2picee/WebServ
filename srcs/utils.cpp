@@ -40,6 +40,16 @@ void	init_default_errors(Server &conf)
 	errors[503] = root + "/errors/503.html";
 };
 
+
+void resetUploadsDir(const std::string &uploadsPath)
+{
+    std::string rmCmd = "rm -rf " + uploadsPath;
+    if (system(rmCmd.c_str()) != 0)
+        std::cerr << "Failed to reset " << uploadsPath << std::endl;
+    if (mkdir(uploadsPath.c_str(), 0755) == -1)
+        std::cerr << "Failed to recreate " << uploadsPath << std::endl;
+}
+
 std::vector<Socket *>all_socket;
 volatile sig_atomic_t	on = 1;
 
@@ -54,6 +64,7 @@ void	handle_sigint(int signum)
 			delete((*it));
 		}
 	}
+	resetUploadsDir("./config/www/uploads");
 	on = 0;
 }
 
@@ -175,46 +186,47 @@ std::string GetUploadFilename(const std::string &body)
 void displayRequestInfo(const Request &req)
 {
 	print("displayRequestInfo :");
-    // Affichage des informations simples
-    std::cout << RED "Version: " RESET << req.version << std::endl;
-    std::cout << RED "Method: " RESET << req.method << std::endl;
-    std::cout << RED "URI: " RESET << req.uri << std::endl;
-    std::cout << RED "Path: " RESET << req.path << std::endl;
-    // Affichage des en-têtes (headers)
-    std::cout << RED "Headers:" RESET << std::endl;
-    for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
-        std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
-    // Affichage des cookies
-    if (!req.cookies.empty())
-    {
-        std::cout << RED "Cookies:" RESET << std::endl;
-        for (std::map<std::string, std::string>::const_iterator it = req.cookies.begin(); it != req.cookies.end(); ++it)
-            std::cout << "  " MAGENTA << it->first << ": " RESET << it->second << std::endl;
-    }
-    // Affichage du corps de la requête (body)
-    std::cout << RED "Body: " RESET << std::endl;
-    std::cout << req.body << std::endl;
+	// Affichage des informations simples
+  /*   std::cout << RED "Version: " RESET << req.version << std::endl;
+	std::cout << RED "Method: " RESET << req.method << std::endl;
+	std::cout << RED "URI: " RESET << req.uri << std::endl;
+	std::cout << RED "Path: " RESET << req.path << std::endl;
+	// Affichage des en-têtes (headers)
+	std::cout << RED "Headers:" RESET << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
+		std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl; */
+	// Affichage des cookies
+	if (!req.cookies.empty())
+	{
+		std::cout << RED "Cookies:" RESET << std::endl;
+		for (std::map<std::string, std::string>::const_iterator it = req.cookies.begin(); it != req.cookies.end(); ++it)
+			std::cout << "  " MAGENTA << it->first << ": " RESET << it->second << std::endl;
+	}
+	return ;
+	// Affichage du corps de la requête (body)
+	std::cout << RED "Body: " RESET << std::endl;
+	std::cout << req.body << std::endl;
 }
 
 void displayResponseInfo(const Response &res)
 {
 	print("displayResponseInfo :");
-    // Affichage des informations principales
-    std::cout << RED "Version: " RESET << res.version << std::endl;
-    std::cout << RED "Status Code: " RESET << res.status_code << std::endl;
-    std::cout << RED "Content-Type: " RESET << res.content_type << std::endl;
+	// Affichage des informations principales
+	/* std::cout << RED "Version: " RESET << res.version << std::endl;
+	std::cout << RED "Status Code: " RESET << res.status_code << std::endl;
+	std::cout << RED "Content-Type: " RESET << res.content_type << std::endl; */
 
-    // Affichage des headers
-    if (!res.headers.empty())
-    {
-        std::cout << RED "Headers:" RESET << std::endl;
-        for (std::vector<std::string>::const_iterator it = res.headers.begin(); it != res.headers.end(); ++it)
-            std::cout << "  " CYAN << *it << RESET << std::endl;
-    }
+	// Affichage des headers
+	if (!res.headers.empty())
+	{
+		std::cout << RED "Headers:" RESET << std::endl;
+		for (std::vector<std::string>::const_iterator it = res.headers.begin(); it != res.headers.end(); ++it)
+			std::cout << "  " CYAN << *it << RESET << std::endl;
+	}
 
-    // Affichage du corps de la réponse
-    /* std::cout << RED "Body: " RESET << std::endl;
-    std::cout << res.body << std::endl; */
+	// Affichage du corps de la réponse
+	/* std::cout << RED "Body: " RESET << std::endl;
+	std::cout << res.body << std::endl; */
 }
 
 std::string getFileName(const std::string &fileBody)
@@ -291,11 +303,21 @@ std::string ft_to_string(int nb)
 	return ss.str();
 }
 
-void setCookie(Response &res, const std::string &name, int maxAgeSeconds = 3600,
-				const std::string &path = "/", bool httpOnly = true, bool secure = true)
+std::string	generateSessionId(void)
 {
 	static int ID = 0;
-	const std::string value = "sess" + ft_to_string(++ID);
+	return "sess" + ft_to_string(ID++);
+}
+
+int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies,
+				int maxAgeSeconds = 3600, const std::string &path = "/", bool httpOnly = true, bool secure = true)
+{
+	std::string value;
+	std::map<std::string, std::string>::const_iterator it = cookies.find(name);
+	if (it != cookies.end())
+		value = it->second;
+	else
+		value = id;
 	std::string cookie = name + "=" + value;
 	cookie += "; Path=" + path;
 	if (maxAgeSeconds > 0)
@@ -305,15 +327,20 @@ void setCookie(Response &res, const std::string &name, int maxAgeSeconds = 3600,
 	if (secure)
 		cookie += "; Secure";
 	res.headers.push_back("Set-Cookie: " + cookie);
+	return maxAgeSeconds;
 }
 
-void setCookie(Response &res, const std::string &name)
+int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies)
 {
-	std::cout << "creating cookie" << std::endl;
-    setCookie(res, name, 3600, "/", true, true);
+	return setCookie(id, res, name, cookies, 3600, "/", true, true);
 }
 
 void print(const std::string msg)
 {
 	std::cout << "-------" << msg << std::endl;
+}
+
+time_t getCurrentTime()
+{
+	return std::time(NULL);
 }

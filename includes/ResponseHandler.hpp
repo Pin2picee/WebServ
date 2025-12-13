@@ -14,14 +14,14 @@ class ResponseHandler
 private:
 	const Server	&_server;
 //methods
-	Response		handleGet(const Locations &loc, const Request &req);
-	Response		handlePost(const Locations &loc, const Request &req);
-	Response		handleDelete(const Locations &loc, const Request &req);
+	void	handleGet(Response &res, const Locations &loc, const Request &req, Session &session);
+	void	handlePost(Response &res, const Locations &loc, const Request &req, Session &session);
+	void	handleDelete(Response &res, const Locations &loc, const Request &req, Session &session);
 
 //utils
 	std::string		getMimeType(const Request &req);
-	Response		&getContentType(Response &res, const Locations &loc, const Request &req);
-	Response		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req);
+	void			getContentType(Response &res, const Locations &loc, const Request &req, Session &session);
+	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
 public:
 	ResponseHandler(const Server &server);
 	~ResponseHandler();

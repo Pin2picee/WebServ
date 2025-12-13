@@ -19,22 +19,27 @@ Response ResponseHandler::handleRequest(const Request &req)
 	Response	res;
 	const std::vector<Locations> &locs = _server.getLocations();
 	const Locations *target = NULL;
+	Session &session = getSession(req, res);
 
+	deleteSession();
+	if (session.current_page.empty())
+		session.current_page = _server.getRoot() + req.path;
 	for (size_t i = 0; i < locs.size(); ++i)
 	{
 		if (!req.path.find(locs[i].path))
 			target = &locs[i];
 	}
 	if (!target)
-		makeResponse(res, req, 404, readFile(_server.getErrorPage(404)), getMimeType(req));
+		makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 	else if (req.method == "GET")
-		res = handleGet(*target, req);
+		handleGet(res, *target, req, session);
 	else if (req.method == "POST")
-		res = handlePost(*target, req);
+		handlePost(res, *target, req, session);
 	else if (req.method == "DELETE")
-		res = handleDelete(*target, req);
+		handleDelete(res, *target, req, session);
 	else
-		makeResponse(res, req, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
+		makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+	print("session current page = " + session.current_page);
 	return res;
 }
 
@@ -44,21 +49,18 @@ Response ResponseHandler::handleRequest(const Request &req)
  * 
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
- * 
- * @return a `Response` structure that will answer in adequation to the get `Request`.
  */
-Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
+void ResponseHandler::handleGet(Response &res, const Locations &loc, const Request &req, Session &session)
 {
-	Response	res;
 	std::string	full_path =  _server.getRoot() + req.path;
 	struct stat	s;
 
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
-		return makeResponse(res, req, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
+		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
 	if (req.path == "/teapot")
-		return makeResponse(res, req, 418, readFile(_server.getErrorPage(418)), getMimeType(req));
+		return makeResponse(res, 418, readFile(_server.getErrorPage(418, session)), getMimeType(req));
 	else if (full_path.empty() || full_path == RED "none")
-		return makeResponse(res, req, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 	else if (stat(full_path.c_str(), &s) == 0 && S_ISDIR(s.st_mode))
 	{
 		if (loc.autoindex)
@@ -77,7 +79,8 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 				closedir(dir);
 			}
 			body << "</ul></body></html>";
-			return makeResponse(res, req, 200, body.str(), "text/html");
+			session.current_page = full_path;
+			return makeResponse(res, 200, body.str(), "text/html");
 		}
 		else
 		{
@@ -88,28 +91,29 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 				if (stat(index_path.c_str(), &s) == 0)
 				{
 					std::string content = readFile(index_path);
-					return makeResponse(res, req, 200, content, getMimeType(req));
+					session.current_page = index_path;
+					return makeResponse(res, 200, content, getMimeType(req));
 				}
 			}
-			return makeResponse(res, req, 403, readFile(_server.getErrorPage(403)), getMimeType(req));
+			return makeResponse(res, 403, readFile(_server.getErrorPage(403, session)), getMimeType(req));
 		}
 	}
 	else
 	{
 		std::ifstream end_ifs(full_path.c_str(), std::ios::binary);
 		if (!end_ifs)
-			return makeResponse(res, req, 404, readFile(_server.getErrorPage(404)), getMimeType(req));
+			return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
-				return _server.handleCGI(req, loc);
+				return _server.handleCGI(res, req, loc, session);
 		else
 		{
 			std::ostringstream buf;
 			buf << end_ifs.rdbuf();
-			return makeResponse(res, req, 200, buf.str(), getMimeType(req));
+			session.current_page = full_path;
+			return makeResponse(res, 200, buf.str(), getMimeType(req));
 		}
 	}
-	return res;
 }
 
 /**
@@ -118,18 +122,14 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
  * 
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
- * 
- * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
+void ResponseHandler::handlePost(Response &res, const Locations &loc, const Request &req, Session &session)
 {
-	Response res;
-
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
-		return makeResponse(res, req, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
+		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
 	if (req.body.size() > _server.getClientMaxBodySize())
-		return makeResponse(res, req, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-	return getContentType(res, loc, req);
+		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
+	return getContentType(res, loc, req, session);
 }
 
 /**
@@ -138,31 +138,28 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
  * 
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
- * 
- * @return a `Response` structure that will answer in adequation to the delete `Request`.
  */
-Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
+void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Request &req, Session &session)
 {
-	Response res;
-
 	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
-		return makeResponse(res, req, 405, makeJsonError("DELETE not allowed on this location"), getMimeType(req));
+		return makeResponse(res, 405, makeJsonError("DELETE not allowed on this location"), getMimeType(req));
 	std::string filename = urlDecode(req.query);
 	std::string::size_type pos = filename.rfind('/');
 	if (pos != std::string::npos)
 		filename = filename.substr(pos + 1);
 	std::cout << filename << std::endl;
 	if (filename.empty())
-		return makeResponse(res, req, 400, makeJsonError("Filename is required"), getMimeType(req));
+		return makeResponse(res, 400, makeJsonError("Filename is required"), getMimeType(req));
 	std::cout << "Deleting file: " << filename << std::endl;
-	std::string deletePath = _server.getRoot() + "/" + loc.upload_dir + "/" + filename;
+	std::string deletePath = _server.getRoot() + "/" + loc.upload_dir + "/" + session.ID + "/" + filename;
 	std::ifstream file(deletePath.c_str());
 	if (!file || std::remove(deletePath.c_str()) != 0)
 	{
 		std::cerr << "Failed to delete file: " << deletePath << std::endl;
-		return makeResponse(res, req, 404, makeJsonError("File not found"), getMimeType(req));
+		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
 	}
-	return makeResponse(res, req, 200, makeJsonError("File deleted successfully"), getMimeType(req));
+	removeUploadFileSession(session, deletePath);
+	return makeResponse(res, 200, makeJsonError("File deleted successfully"), getMimeType(req));
 }
 
 //utils
@@ -297,6 +294,23 @@ std::string ResponseHandler::getMimeType(const Request &req)
 	return MIME_TEXT_HTML;
 }
 
+std::string createUploadDir(const std::string &root, const std::string &upload_dir, const std::string &userId)
+{
+	if (userId.empty())
+		return "";
+    std::string path = root + "/" + upload_dir + "/" + userId;
+
+    // mkdir path si pas existant
+    if (mkdir(path.c_str(), 0755) == -1)
+    {
+        if (errno == EEXIST)
+            return path;
+        else
+            return std::cerr << "Error creating directory " << path << ": " << strerror(errno) << std::endl, "";
+    }
+	return path;
+}
+
 /**
  * @brief
  * Manage the POST request of a file.
@@ -305,38 +319,40 @@ std::string ResponseHandler::getMimeType(const Request &req)
  * @param res The `Response` structure that will be returned.
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
- * 
- * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response &ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req)
+void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session)
 {
 	if (boundary.empty())
-		return makeResponse(res, req, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 	std::size_t fileStart = req.body.find("filename=\"");
 	if (fileStart != std::string::npos)
 	{
 		std::string filename = getFileName(req.body);
 		if (filename.empty())
-			return makeResponse(res, req, 204, "", getMimeType(req));
-		filename =  _server.getRoot() + "/" + loc.upload_dir + "/" + filename;
+			return makeResponse(res, 204, "", getMimeType(req));
+		std::string Userpath = createUploadDir(_server.getRoot(), loc.upload_dir, session.ID);
+		if (Userpath.empty())
+			return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
+		filename =  Userpath + "/" + filename;
 		fileStart = req.body.find("\r\n\r\n", fileStart);
 		if (fileStart == std::string::npos)
-			return makeResponse(res, req, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+			return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 		fileStart += 4;
 		std::size_t fileEnd = req.body.find(boundary, fileStart);
 		if (fileEnd == std::string::npos)
-			return makeResponse(res, req, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+			return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 		fileEnd -= 2;
 		if (fileEnd - fileStart > _server.getClientMaxBodySize())
-			return makeResponse(res, req, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
+			return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
-			return makeResponse(res, req, 500, readFile(_server.getErrorPage(500)), getMimeType(req));
+			return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
 		ofs.write(req.body.c_str() + fileStart, fileEnd - fileStart);
 		ofs.close();
-		return makeResponse(res, req, 201, readFile(_server.getErrorPage(201)), getMimeType(req));
+		session.uploaded_files.push_back(filename);
+		return makeResponse(res, 201, readFile(_server.getErrorPage(201, session)), getMimeType(req));
 	}
-	return makeResponse(res, req, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+	return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 }
 
 /**
@@ -346,10 +362,8 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
  * @param res The `Response` structure that will be returned.
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
- * 
- * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response &ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req)
+void	ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req, Session &session)
 {
 	std::string contentType;
 	std::map<std::string, std::string>::const_iterator it = req.headers.find("Content-Type");
@@ -357,19 +371,19 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
 	if (it != req.headers.end())
 		contentType = it->second;
 	else
-		return makeResponse(res, req, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 	std::string boundary;
 	std::size_t pos = contentType.find("boundary=");
 
 	if (pos != std::string::npos)
 	{
 		boundary = "--" + contentType.substr(pos + 9);
-		return handleFile(boundary, res, loc, req);
+		return handleFile(boundary, res, loc, req, session);
 	}
 	else
 	{
 		if (req.body.size() > _server.getClientMaxBodySize())
-			return makeResponse(res, req, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-		return makeResponse(res, req, 200, readFile(_server.getErrorPage(200)), getMimeType(req));
+			return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
+		return makeResponse(res, 200, readFile(_server.getErrorPage(200, session)), getMimeType(req));
 	}
 }

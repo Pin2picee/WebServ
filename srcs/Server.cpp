@@ -39,11 +39,14 @@ const std::map<int, std::string>& Server::getErrorPages() const
  * 
  * @return the corresponding error_page.
  */
-const std::string& Server::getErrorPage(int code) const
+const std::string& Server::getErrorPage(int code, Session &session) const
 {
 	std::map<int, std::string>::const_iterator it = error_pages.find(code);
    	if (it != error_pages.end())
+	{
+		session.current_page = it->second;
 		return it->second;
+	}
 	else
 	{
 		static std::string default_page = "<html><body><h1>Error</h1></body></html>";
@@ -186,10 +189,9 @@ void	Server::addLocation(const Locations& loc)
  * 
  * @return a Response struct.
  */
-Response Server::parseCGIOutput(const std::string &output, const Request &req) const
+void Server::parseCGIOutput(Response &res, const std::string &output, Session &session) const
 {
-	Response res;
-	res = makeResponse(res, req, 202, readFile(getErrorPage(200)), MIME_TEXT_HTML);//202 to avoid creating a cookie too early
+	makeResponse(res, 202, readFile(getErrorPage(200, session)), MIME_TEXT_HTML);//202 to avoid creating a cookie too early
 	res.status_code = 200;
 	size_t header_end = output.find("\r\n\r\n");
 	if (header_end == std::string::npos)
@@ -221,9 +223,7 @@ Response Server::parseCGIOutput(const std::string &output, const Request &req) c
 		}
 	}
 	res.body = body_part;
-	if (res.status_code == 200 && req.cookies.find("User") == req.cookies.end())
-		setCookie(res, "User");
-	return res;
+	getErrorPage(res.status_code, session);
 }
 
 /**
@@ -235,7 +235,7 @@ Response Server::parseCGIOutput(const std::string &output, const Request &req) c
  * 
  * @return A Response struct.
  */
-Response Server::handleCGI(const Request &req, const Locations &loc) const
+void Server::handleCGI(Response &res, const Request &req, const Locations &loc, Session &session) const
 {
 	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
 	std::string output;
@@ -332,7 +332,7 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 
 		waitpid(pid, NULL, 0);
 	}
-	return parseCGIOutput(output, req);
+	return parseCGIOutput(res, output, session);
 }
 
 
@@ -353,4 +353,45 @@ Server &Server::operator=(const Server &assignement)
 		client_max_body_size = assignement.client_max_body_size;
 	}
 	return (*this);
+}
+
+std::map<std::string, Session> g_sessions;
+
+Session &getSession(const Request &req, Response &res)
+{
+	std::map<std::string, std::string>::const_iterator it = req.cookies.find("User");
+	if (it == req.cookies.end())
+	{
+		std::string id = generateSessionId();
+		g_sessions[id].ID = id;
+		g_sessions[id] = Session();
+		g_sessions[id].expiryTime = getCurrentTime() + setCookie(id, res, "User", req.cookies);
+		return g_sessions[id];
+	}
+	g_sessions[it->second].ID = it->second;
+	return g_sessions[it->second];
+}
+
+void	deleteSession(void)
+{
+	time_t now = getCurrentTime();
+	for (std::map<std::string, Session>::iterator it = g_sessions.begin();
+		it != g_sessions.end();)
+	{
+		if (it->second.expiryTime <= now)
+    	{
+			std::map<std::string, Session>::iterator toDelete = it;
+            g_sessions.erase(toDelete);
+		}
+		++it;
+	}
+}
+
+void removeUploadFileSession(Session &session, std::string deletePath)
+{
+	std::vector<std::string>::iterator it =
+	std::find(session.uploaded_files.begin(), session.uploaded_files.end(), deletePath);
+
+	if (it != session.uploaded_files.end())
+		session.uploaded_files.erase(it);
 }

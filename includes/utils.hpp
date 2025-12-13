@@ -49,6 +49,8 @@ struct Response
 	Response() : version("HTTP/1.1"), status_code(200), content_type("text/html"){};
 };
 
+time_t		getCurrentTime();
+std::string	generateSessionId(void);
 void		parseCookies(Request &req);
 void		print(const std::string msg);
 void		init_default_errors(Server &conf);
@@ -62,7 +64,7 @@ void		displayResponseInfo(const Response &res);
 std::string getFileName(const std::string &fileBody);
 std::string GetUploadFilename(const std::string &body);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
-void		setCookie(Response &res, const std::string &name);
+int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 
@@ -81,15 +83,12 @@ void stripe(std::string &s, const std::string &set, StripSide side = BOTH);
  * @param content_type The MIME content type (sed by default as text plain).
  */
 
-inline Response &makeResponse(Response &res, const Request &req, int status, const std::string &body, const std::string &content_type = MIME_TEXT_HTML)
+inline void makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_HTML)
 {
 	res.status_code = status;
 	res.body = body;
 	res.content_type = content_type;
 	res.version = "HTTP/1.1";
-	if ((status == 200 || status == 201) && req.cookies.find("User") == req.cookies.end())
-		setCookie(res, "User");
-	return res;
 }
 
 extern std::vector<Socket *>all_socket;
