@@ -22,6 +22,7 @@ private:
 	std::string		getMimeType(const Request &req);
 	void			getContentType(Response &res, const Locations &loc, const Request &req, Session &session);
 	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
+	std::string		generateDeleteFileForm(const Session &session, const std::string &uploadRoot = "./config/www/uploads");
 public:
 	ResponseHandler(const Server &server);
 	~ResponseHandler();

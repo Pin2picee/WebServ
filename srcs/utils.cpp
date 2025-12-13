@@ -33,21 +33,23 @@ void	init_default_errors(Server &conf)
 	errors[403] = root + "/errors/403.html";
 	errors[404] = root + "/errors/404.html";
 	errors[405] = root + "/errors/405.html";
+	errors[409] = root + "/errors/409.html";
 	errors[413] = root + "/errors/413.html";
+	errors[418] = root + "/errors/418.html";
 	errors[500] = root + "/errors/500.html";
 	errors[501] = root + "/errors/501.html";
 	errors[502] = root + "/errors/502.html";
 	errors[503] = root + "/errors/503.html";
-};
+}
 
 
 void resetUploadsDir(const std::string &uploadsPath)
 {
-    std::string rmCmd = "rm -rf " + uploadsPath;
-    if (system(rmCmd.c_str()) != 0)
-        std::cerr << "Failed to reset " << uploadsPath << std::endl;
-    if (mkdir(uploadsPath.c_str(), 0755) == -1)
-        std::cerr << "Failed to recreate " << uploadsPath << std::endl;
+	std::string rmCmd = "rm -rf " + uploadsPath;
+	if (system(rmCmd.c_str()) != 0)
+		std::cerr << "Failed to reset " << uploadsPath << std::endl;
+	if (mkdir(uploadsPath.c_str(), 0755) == -1)
+		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 }
 
 std::vector<Socket *>all_socket;

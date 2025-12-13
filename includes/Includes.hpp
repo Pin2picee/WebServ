@@ -31,6 +31,7 @@
 # include <cstdlib>
 # include <csignal>
 # include <ctime>
+#include <sys/stat.h>
 
 // Text colors
 # define RESET   "\033[0m"

@@ -39,7 +39,6 @@ Response ResponseHandler::handleRequest(const Request &req)
 		handleDelete(res, *target, req, session);
 	else
 		makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
-	print("session current page = " + session.current_page);
 	return res;
 }
 
@@ -63,7 +62,7 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 	else if (stat(full_path.c_str(), &s) == 0 && S_ISDIR(s.st_mode))
 	{
-		if (loc.autoindex)
+		if (req.path != "/uploads" && loc.autoindex)
 		{
 			std::ostringstream body;
 			body << "<html><body><h1>Index of " << req.uri << "</h1><ul>";
@@ -90,7 +89,11 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 				struct stat s;
 				if (stat(index_path.c_str(), &s) == 0)
 				{
-					std::string content = readFile(index_path);
+					std::string content;
+					if (req.path == "/delete_file.html")
+						content = generateDeleteFileForm(session);
+					else
+						content = readFile(index_path);
 					session.current_page = index_path;
 					return makeResponse(res, 200, content, getMimeType(req));
 				}
@@ -109,7 +112,10 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 		else
 		{
 			std::ostringstream buf;
-			buf << end_ifs.rdbuf();
+			if (req.path == "/delete_file.html")
+				buf << generateDeleteFileForm(session);
+			else
+				buf << end_ifs.rdbuf();
 			session.current_page = full_path;
 			return makeResponse(res, 200, buf.str(), getMimeType(req));
 		}
@@ -147,17 +153,12 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 	std::string::size_type pos = filename.rfind('/');
 	if (pos != std::string::npos)
 		filename = filename.substr(pos + 1);
-	std::cout << filename << std::endl;
 	if (filename.empty())
-		return makeResponse(res, 400, makeJsonError("Filename is required"), getMimeType(req));
-	std::cout << "Deleting file: " << filename << std::endl;
+		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
 	std::string deletePath = _server.getRoot() + "/" + loc.upload_dir + "/" + session.ID + "/" + filename;
 	std::ifstream file(deletePath.c_str());
 	if (!file || std::remove(deletePath.c_str()) != 0)
-	{
-		std::cerr << "Failed to delete file: " << deletePath << std::endl;
 		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
-	}
 	removeUploadFileSession(session, deletePath);
 	return makeResponse(res, 200, makeJsonError("File deleted successfully"), getMimeType(req));
 }
@@ -191,12 +192,59 @@ static std::string getReasonPhrase(int status_code)
 		case 404: return "Not Found";
 		case 405: return "Method Not Allowed";
 		case 408: return "Request Timeout";
+		case 409: return "Conflict";
+		case 418: return "I'm a teapot";
 		case 500: return "Internal Server Error";
 		case 501: return "Not Implemented";
 		case 502: return "Bad Gateway";
 		case 503: return "Service Unavailable";
 		default:  return "Unknown";
 	}
+}
+
+
+std::string ResponseHandler::generateDeleteFileForm(const Session &session, const std::string &uploadRoot)
+{
+	std::string html = readFile("./config/www/delete_file.html");
+	std::string userDir = uploadRoot + "/" + session.ID;
+	std::string fileSelectHtml;
+	struct stat info;
+	bool hasFiles = false;
+
+	if (!(stat(userDir.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)))
+		fileSelectHtml = "<p>No files to delete.</p>";
+	else
+	{
+		std::vector<std::string> files = session.uploaded_files;
+		if (files.empty())
+			fileSelectHtml = "<p>No files to delete.</p>";
+		else
+		{
+			hasFiles = true;
+			fileSelectHtml += "<select name=\"filename\" id=\"filename\">";
+			for (size_t i = 0; i < files.size(); ++i)
+			{
+				std::string filename = files[i];
+				std::size_t pos = filename.rfind('/');
+				if (pos != std::string::npos)
+					filename = filename.substr(pos + 1);
+				fileSelectHtml += "<option value=\"" + filename + "\">" + filename + "</option>";
+			}
+			fileSelectHtml += "</select>";
+		}
+	}
+	std::string searchStr = "<input type=\"text\" id=\"filename\" placeholder=\"Enter filename\" required>";
+	size_t pos = html.find(searchStr);
+	if (pos != std::string::npos)
+		html.replace(pos, searchStr.length(), fileSelectHtml);
+	if (!hasFiles)
+	{
+		std::string buttonStr = "<button type=\"submit\">Delete</button>";
+		pos = html.find(buttonStr);
+		if (pos != std::string::npos)
+			html.erase(pos, buttonStr.length());
+	}
+	return html;
 }
 
 /**
@@ -298,16 +346,16 @@ std::string createUploadDir(const std::string &root, const std::string &upload_d
 {
 	if (userId.empty())
 		return "";
-    std::string path = root + "/" + upload_dir + "/" + userId;
+	std::string path = root + "/" + upload_dir + "/" + userId;
 
-    // mkdir path si pas existant
-    if (mkdir(path.c_str(), 0755) == -1)
-    {
-        if (errno == EEXIST)
-            return path;
-        else
-            return std::cerr << "Error creating directory " << path << ": " << strerror(errno) << std::endl, "";
-    }
+	// mkdir path si pas existant
+	if (mkdir(path.c_str(), 0755) == -1)
+	{
+		if (errno == EEXIST)
+			return path;
+		else
+			return std::cerr << "Error creating directory " << path << ": " << strerror(errno) << std::endl, "";
+	}
 	return path;
 }
 
@@ -349,6 +397,8 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
 			return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
 		ofs.write(req.body.c_str() + fileStart, fileEnd - fileStart);
 		ofs.close();
+		if (std::find(session.uploaded_files.begin(), session.uploaded_files.end(), filename) != session.uploaded_files.end())
+			return makeResponse(res, 409, readFile(_server.getErrorPage(409, session)), getMimeType(req));
 		session.uploaded_files.push_back(filename);
 		return makeResponse(res, 201, readFile(_server.getErrorPage(201, session)), getMimeType(req));
 	}

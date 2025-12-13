@@ -22,11 +22,10 @@
       backdrop-filter: blur(5px);
     }
 
-    input[type="text"], button {
+    input[type="text"], button, select {
       margin-bottom: 15px;
     }
 
-    /* Style identique aux boutons de Webserv Test */
     a.button {
       display: inline-block;
       padding: 12px 25px;
@@ -49,39 +48,58 @@
 
   <h2>Delete a File</h2>
 
+  <!-- Message affiché après refresh -->
+  <p id="statusMessage" style="display:none; font-weight:bold;"></p>
+
   <form id="deleteForm">
+    <!-- CET INPUT SERA REMPLACÉ PAR TON <select> CÔTÉ SERVEUR -->
     <input type="text" id="filename" placeholder="Enter filename" required>
     <button type="submit">Delete</button>
   </form>
 
-  <!-- Nouveau bouton ajouté ici -->
   <a href="index.html" class="button">Return to Home</a>
 
   <script>
-    // JavaScript pour envoyer une requête DELETE via fetch
+    // 🔄 Affiche le message APRÈS le refresh
+    window.addEventListener("load", function () {
+      const statusMsg = document.getElementById("statusMessage");
+
+      if (sessionStorage.getItem("deleteSuccess") === "true") {
+        statusMsg.textContent = "File deleted successfully!";
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "#b6ffb6";
+
+        // Nettoyage
+        sessionStorage.removeItem("deleteSuccess");
+      }
+    });
+
+    // 🗑️ Gestion du DELETE
     document.getElementById("deleteForm").addEventListener("submit", function(event) {
-      event.preventDefault();  // Empêche le formulaire de se soumettre de manière traditionnelle
+      event.preventDefault();
 
-      const filename = document.getElementById("filename").value;
-      const url = `/uploads?filename=${encodeURIComponent(filename)}`;  // URL de ta route de suppression avec le nom du fichier dans la query string
+      const filenameElement = document.getElementById("filename");
+      if (!filenameElement || !filenameElement.value) {
+        alert("No file selected");
+        return;
+      }
 
-      fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'Accept': 'application/json',  // Accepte une réponse JSON
-        },
-      })
-      .then(response => response.json())  // On attend une réponse JSON
-      .then(data => {
-        if (data.status === "success") {
-          alert("File deleted successfully!");
-        } else {
-          alert("Error: " + data.message);
-        }
-      })
-      .catch(error => {
-        alert("An error occurred: " + error);
-      });
+      const filename = filenameElement.value;
+      const url = `/uploads?filename=${encodeURIComponent(filename)}`;
+
+      fetch(url, { method: 'DELETE' })
+        .then(response => {
+          if (response.ok) {
+            // Stocke l’info pour après le refresh
+            sessionStorage.setItem("deleteSuccess", "true");
+            window.location.reload();
+          } else {
+            alert("Failed to delete file");
+          }
+        })
+        .catch(() => {
+          alert("Network error");
+        });
     });
   </script>
 
