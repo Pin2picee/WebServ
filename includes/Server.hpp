@@ -42,18 +42,20 @@ extern std::map<std::string, Session> g_sessions;
 struct Locations
 {
 	bool						cgi;
+	bool						sensitive;
 	bool						autoindex;
 	std::string					root;
 	std::string					path;
 	std::string					upload_dir;
 	std::string					cgi_extension;
+	std::string					cgi_path;
 	std::vector<std::string>	methods;
 	std::vector<std::string>	index_files;
 
 	Locations()
-		: cgi(false), autoindex(false),
-		  root(RED "none"), path(RED "none"),
-		  upload_dir(RED "none"), cgi_extension(RED "none") {}
+		: cgi(false), sensitive(false), autoindex(false),
+		  root(""), path(""),
+		  upload_dir(""), cgi_extension("") {}
 };
 
 struct Response;
@@ -72,11 +74,13 @@ struct Request;
 class Server
 {
 private:
-	std::string											root;
 	std::vector<std::pair<std::string, int> >			listen;
-	std::vector<Locations>								locations;
-	std::map<int, std::string>							error_pages;
+	std::vector<std::string>							domain_names;
+	std::string											root;
+	std::string											default_page;
 	size_t												client_max_body_size;
+	std::map<int, std::string>							error_pages;
+	std::vector<Locations>								locations;
 
 	void parseCGIOutput(Response &res, const std::string &output, Session &session) const;
 public:
@@ -87,6 +91,8 @@ public:
 	// Getters
 
 	const std::string&									getRoot() const;
+	const std::vector<std::string>&						getDomainNames() const;
+	const std::string&									getDefaultPage() const;
 	const std::vector<std::pair<std::string, int> >&	getListen() const;
 	const std::vector<Locations>&						getLocations() const;
 	const std::string&									getErrorPage(int code, Session &session) const;
@@ -102,7 +108,9 @@ public:
 	// Setters
 
 	void 												setRoot(const std::string &r);
+	void												SetDomainNames(const std::string domainName);
 	void 												setClientMaxBodySize(size_t value);
+	void												setDefaultPage(const std::string &s);
 
 	// Utils
 

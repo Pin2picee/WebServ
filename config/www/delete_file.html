@@ -85,24 +85,30 @@
       }
 
       const filename = filenameElement.value;
-      const url = `/uploads?filename=${encodeURIComponent(filename)}`;
+      const url = `/delete_file.html?filename=${encodeURIComponent(filename)}`;
 
       fetch(url, { method: 'DELETE' })
         .then(response => {
-          if (response.ok) {
-            // Stocke l’info pour après le refresh
-            sessionStorage.setItem("deleteSuccess", "true");
-            window.location.reload();
-          } else {
-            alert("Failed to delete file");
-          }
+          return response.text().then(text => {
+            if (response.ok) {
+              // Succès → pop-up vert
+              alert("File deleted successfully!");
+            } else {
+              // Erreur → parse JSON si possible
+              try {
+                var obj = JSON.parse(text);
+                alert("Error: " + obj.message);
+              } catch (e) {
+                // Si ce n'est pas du JSON, affiche le texte brut
+                alert("Error: " + text);
+              }
+            }
+          });
         })
         .catch(() => {
           alert("Network error");
         });
     });
   </script>
-
-  <a href="/autoindex?dir=/uploads/sess0" class="button">Watch autoindex</a>
-</body>
+      </body>
 </html>

@@ -13,7 +13,6 @@
     body {
       height: 100vh;
       display: flex;
-      flex-direction: column;
       justify-content: center;  
       align-items: center;      
       text-align: center;
@@ -26,29 +25,11 @@
       font-size: 3rem;
       text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
       animation: float 2s ease-in-out infinite alternate;
-      margin-bottom: 30px;
     }
 
     @keyframes float {
       from { transform: translateY(0); }
       to { transform: translateY(-15px); }
-    }
-
-    a.button {
-      display: inline-block;
-      padding: 12px 25px;
-      background: white;
-      color: #0072ff;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-      transition: 0.2s ease;
-      margin: 20px; /* Augmenté l'espace entre les boutons */
-    }
-
-    a.button:hover {
-      background: #e8f2ff;
-      transform: scale(1.05);
     }
 
     @media (max-width: 600px) {
@@ -57,12 +38,6 @@
   </style>
 </head>
 <body>
-  <h1>Welcome to Webserv 🎉</h1>
-
-  <!-- BOUTON POUR ALLER À LA PAGE UPLOAD -->
-  <a href="upload.html" class="button">Upload a file</a>
-
-  <!-- BOUTON POUR ALLER À LA PAGE DE SUPPRESSION -->
-  <a href="delete_file.html" class="button">Delete a file</a> <!-- Nouveau bouton ajouté -->
-      </body>
+  <h1>Welcome to Mini Webserv 🎉</h1>
+</body>
 </html>

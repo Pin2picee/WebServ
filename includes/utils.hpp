@@ -56,6 +56,8 @@ void		parseCookies(Request &req);
 void		print(const std::string msg);
 void		init_default_errors(Server &conf);
 std::string urlDecode(const std::string &str);
+std::string cleanPath(const std::string &path);
+bool		pathExists(const std::string &path);
 std::string readFile(const std::string& filepath);
 long long	convertSize(const std::string &input);
 std::string	strip_semicolon(const std::string &s);

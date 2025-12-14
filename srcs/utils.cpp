@@ -189,14 +189,14 @@ void displayRequestInfo(const Request &req)
 {
 	print("displayRequestInfo :");
 	// Affichage des informations simples
-  /*   std::cout << RED "Version: " RESET << req.version << std::endl;
+    std::cout << RED "Version: " RESET << req.version << std::endl;
 	std::cout << RED "Method: " RESET << req.method << std::endl;
 	std::cout << RED "URI: " RESET << req.uri << std::endl;
 	std::cout << RED "Path: " RESET << req.path << std::endl;
 	// Affichage des en-têtes (headers)
 	std::cout << RED "Headers:" RESET << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
-		std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl; */
+		std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
 	// Affichage des cookies
 	if (!req.cookies.empty())
 	{
@@ -214,9 +214,9 @@ void displayResponseInfo(const Response &res)
 {
 	print("displayResponseInfo :");
 	// Affichage des informations principales
-	/* std::cout << RED "Version: " RESET << res.version << std::endl;
+	std::cout << RED "Version: " RESET << res.version << std::endl;
 	std::cout << RED "Status Code: " RESET << res.status_code << std::endl;
-	std::cout << RED "Content-Type: " RESET << res.content_type << std::endl; */
+	std::cout << RED "Content-Type: " RESET << res.content_type << std::endl;
 
 	// Affichage des headers
 	if (!res.headers.empty())
@@ -227,8 +227,8 @@ void displayResponseInfo(const Response &res)
 	}
 
 	// Affichage du corps de la réponse
-	/* std::cout << RED "Body: " RESET << std::endl;
-	std::cout << res.body << std::endl; */
+	std::cout << RED "Body: " RESET << std::endl;
+	std::cout << res.body << std::endl;
 }
 
 std::string getFileName(const std::string &fileBody)
@@ -366,7 +366,6 @@ void addAutoindexButton(const std::string &targetDir)
 	std::string indexPath = "config/www/";
 	if (!pathExists(indexPath + targetDir))
 		return;
-	print("targetDir = " + targetDir);
 	const char* indexPaths[] = { "index.html", "upload.html", "delete_file.html" };
 	for (int i = 0; i < 3; ++i)
 	{
@@ -382,18 +381,17 @@ void addAutoindexButton(const std::string &targetDir)
 		buffer << file.rdbuf();
 		std::string html = buffer.str();
 		file.close();
-		std::string buttonHtml = "  <a href=\"/autoindex?dir=" + targetDir + "\" class=\"button\">Watch autoindex</a>\n";
+		std::string buttonHtml = "  <a href=\"/uploads?dir=" + targetDir + "\" class=\"button\">Watch autoindex</a>\n";
+		if (html.find(buttonHtml) != std::string::npos)
+            return ;
 		size_t pos = html.find("</body>");
 		if (pos != std::string::npos)
 			html.insert(pos, buttonHtml);
-
 		std::ofstream outFile(indexPath.c_str());
 		if (outFile)
 			outFile << html;
 	}
 }
-
-
 
 void removeAutoindexButton()
 {
@@ -409,28 +407,54 @@ void removeAutoindexButton()
 			std::cerr << "Can't open " << indexPath << std::endl;
 			continue;
 		}
-
 		std::stringstream buffer;
 		buffer << file.rdbuf();
 		std::string html = buffer.str();
 		file.close();
 
-		std::string startTag = "<a href=\"/autoindex?";
+		std::string startTag = "<a href=\"/uploads?";
 		size_t pos = html.find(startTag);
 		while (pos != std::string::npos)
 		{
 			size_t endPos = html.find("</a>", pos);
 			if (endPos != std::string::npos)
 			{
-				endPos += 4; // longueur de "</a>"
+				endPos += 5; // longueur de "</a>\n"
 				html.erase(pos, endPos - pos);
 			}
 			pos = html.find(startTag, pos);
 		}
-
 		std::ofstream outFile(indexPath.c_str());
 		if (outFile)
 			outFile << html;
 	}
 }
 
+std::string cleanPath(const std::string &path)
+{
+    if (path.empty())
+		return "";
+    std::string clean;
+    clean.reserve(path.size());
+    bool lastWasSlash = false;
+    for (size_t i = 0; i < path.size(); ++i)
+	{
+        char c = path[i];
+        if (c == '/')
+		{
+            if (!lastWasSlash)
+			{
+                clean += c;
+                lastWasSlash = true;
+            }
+        }
+		else
+		{
+            clean += c;
+            lastWasSlash = false;
+        }
+    }
+    if (clean.size() > 1 && clean[clean.size() - 1] == '/')
+        clean.erase(clean.size() - 1);
+    return clean;
+}

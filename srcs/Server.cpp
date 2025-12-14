@@ -22,6 +22,28 @@ const std::string&	Server::getRoot() const
 
 /**
  * @brief
+ * Get the domain_names.
+ * 
+ * @return the domain_names.
+ */
+const std::vector<std::string>& Server::getDomainNames() const
+{
+	return domain_names;
+}
+
+/**
+ * @brief
+ * Get the default page to display when a folder is selected.
+ * 
+ * @return the default page.
+ */
+const std::string&	Server::getDefaultPage() const
+{
+	return default_page;
+}
+
+/**
+ * @brief
  * Get the error_pages.
  * 
  * @return the error_pages.
@@ -130,6 +152,28 @@ std::vector<Locations>&	Server::getLocationsRef()
 void	Server::setRoot(const std::string &r)
 {
 	root = r;
+}
+
+/**
+ * @brief
+ * Set the domain names of the server.
+ * 
+ * @param domainName the domain name.
+ */
+void	Server::SetDomainNames(const std::string domainName)
+{
+	domain_names.push_back(domainName);
+}
+
+/**
+ * @brief
+ * Set the default page that will be generated when a folder is selected.
+ * 
+ * @param s the default page.
+ */
+void	Server::setDefaultPage(const std::string &s)
+{
+	default_page = s;
 }
 
 /**

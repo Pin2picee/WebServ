@@ -65,7 +65,7 @@ const std::vector<Socket *>&	Config::getSocket() const
  * 
  * @return A `Location` structure that will be autmatically added to the corresponding `Server` structure.
  */
-Locations	parse_loc(size_t &i, std::vector<std::string> tokens, std::string root)
+Locations	parse_loc(size_t &i, std::vector<std::string> tokens)
 {
 	Locations loc;
 
@@ -78,19 +78,21 @@ Locations	parse_loc(size_t &i, std::vector<std::string> tokens, std::string root
 		else if (tokens[i] == "index")
 			fill_tokens(loc.index_files, tokens, i);
 		else if (tokens[i] == "autoindex")
-			loc.autoindex = (strip_semicolon(tokens[++(i)]) == "on");
+			loc.autoindex = (strip_semicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "upload_dir")
-			loc.upload_dir = strip_semicolon(tokens[++(i)]);
+			loc.upload_dir = strip_semicolon(tokens[++i]);
 		else if (tokens[i] == "cgi")
-			loc.cgi = (strip_semicolon(tokens[++(i)]) == "on");
+			loc.cgi = (strip_semicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "cgi_extension")
-			loc.cgi_extension = strip_semicolon(tokens[++(i)]);
+			loc.cgi_extension = strip_semicolon(tokens[++i]);
+		else if (tokens[i] == "cgi_path")
+			loc.cgi_path = strip_semicolon(tokens[++i]);
 		else if (tokens[i] == "root")
-			loc.root = strip_semicolon(tokens[++(i)]);
-		++(i);
+			loc.root = strip_semicolon(tokens[++i]);
+		else if (tokens[i] == "sensitive")
+			loc.sensitive = (strip_semicolon(tokens[++i]) == "on");
+		++i;
 	}
-	if (loc.root.empty())
-		loc.root = root;
 	return (loc);
 }
 
@@ -168,12 +170,17 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
 			}
 			else if (tokens[i] == "root")
 				conf.setRoot(strip_semicolon(tokens[i + 1]));
+			else if (tokens[i] == "index")
+				conf.setDefaultPage(strip_semicolon(tokens[i + 1]));
 			else if (tokens[i] == "error_page" && i + 2 < tokens.size())
 				conf.addErrorPage(atoi(tokens[i + 1].c_str()), conf.getRoot() + strip_semicolon(tokens[i + 2]));
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
+			else if (tokens[i] == "server_name")
+				for (int j = 1; i + j < tokens.size() && tokens[i].find(";") == std::string::npos; j++)
+					conf.SetDomainNames(strip_semicolon((tokens[i + j])));
 			else if (tokens[i] == "location")
-				conf.addLocation(parse_loc(i, tokens, conf.getRoot()));
+				conf.addLocation(parse_loc(i, tokens));
 		}
 	}
 	init_default_errors(conf);
