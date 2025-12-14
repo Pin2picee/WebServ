@@ -59,6 +59,7 @@ std::string readFile(const std::string& filepath);
 long long	convertSize(const std::string &input);
 std::string	strip_semicolon(const std::string &s);
 std::string makeJsonError(const std::string &msg);
+bool		canDisplayFile(const std::string mime);
 void		displayRequestInfo(const Request &req);
 void		displayResponseInfo(const Response &res);
 std::string getFileName(const std::string &fileBody);

@@ -20,12 +20,14 @@ private:
 
 //utils
 	std::string		getMimeType(const Request &req);
+	std::string		getMimeType(const std::string &path);
 	void			getContentType(Response &res, const Locations &loc, const Request &req, Session &session);
-	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
+	void			generateAutoindex(const std::string &full_path, const Request &req, Response &res, Session &session);
 	std::string		generateDeleteFileForm(const Session &session, const std::string &uploadRoot = "./config/www/uploads");
+	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
 public:
-	ResponseHandler(const Server &server);
 	~ResponseHandler();
+	ResponseHandler(const Server &server);
 	ResponseHandler(const ResponseHandler &copy);
 	ResponseHandler &operator=(const ResponseHandler &assignement);
 

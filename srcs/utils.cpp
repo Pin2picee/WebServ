@@ -346,3 +346,11 @@ time_t getCurrentTime()
 {
 	return std::time(NULL);
 }
+
+bool canDisplayFile(const std::string mime)
+{
+	return	mime == MIME_TEXT_HTML || mime == MIME_TEXT_PLAIN || mime == MIME_TEXT_CSS ||
+			mime == MIME_TEXT_JAVASCRIPT || mime == MIME_IMAGE_PNG || mime == MIME_IMAGE_JPEG ||
+			mime == MIME_IMAGE_GIF || mime == MIME_IMAGE_SVG || mime == MIME_IMAGE_WEBP ||
+			mime == MIME_IMAGE_BMP;
+}

@@ -62,25 +62,8 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 	else if (stat(full_path.c_str(), &s) == 0 && S_ISDIR(s.st_mode))
 	{
-		if (req.path != "/uploads" && loc.autoindex)
-		{
-			std::ostringstream body;
-			body << "<html><body><h1>Index of " << req.uri << "</h1><ul>";
-			DIR *dir = opendir(full_path.c_str());
-			if (dir)
-			{
-				struct dirent *entry;
-				while ((entry = readdir(dir)))
-				{
-					std::string name = entry->d_name;
-					body << "<li><a href=\"" << name << "\">" << name << "</a></li>";
-				}
-				closedir(dir);
-			}
-			body << "</ul></body></html>";
-			session.current_page = full_path;
-			return makeResponse(res, 200, body.str(), "text/html");
-		}
+		if (loc.autoindex)
+			return generateAutoindex(full_path, req, res, session);
 		else
 		{
 			for (size_t i = 0; i < loc.index_files.size(); i++)
@@ -164,6 +147,60 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 }
 
 //utils
+void ResponseHandler::generateAutoindex(const std::string &full_path, const Request &req, Response &res, Session &session)
+{
+	std::ifstream templateFile("config/www/autoindex.html");
+	if (!templateFile)
+		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
+	std::stringstream buffer;
+	buffer << templateFile.rdbuf();
+	std::string html = buffer.str();
+	std::ostringstream fileList;
+	std::string uri = req.uri;
+	std::string path = full_path;
+	if (uri == "/uploads")
+	{
+		uri += "/" + session.ID;
+		path += "/" + session.ID;
+	}
+	if (!uri.empty() && uri[uri.size() - 1] != '/')
+		uri += '/';
+	if (!path.empty() && path[path.size() - 1] != '/')
+		path += '/';
+	DIR *dir = opendir(path.c_str());
+	if (dir)
+	{
+		struct dirent *entry;
+		while ((entry = readdir(dir)))
+		{
+			std::string name = entry->d_name;
+			if (name == "." || name == "..")
+				continue;
+			std::string fullEntryPath = path + name;
+			struct stat st;
+			if (stat(fullEntryPath.c_str(), &st) != 0)
+				continue;
+			std::string hrefPath = uri;
+			if (!hrefPath.empty() && hrefPath[hrefPath.size() - 1] != '/')
+				hrefPath += '/';
+			hrefPath += name;
+			if (S_ISDIR(st.st_mode))
+				hrefPath += '/';
+			std::string liClass = S_ISDIR(st.st_mode) ? "folder" : "file";
+			fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" << name;
+			if (S_ISDIR(st.st_mode))
+				fileList << "/";
+			fileList << "</a></li>\n";
+		}
+		closedir(dir);
+	}
+	size_t pos = html.find("<!-- FILE_LIST_PLACEHOLDER -->");
+	if (pos != std::string::npos)
+		html.replace(pos, strlen("<!-- FILE_LIST_PLACEHOLDER -->"), fileList.str());
+	session.current_page = path;
+	return makeResponse(res, 200, html, getMimeType(path));
+}
+
 /**
  * @brief
  * Get the reason phrase of a corresponding status code.
@@ -314,33 +351,109 @@ std::string ResponseHandler::getMimeType(const Request &req)
 	if (it != req.headers.end())
 	{
 		std::string contentType = it->second;
-		if (contentType.find("text/html") != std::string::npos)
+		if (contentType.find(MIME_TEXT_HTML) != std::string::npos)
 			return MIME_TEXT_HTML;
-		if (contentType.find("text/css") != std::string::npos)
+		if (contentType.find(MIME_TEXT_CSS) != std::string::npos)
 			return MIME_TEXT_CSS;
-		if (contentType.find("application/javascript") != std::string::npos || contentType.find("text/javascript") != std::string::npos)
+		if (contentType.find(MIME_TEXT_JAVASCRIPT) != std::string::npos)
 			return MIME_TEXT_JAVASCRIPT;
-		if (contentType.find("image/jpeg") != std::string::npos)
+		if (contentType.find(MIME_APPLICATION_JSON) != std::string::npos)
+			return MIME_APPLICATION_JSON;
+		if (contentType.find(MIME_APPLICATION_XML) != std::string::npos)
+			return MIME_APPLICATION_XML;
+		if (contentType.find(MIME_APPLICATION_PDF) != std::string::npos)
+			return MIME_APPLICATION_PDF;
+		if (contentType.find(MIME_APPLICATION_ZIP) != std::string::npos)
+			return MIME_APPLICATION_ZIP;
+		if (contentType.find(MIME_APPLICATION_GZIP) != std::string::npos)
+			return MIME_APPLICATION_GZIP;
+		if (contentType.find(MIME_IMAGE_JPEG) != std::string::npos)
 			return MIME_IMAGE_JPEG;
-		if (contentType.find("image/png") != std::string::npos)
+		if (contentType.find(MIME_IMAGE_PNG) != std::string::npos)
 			return MIME_IMAGE_PNG;
-		if (contentType.find("image/gif") != std::string::npos)
+		if (contentType.find(MIME_IMAGE_GIF) != std::string::npos)
 			return MIME_IMAGE_GIF;
+		if (contentType.find(MIME_IMAGE_SVG) != std::string::npos)
+			return MIME_IMAGE_SVG;
+		if (contentType.find(MIME_IMAGE_WEBP) != std::string::npos)
+			return MIME_IMAGE_WEBP;
+		if (contentType.find(MIME_IMAGE_BMP) != std::string::npos)
+			return MIME_IMAGE_BMP;
+		if (contentType.find(MIME_FONT_WOFF) != std::string::npos)
+			return MIME_FONT_WOFF;
+		if (contentType.find(MIME_FONT_WOFF2) != std::string::npos)
+			return MIME_FONT_WOFF2;
+		if (contentType.find(MIME_FONT_TTF) != std::string::npos)
+			return MIME_FONT_TTF;
+		if (contentType.find(MIME_FONT_OTF) != std::string::npos)
+			return MIME_FONT_OTF;
+		if (contentType.find(MIME_AUDIO_MP3) != std::string::npos)
+			return MIME_AUDIO_MP3;
+		if (contentType.find(MIME_AUDIO_WAV) != std::string::npos)
+			return MIME_AUDIO_WAV;
+		if (contentType.find(MIME_VIDEO_MP4) != std::string::npos)
+			return MIME_VIDEO_MP4;
+		if (contentType.find(MIME_VIDEO_WEBM) != std::string::npos)
+			return MIME_VIDEO_WEBM;
 	}
-	if (req.path.find(".html") != std::string::npos)
+	return getMimeType(req.path);
+}
+
+
+std::string ResponseHandler::getMimeType(const std::string &path)
+{
+	if (path.find(".html") != std::string::npos)
 		return MIME_TEXT_HTML;
-	if (req.path.find(".css") != std::string::npos)
+	if (path.find(".htm") != std::string::npos)
+		return MIME_TEXT_HTML;
+	if (path.find(".css") != std::string::npos)
 		return MIME_TEXT_CSS;
-	if (req.path.find(".js") != std::string::npos)
+	if (path.find(".js") != std::string::npos)
 		return MIME_TEXT_JAVASCRIPT;
-	if (req.path.find(".jpg") != std::string::npos || req.path.find(".jpeg") != std::string::npos)
+	if (path.find(".json") != std::string::npos)
+		return MIME_APPLICATION_JSON;
+	if (path.find(".xml") != std::string::npos)
+		return MIME_APPLICATION_XML;
+	if (path.find(".pdf") != std::string::npos)
+		return MIME_APPLICATION_PDF;
+	if (path.find(".zip") != std::string::npos)
+		return MIME_APPLICATION_ZIP;
+	if (path.find(".gz") != std::string::npos)
+		return MIME_APPLICATION_GZIP;
+	if (path.find(".jpg") != std::string::npos || path.find(".jpeg") != std::string::npos)
 		return MIME_IMAGE_JPEG;
-	if (req.path.find(".png") != std::string::npos)
+	if (path.find(".png") != std::string::npos)
 		return MIME_IMAGE_PNG;
-	if (req.path.find(".gif") != std::string::npos)
+	if (path.find(".gif") != std::string::npos)
 		return MIME_IMAGE_GIF;
+	if (path.find(".svg") != std::string::npos)
+		return MIME_IMAGE_SVG;
+	if (path.find(".webp") != std::string::npos)
+		return MIME_IMAGE_WEBP;
+	if (path.find(".bmp") != std::string::npos)
+		return MIME_IMAGE_BMP;
+	if (path.find(".woff") != std::string::npos)
+		return MIME_FONT_WOFF;
+	if (path.find(".woff2") != std::string::npos)
+		return MIME_FONT_WOFF2;
+	if (path.find(".ttf") != std::string::npos)
+		return MIME_FONT_TTF;
+	if (path.find(".otf") != std::string::npos)
+		return MIME_FONT_OTF;
+	if (path.find(".mp3") != std::string::npos)
+		return MIME_AUDIO_MP3;
+	if (path.find(".wav") != std::string::npos)
+		return MIME_AUDIO_WAV;
+	if (path.find(".mp4") != std::string::npos)
+		return MIME_VIDEO_MP4;
+	if (path.find(".webm") != std::string::npos)
+		return MIME_VIDEO_WEBM;
+	if (path.find(".exe") != std::string::npos)
+		return MIME_APPLICATION_OCTET_STREAM;
 	return MIME_TEXT_HTML;
 }
+
+
 
 std::string createUploadDir(const std::string &root, const std::string &upload_dir, const std::string &userId)
 {

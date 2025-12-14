@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webserv Autoindex</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  
+      align-items: center;      
+      text-align: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      padding-top: 50px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      animation: float 2s ease-in-out infinite alternate;
+      margin-bottom: 30px;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-15px); }
+    }
+
+    ul.file-list {
+      width: 90%;
+      max-width: 600px;
+      text-align: left;
+      margin-top: 20px;
+      padding: 0;
+    }
+
+    ul.file-list li {
+      background: rgba(255, 255, 255, 0.15);
+      margin: 8px 0;
+      border-radius: 8px;
+      transition: 0.2s ease;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    /* Tout le bloc <li> est cliquable */
+    ul.file-list li a {
+      display: block;
+      padding: 12px 20px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    ul.file-list li:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Icônes pour dossiers et fichiers */
+    .folder a::before { content: "📁 "; }
+    .file a::before { content: "📄 "; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      ul.file-list { padding: 0 10px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Files in your directory 📂</h1>
+
+  <ul class="file-list">
+    <!-- FILE_LIST_PLACEHOLDER -->
+  </ul>
+</body>
+</html>
