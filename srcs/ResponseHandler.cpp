@@ -29,6 +29,9 @@ Response ResponseHandler::handleRequest(const Request &req)
 		if (!req.path.find(locs[i].path))
 			target = &locs[i];
 	}
+	std::cout << "target = " << ((target) ? "exist" : "NULL") << ", uploadsize = " << session.uploaded_files.size() << ", autoindex = " << (target->autoindex ? "on" : "off") << std::endl;
+	if (!session.uploaded_files.size())
+		removeAutoindexButton();
 	if (!target)
 		makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 	else if (req.method == "GET")
@@ -515,8 +518,8 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
 		if (std::find(session.uploaded_files.begin(), session.uploaded_files.end(), filename) != session.uploaded_files.end())
 			return makeResponse(res, 409, readFile(_server.getErrorPage(409, session)), getMimeType(req));
 		session.uploaded_files.push_back(filename);
-		if (!session.uploaded_files.size() && loc.autoindex)
-			addAutoindexButton(Userpath);
+		if (session.uploaded_files.size() && loc.autoindex)
+			addAutoindexButton(loc.upload_dir + "/" + session.ID);
 		return makeResponse(res, 201, readFile(_server.getErrorPage(201, session)), getMimeType(req));
 	}
 	return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));

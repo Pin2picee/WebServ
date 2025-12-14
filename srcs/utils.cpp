@@ -363,33 +363,36 @@ bool pathExists(const std::string &path)
 
 void addAutoindexButton(const std::string &targetDir)
 {
-	if (!pathExists(targetDir))
+	std::string indexPath = "config/www/";
+	if (!pathExists(indexPath + targetDir))
 		return;
-
+	print("targetDir = " + targetDir);
 	const char* indexPaths[] = { "index.html", "upload.html", "delete_file.html" };
 	for (int i = 0; i < 3; ++i)
 	{
-		std::string indexPath = "config/www/";
+		indexPath = "config/www/";
 		indexPath += indexPaths[i];
 		std::ifstream file(indexPath.c_str());
 		if (!file)
 		{
-			std::cerr << "Impossible d'ouvrir " << indexPath << std::endl;
+			std::cerr << "Can't open " << indexPath << std::endl;
 			continue;
 		}
 		std::stringstream buffer;
 		buffer << file.rdbuf();
 		std::string html = buffer.str();
 		file.close();
-		std::string buttonHtml = "  <a href=\"/autoindex?dir=" + targetDir + "\" class=\"button\">Voir Autoindex</a>\n";
+		std::string buttonHtml = "  <a href=\"/autoindex?dir=" + targetDir + "\" class=\"button\">Watch autoindex</a>\n";
 		size_t pos = html.find("</body>");
 		if (pos != std::string::npos)
 			html.insert(pos, buttonHtml);
+
 		std::ofstream outFile(indexPath.c_str());
 		if (outFile)
 			outFile << html;
 	}
 }
+
 
 
 void removeAutoindexButton()
@@ -403,7 +406,7 @@ void removeAutoindexButton()
 		std::ifstream file(indexPath.c_str());
 		if (!file)
 		{
-			std::cerr << "Impossible d'ouvrir " << indexPath << std::endl;
+			std::cerr << "Can't open " << indexPath << std::endl;
 			continue;
 		}
 
