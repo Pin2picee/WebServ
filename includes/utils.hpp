@@ -51,6 +51,7 @@ struct Response
 
 time_t		getCurrentTime();
 std::string	generateSessionId(void);
+void		removeAutoindexButton();
 void		parseCookies(Request &req);
 void		print(const std::string msg);
 void		init_default_errors(Server &conf);
@@ -64,6 +65,7 @@ void		displayRequestInfo(const Request &req);
 void		displayResponseInfo(const Response &res);
 std::string getFileName(const std::string &fileBody);
 std::string GetUploadFilename(const std::string &body);
+void		addAutoindexButton(const std::string &targetDir);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
 

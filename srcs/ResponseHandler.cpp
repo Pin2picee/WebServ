@@ -143,6 +143,8 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 	if (!file || std::remove(deletePath.c_str()) != 0)
 		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
 	removeUploadFileSession(session, deletePath);
+	if (!session.uploaded_files.size() && loc.autoindex)
+		removeAutoindexButton();
 	return makeResponse(res, 200, makeJsonError("File deleted successfully"), getMimeType(req));
 }
 
@@ -513,6 +515,8 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
 		if (std::find(session.uploaded_files.begin(), session.uploaded_files.end(), filename) != session.uploaded_files.end())
 			return makeResponse(res, 409, readFile(_server.getErrorPage(409, session)), getMimeType(req));
 		session.uploaded_files.push_back(filename);
+		if (!session.uploaded_files.size() && loc.autoindex)
+			addAutoindexButton(Userpath);
 		return makeResponse(res, 201, readFile(_server.getErrorPage(201, session)), getMimeType(req));
 	}
 	return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));

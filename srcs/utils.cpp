@@ -354,3 +354,80 @@ bool canDisplayFile(const std::string mime)
 			mime == MIME_IMAGE_GIF || mime == MIME_IMAGE_SVG || mime == MIME_IMAGE_WEBP ||
 			mime == MIME_IMAGE_BMP;
 }
+
+bool pathExists(const std::string &path)
+{
+	struct stat info;
+	return stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
+}
+
+void addAutoindexButton(const std::string &targetDir)
+{
+	if (!pathExists(targetDir))
+		return;
+
+	const char* indexPaths[] = { "index.html", "upload.html", "delete_file.html" };
+	for (int i = 0; i < 3; ++i)
+	{
+		std::string indexPath = "config/www/";
+		indexPath += indexPaths[i];
+		std::ifstream file(indexPath.c_str());
+		if (!file)
+		{
+			std::cerr << "Impossible d'ouvrir " << indexPath << std::endl;
+			continue;
+		}
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		std::string html = buffer.str();
+		file.close();
+		std::string buttonHtml = "  <a href=\"/autoindex?dir=" + targetDir + "\" class=\"button\">Voir Autoindex</a>\n";
+		size_t pos = html.find("</body>");
+		if (pos != std::string::npos)
+			html.insert(pos, buttonHtml);
+		std::ofstream outFile(indexPath.c_str());
+		if (outFile)
+			outFile << html;
+	}
+}
+
+
+void removeAutoindexButton()
+{
+	const char* indexPaths[] = { "index.html", "upload.html", "delete_file.html" };
+	for (int i = 0; i < 3; i++)
+	{
+		std::string indexPath = "config/www/";
+		indexPath += indexPaths[i];
+
+		std::ifstream file(indexPath.c_str());
+		if (!file)
+		{
+			std::cerr << "Impossible d'ouvrir " << indexPath << std::endl;
+			continue;
+		}
+
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		std::string html = buffer.str();
+		file.close();
+
+		std::string startTag = "<a href=\"/autoindex?";
+		size_t pos = html.find(startTag);
+		while (pos != std::string::npos)
+		{
+			size_t endPos = html.find("</a>", pos);
+			if (endPos != std::string::npos)
+			{
+				endPos += 4; // longueur de "</a>"
+				html.erase(pos, endPos - pos);
+			}
+			pos = html.find(startTag, pos);
+		}
+
+		std::ofstream outFile(indexPath.c_str());
+		if (outFile)
+			outFile << html;
+	}
+}
+
