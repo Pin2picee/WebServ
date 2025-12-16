@@ -34,8 +34,23 @@ const Locations *findLocation(const Request &req, const std::vector<Locations> &
 Response ResponseHandler::handleRequest(const Request &req, std::map<std::string, Session> &g_sessions)
 {
 	Response	res;
-	const std::vector<Locations> &locs = _server.getLocations();
 	Session &session = getSession(g_sessions, req, res);
+	std::string host = req.headers.count("Host") ? req.headers.at("Host") : "";
+    const std::vector<std::string> &allowedHosts = _server.getDomainNames();
+    bool hostValid = false;
+
+    for (size_t i = 0; i < allowedHosts.size(); ++i)
+	{
+        if (host == allowedHosts[i] || host == "localhost")
+		{
+            hostValid = true;
+            break;
+        }
+    }
+    if (!hostValid)
+        return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+
+	const std::vector<Locations> &locs = _server.getLocations();
 	const Locations *target = findLocation(req, locs);
 
 	deleteSession();
