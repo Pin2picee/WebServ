@@ -379,7 +379,6 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 	return parseCGIOutput(res, output, session);
 }
 
-
 Server::Server(const Server &copy)
 {
 	if (this != &copy)
@@ -401,18 +400,20 @@ Server &Server::operator=(const Server &assignement)
 
 std::map<std::string, Session> g_sessions;
 
-Session &getSession(const Request &req, Response &res)
+Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res)
 {
 	std::map<std::string, std::string>::const_iterator it = req.cookies.find("User");
 	if (it == req.cookies.end())
 	{
 		std::string id = generateSessionId();
-		g_sessions[id].ID = id;
-		g_sessions[id] = Session();
-		g_sessions[id].expiryTime = getCurrentTime() + setCookie(id, res, "User", req.cookies);
-		return g_sessions[id];
+		Session &newSession = g_sessions[id];
+		newSession.ID = id;
+		newSession.expiryTime = getCurrentTime() + setCookie(id, res, "User", req.cookies);
+		return newSession;
 	}
-	g_sessions[it->second].ID = it->second;
+	std::string sessionId = it->second;
+	setCookie(sessionId, res, "User", req.cookies);
+	g_sessions[it->second].ID = sessionId;
 	return g_sessions[it->second];
 }
 

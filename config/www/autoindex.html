@@ -48,7 +48,6 @@
       list-style: none;
     }
 
-    /* Tout le bloc <li> est cliquable */
     ul.file-list li a {
       display: block;
       padding: 12px 20px;
@@ -61,13 +60,29 @@
       background: rgba(255, 255, 255, 0.25);
     }
 
-    /* Icônes pour dossiers et fichiers */
     .folder a::before { content: "📁 "; }
     .file a::before { content: "📄 "; }
 
     @media (max-width: 600px) {
       h1 { font-size: 2rem; }
       ul.file-list { padding: 0 10px; }
+    }
+
+    a.button {
+      display: inline-block;
+      padding: 12px 25px;
+      background: white;
+      color: #0072ff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.2s ease;
+      margin-top: 15px;
+    }
+
+    a.button:hover {
+      background: #e8f2ff;
+      transform: scale(1.05);
     }
   </style>
 </head>

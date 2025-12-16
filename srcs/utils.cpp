@@ -326,9 +326,11 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 		cookie += "; Max-Age=" + ft_to_string(maxAgeSeconds);
 	if (httpOnly)
 		cookie += "; HttpOnly";
-	if (secure)
-		cookie += "; Secure";
-	res.headers.push_back("Set-Cookie: " + cookie);
+	cookie += "; SameSite=Lax";
+	(void)secure;
+	/* if (secure)
+		cookie += "; Secure"; */
+	res.headers.push_back(cookie);
 	return maxAgeSeconds;
 }
 
@@ -412,7 +414,7 @@ void removeAutoindexButton()
 		std::string html = buffer.str();
 		file.close();
 
-		std::string startTag = "<a href=\"/uploads?";
+		std::string startTag = "<a href=\"/autoindex?";
 		size_t pos = html.find(startTag);
 		while (pos != std::string::npos)
 		{
@@ -457,4 +459,16 @@ std::string cleanPath(const std::string &path)
     if (clean.size() > 1 && clean[clean.size() - 1] == '/')
         clean.erase(clean.size() - 1);
     return clean;
+}
+
+std::string shortenFileName(const std::string &name, size_t maxLength)
+{
+    if (name.length() <= maxLength)
+        return name;
+
+    const std::string ellipsis = "(...)";
+    size_t keep = (maxLength - ellipsis.length()) / 2;
+
+    std::string shortened = name.substr(0, keep) + ellipsis + name.substr(name.length() - keep);
+    return shortened;
 }

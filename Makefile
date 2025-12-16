@@ -2,7 +2,7 @@ MAKEFLAGS += -s  # global silence mode
 
 C++				= c++
 HDRS			= ./includes
-FLAGS			= -Wall -Wextra -Werror -std=c++98 -g -I $(HDRS)
+FLAGS			= -Wall -Wextra -Werror -std=c++98 -D_GLIBCXX_USE_CXX11_ABI=0 -g -I $(HDRS)
 
 SRCS			=	main.cpp \
 					srcs/utils.cpp \

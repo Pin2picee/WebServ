@@ -183,6 +183,7 @@ int	Monitor::	new_clients(int i)
 void	Monitor::Monitoring()
 {
 	int poll_return;
+	std::map<std::string, Session> g_sessions;
 
 	std::cout << "Lancement du server" << std::endl;
 	int	poll_reveil = 0;
@@ -281,7 +282,7 @@ void	Monitor::Monitoring()
 						}
 						*/
 						Request request = it_client->second.ExtractRequest();
-						Response	structResponse = it_client->second.handler.handleRequest(request);
+						Response	structResponse = it_client->second.handler.handleRequest(request, g_sessions);
 						updateClientCookies(it_client->second, structResponse);
 						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
 					}

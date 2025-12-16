@@ -9,18 +9,18 @@ ResponseHandler::~ResponseHandler() {}
 const Locations *findLocation(const Request &req, const std::vector<Locations> &locs)
 {
 	const Locations* bestMatch = NULL;
-    size_t longest = 0;
+	size_t longest = 0;
 
-    for (size_t i = 0; i < locs.size(); ++i)
-    {
-        const std::string &locPath = locs[i].path;
-        if (req.path.compare(0, locPath.size(), locPath) == 0 && locPath.size() > longest)
+	for (size_t i = 0; i < locs.size(); ++i)
+	{
+		const std::string &locPath = locs[i].path;
+		if (req.path.compare(0, locPath.size(), locPath) == 0 && locPath.size() > longest)
 		{
 			bestMatch = &locs[i];
 			longest = locPath.size();
 		}
-    }
-    return bestMatch;
+	}
+	return bestMatch;
 }
 
 /**
@@ -31,14 +31,15 @@ const Locations *findLocation(const Request &req, const std::vector<Locations> &
  * 
  * @return a `Response` structure that will answer in adequation to the `Request`.
  */
-Response ResponseHandler::handleRequest(const Request &req)
+Response ResponseHandler::handleRequest(const Request &req, std::map<std::string, Session> &g_sessions)
 {
 	Response	res;
 	const std::vector<Locations> &locs = _server.getLocations();
-	Session &session = getSession(req, res);
+	Session &session = getSession(g_sessions, req, res);
 	const Locations *target = findLocation(req, locs);
 
 	deleteSession();
+	displayRequestInfo(req);
 	if (!session.uploaded_files.size())
 		removeAutoindexButton();
 	if (session.current_page.empty())
@@ -53,6 +54,7 @@ Response ResponseHandler::handleRequest(const Request &req)
 		handleDelete(res, *target, req, session);
 	else
 		makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+	displayResponseInfo(res);
 	return res;
 }
 
@@ -65,7 +67,6 @@ Response ResponseHandler::handleRequest(const Request &req)
  */
 void ResponseHandler::handleGet(Response &res, const Locations &loc, const Request &req, Session &session)
 {
-	print("get");
 	std::string	full_path = (loc.root[0] == '/')
 							? cleanPath(loc.root + "/" + req.uri.substr(loc.path.size()))
 							: cleanPath(_server.getRoot() + "/" + loc.root + "/" + req.uri.substr(loc.path.size()));
@@ -75,14 +76,14 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
 	if (req.path == "/teapot")
 		return makeResponse(res, 418, readFile(_server.getErrorPage(418, session)), getMimeType(req));
-	else if (full_path.empty() || full_path == RED "none")
+	else if (full_path.empty())
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
 	else if (stat(full_path.c_str(), &s) == 0 && S_ISDIR(s.st_mode))
 	{
 		if (loc.sensitive)
 			return makeResponse(res, 403, readFile(_server.getErrorPage(403, session)), getMimeType(req));
 		else if (loc.autoindex)
-			return generateAutoindex(req, res, session, loc);
+			return generateAutoindex(full_path, full_path.substr(_server.getRoot().size()), req, res, session);
 		else
 		{
 			for (size_t i = 0; i < loc.index_files.size(); i++)
@@ -96,6 +97,7 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 						content = generateDeleteFileForm(session);
 					else
 						content = readFile(index_path);
+					session.current_page.clear();
 					session.current_page = index_path;
 					return makeResponse(res, 200, content, getMimeType(req));
 				}
@@ -133,7 +135,6 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
  */
 void ResponseHandler::handlePost(Response &res, const Locations &loc, const Request &req, Session &session)
 {
-	print("post");
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
 	if (req.body.size() > _server.getClientMaxBodySize())
@@ -150,19 +151,16 @@ void ResponseHandler::handlePost(Response &res, const Locations &loc, const Requ
  */
 void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Request &req, Session &session)
 {
-	print("delete");
 	if (std::find(loc.methods.begin(), loc.methods.end(), "DELETE") == loc.methods.end())
 		return makeResponse(res, 405, makeJsonError("DELETE not allowed on this location"), getMimeType(req));
 	std::string filename = urlDecode(req.query);
 	std::string::size_type pos = filename.rfind('/');
 	if (pos != std::string::npos)
 		filename = filename.substr(pos + 1);
-	print("filename = " + filename);
 	if (filename.empty())
 		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
 	std::string deletePath = cleanPath(_server.getRoot() + "/" + loc.upload_dir + "/" + session.ID + "/" + filename);
 	std::ifstream file(deletePath.c_str());
-	print("deletePath = " + deletePath);
 	if (!file || std::remove(deletePath.c_str()) != 0)
 		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
 	removeUploadFileSession(session, deletePath);
@@ -172,59 +170,78 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 }
 
 //utils
-void ResponseHandler::generateAutoindex(const Request &req, Response &res, Session &session, const Locations &loc)
+void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session)
 {
-    std::string expectedDir = cleanPath(loc.upload_dir + "/" + session.ID);
-	std::string dir = expectedDir;
-	std::string key = "dir=";
-	std::size_t pos = req.query.find(key);
-	if (pos != std::string::npos)
-		dir = req.query.substr(pos + key.size()); // récupère tout après "dir="
-    if (dir != expectedDir)
-        return makeResponse(res, 403, readFile(_server.getErrorPage(403, session)), getMimeType(req));
-    std::string fullPath = _server.getRoot() + dir;
-    if (!pathExists(fullPath))
-        return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
-    std::ifstream templateFile((_server.getRoot() + "autoindex.html").c_str());
-    if (!templateFile)
-        return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
-    std::stringstream buffer;
-    buffer << templateFile.rdbuf();
-    std::string html = buffer.str();
-    std::ostringstream fileList;
-    DIR *dirPtr = opendir(fullPath.c_str());
-    if (dirPtr)
-    {
-        struct dirent *entry;
-        while ((entry = readdir(dirPtr)))
-        {
-            std::string name = entry->d_name;
-            if (name == "." || name == "..")
-				continue;
-            std::string fullEntryPath = cleanPath(fullPath + "/" + name);
-            struct stat st;
-            if (stat(fullEntryPath.c_str(), &st) != 0)
-				continue;
-            std::string hrefPath = cleanPath(dir + "/" + name);
-            if (S_ISDIR(st.st_mode))
-				hrefPath += "/";
-            std::string liClass = S_ISDIR(st.st_mode) ? "folder" : "file";
-            fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" << name;
-            if (S_ISDIR(st.st_mode)) 
-				fileList << "/";
-			fileList << "</a></li>\n";
-        }
-        closedir(dirPtr);
+	const std::string fullPath = fullpath;
+	DIR *dirPtr = opendir(fullPath.c_str());
+	if (!dirPtr)
+		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
+	std::ostringstream fileList;
+    struct dirent *entry;
+	const std::string autoindexRoot = "/autoindex";
+
+    if (locPath != autoindexRoot && locPath != autoindexRoot + "/")
+	{
+        std::string parentPath = locPath;
+        if (parentPath[parentPath.size() - 1] == '/')
+            parentPath.erase(parentPath.size() - 1);
+        size_t pos = parentPath.find_last_of('/');
+        if (pos != std::string::npos)
+            parentPath = parentPath.substr(0, pos + 1);
+        else
+            parentPath = autoindexRoot + "/";
+
+        fileList << "<li class=\"folder\"><a href=\"" << parentPath << "\">Go Back (Parent Directory)</a></li>\n";
     }
-    pos = html.find("<!-- FILE_LIST_PLACEHOLDER -->");
-    if (pos != std::string::npos)
-        html.replace(pos, strlen("<!-- FILE_LIST_PLACEHOLDER -->"), fileList.str());
-    std::string buttonHtml = "<a href=\"" + loc.upload_dir + "?dir=" + session.ID + "\" class=\"button\">Watch autoindex</a>\n";
-    pos = html.find("</body>");
-    if (pos != std::string::npos && html.find("Watch autoindex") == std::string::npos)
-        html.insert(pos, buttonHtml);
-    session.current_page = fullPath;
-    return makeResponse(res, 200, html, getMimeType(req));
+	while ((entry = readdir(dirPtr)) != NULL)
+	{
+		std::string name = entry->d_name;
+		if (name == "." || name == "..")
+			continue;
+
+		std::string entryFullPath = fullPath + "/" + name;
+		struct stat st;
+		if (stat(entryFullPath.c_str(), &st) != 0)
+			continue;
+
+		// Construire le href en conservant le location path
+		std::string hrefPath = locPath;
+		if (hrefPath[hrefPath.size() - 1] != '/')
+			hrefPath += "/";
+		hrefPath += name;
+		if (S_ISDIR(st.st_mode))
+			hrefPath += "/";
+
+		std::string liClass = S_ISDIR(st.st_mode) ? "folder" : "file";
+		std::string displayName = shortenFileName(name, 50);
+        if (S_ISDIR(st.st_mode))
+            displayName += "/";
+		fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" 
+                 << displayName << "</a></li>\n";
+	}
+	closedir(dirPtr);
+
+	// Lecture du template
+	std::ifstream templateFile("./config/www/autoindex.html");
+	if (!templateFile)
+		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
+
+	std::stringstream buffer;
+	buffer << templateFile.rdbuf();
+	std::string html = buffer.str();
+
+	// Injection de la liste de fichiers
+	std::string placeholder = "<!-- FILE_LIST_PLACEHOLDER -->";
+	size_t pos = html.find(placeholder.c_str());
+	if (pos != std::string::npos)
+		html.replace(pos, placeholder.length(), fileList.str());
+
+	std::string buttonHtml = "<a href=\"/\" class=\"button\">Return to Home</a>\n";
+	pos = html.find("</body>");
+	if (pos != std::string::npos)
+		html.insert(pos, buttonHtml);
+	// Envoi de la réponse
+	makeResponse(res, 200, html, getMimeType(req));
 }
 
 /**
@@ -317,6 +334,8 @@ std::string	ResponseHandler::responseToString(const Response &res)
 	if (!res.content_type.empty())
 		oss << "Content-Type: " << res.content_type << "\r\n";
 	oss << "Content-Length: " << res.body.size() << "\r\n";
+	for (size_t i = 0; i < res.headers.size(); ++i)
+		oss << "Set-Cookie: " << res.headers[i] << "\r\n";
 	oss << "\r\n" << res.body;
 	return oss.str();
 }

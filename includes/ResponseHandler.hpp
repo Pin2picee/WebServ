@@ -22,7 +22,7 @@ private:
 	std::string		getMimeType(const Request &req);
 	std::string		getMimeType(const std::string &path);
 	void			getContentType(Response &res, const Locations &loc, const Request &req, Session &session);
-	void			generateAutoindex(const Request &req, Response &res, Session &session, const Locations &loc);
+	void			generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session);
 	std::string		generateDeleteFileForm(const Session &session, const std::string &uploadRoot = "./config/www/uploads");
 	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
 public:
@@ -32,7 +32,7 @@ public:
 	ResponseHandler &operator=(const ResponseHandler &assignement);
 
 	//handle requests
-	Response		handleRequest(const Request &req);
+	Response		handleRequest(const Request &req, std::map<std::string, Session> &g_sessions);
 	std::string		requestToString(const Request &req);
 	std::string		responseToString(const Response &res);
 };

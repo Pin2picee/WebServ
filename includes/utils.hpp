@@ -68,6 +68,7 @@ void		displayResponseInfo(const Response &res);
 std::string getFileName(const std::string &fileBody);
 std::string GetUploadFilename(const std::string &body);
 void		addAutoindexButton(const std::string &targetDir);
+std::string shortenFileName(const std::string &name, size_t maxLength);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
 
