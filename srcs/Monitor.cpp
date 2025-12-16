@@ -281,7 +281,7 @@ void	Monitor::Monitoring()
 						}
 						*/
 						Request request = it_client->second.ExtractRequest();
-						Response	structResponse = it_client->second.handler.handleRequest(request);
+						Response	structResponse = it_client->second.handler.handleRequest(request, &it_client->second);
 						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
 					}
 					nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);

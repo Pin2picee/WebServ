@@ -236,7 +236,7 @@ Response parseCGIOutput(const std::string &output)
  * 
  * @return A Response struct.
  */
-Response Server::handleCGI(const Request &req, const Locations &loc) const
+Response Server::handleCGI(const Request &req, const Locations &loc, Client *current) const
 {
 	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
 	std::string output;
@@ -318,22 +318,26 @@ Response Server::handleCGI(const Request &req, const Locations &loc) const
 		close(pipe_out[1]);
 		close(pipe_in[0]);
 
+		current->setPipeOut(pipe_in[1]);//on ecrit a la l'entre du fils le body
+		current->setPipeIn(pipe_out[0]);//on lit la sortie du fils
+		
 		// If POST method → send body to CGI
+		/*
 		if (req.method == "POST" && !req.body.empty())
-			write(pipe_in[1], req.body.c_str(), req.body.size());
+		write(pipe_in[1], req.body.c_str(), req.body.size());//WRITE SEULEMENT SI JE PEUX
 		close(pipe_in[1]);
 
 		// Read CGI output
 		char buffer[4096];
 		ssize_t bytes;
-
-		while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)
-			output.append(buffer, bytes);
+		
+		while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)//READ SEULEMENT SI JE PEUX
+		output.append(buffer, bytes);
 		close(pipe_out[0]);
-
+		
 		waitpid(pid, NULL, 0);
+		*/
 	}
-
 	return parseCGIOutput(output);
 }
 

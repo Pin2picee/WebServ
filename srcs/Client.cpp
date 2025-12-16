@@ -104,6 +104,17 @@ void	Client::setReponse(std::string buf)
 		this->reponse = buf;
 }
 
+void			Client::setPipeIn(int fd)
+{
+	this->fd_pipe_in = fd;
+}
+
+void			Client::setPipeOut(int fd)
+{
+	this->fd_pipe_out = fd;
+}
+
+
 std::string	&Client::getRequest()
 {
 	return (this->request);

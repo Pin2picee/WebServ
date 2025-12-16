@@ -26,6 +26,8 @@ class Client
 		bool	request_finish;
 		bool	correct_syntax;
 		size_t  offset;
+		int	fd_pipe_in;//lecture a la sortie du fils donc 0 car sortie du pipe
+		int	fd_pipe_out;//ecriture a l'entre du fils pour le body donc 1 car entre du pipe
 
 		Client();
 	public :// a changer
@@ -41,6 +43,8 @@ class Client
 		void			setRequest(std::string buf);
 		int				ParseSyntaxRequest(void);
 		void			setReponse(std::string buf);
+		void			setPipeIn(int fd);
+		void			setPipeOut(int fd);
 	//get
 		std::string		&getRequest();
 		std::string		&getReponse();

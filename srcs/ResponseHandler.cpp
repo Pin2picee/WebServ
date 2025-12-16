@@ -14,7 +14,7 @@ ResponseHandler::~ResponseHandler() {}
  * 
  * @return a `Response` structure that will answer in adequation to the `Request`.
  */
-Response ResponseHandler::handleRequest(const Request &req)
+Response ResponseHandler::handleRequest(const Request &req, Client *current)
 {
 	Response	res;
 	const std::vector<Locations> &locs = _server.getLocations();
@@ -28,7 +28,7 @@ Response ResponseHandler::handleRequest(const Request &req)
 	if (!target)
 		makeResponse(res, 404, readFile(_server.getErrorPage(404)), getMimeType(req));
 	else if (req.method == "GET")
-		res = handleGet(*target, req);
+		res = handleGet(*target, req, current);
 	else if (req.method == "POST")
 		res = handlePost(*target, req);
 	else if (req.method == "DELETE")
@@ -47,7 +47,7 @@ Response ResponseHandler::handleRequest(const Request &req)
  * 
  * @return a `Response` structure that will answer in adequation to the get `Request`.
  */
-Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
+Response ResponseHandler::handleGet(const Locations &loc, const Request &req, Client *current)
 {
 	Response	res;
 	std::string	full_path =  _server.getRoot() + req.path;
@@ -106,7 +106,7 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req)
 			makeResponse(res, 404, readFile(_server.getErrorPage(404)), getMimeType(req));
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
-				res = _server.handleCGI(req, loc);
+				res = _server.handleCGI(req, loc, current);
 		else
 		{
 			std::ostringstream buf;

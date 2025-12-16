@@ -85,7 +85,7 @@ public:
 	void 												addLocation(const Locations& loc);
 	void 												addListen(const std::string& ip, int port);
 	void 												addErrorPage(int code, const std::string& path);
-	Response 											handleCGI(const Request &req, const Locations &loc) const;
+	Response 											handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
 
 #endif

@@ -14,7 +14,7 @@ class ResponseHandler
 private:
 	const Server	&_server;
 //methods
-	Response		handleGet(const Locations &loc, const Request &req);
+	Response		handleGet(const Locations &loc, const Request &req, Client *current);
 	Response		handlePost(const Locations &loc, const Request &req);
 	Response		handleDelete(const Locations &loc, const Request &req);
 
@@ -29,7 +29,7 @@ public:
 	ResponseHandler &operator=(const ResponseHandler &assignement);
 
 	//handle requests
-	Response		handleRequest(const Request &req);
+	Response		handleRequest(const Request &req, Client *current);
 	std::string		requestToString(const Request &req);
 	std::string		responseToString(const Response &res);
 };
