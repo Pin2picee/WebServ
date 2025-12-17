@@ -38,14 +38,6 @@ Monitor &Monitor::operator=(const Monitor &copy)
 	return (*this);
 }
 
-void   Monitor::add_fd(int &fd)
-{
-	all_fd[this->nb_fd].fd = fd; 
-	all_fd[this->nb_fd].events = POLLIN;
-	this->nb_fd++;
-	this->nb_fd_server++;
-}
-
 Monitor::Monitor(std::vector<Socket *> tab)
 {
 	this->nb_fd = 0;
@@ -299,6 +291,16 @@ void	Monitor::Monitoring()
 			}
 		}
 	}
+	for (std::vector<Socket*>::iterator it = all_sockets.begin(); it != all_sockets.end(); ++it)
+	{
+		if (*it)
+		{
+			close((*it)->getFd());
+			delete *it;
+		}
+	}
+	all_sockets.clear();
+	resetUploadsDir("./config/www/uploads");
 }
 
 static void parseSetCookie(const std::string &header, std::string &name, std::string &value)

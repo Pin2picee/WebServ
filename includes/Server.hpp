@@ -67,9 +67,7 @@ class Server
 {
 private:
 	std::vector<std::pair<std::string, int> >			listen;
-	std::vector<std::string>							domain_names;
 	std::string											root;
-	std::string											default_page;
 	size_t												client_max_body_size;
 	std::map<int, std::string>							error_pages;
 	std::vector<Locations>								locations;
@@ -83,26 +81,19 @@ public:
 	// Getters
 
 	const std::string&									getRoot() const;
-	const std::vector<std::string>&						getDomainNames() const;
-	const std::string&									getDefaultPage() const;
 	const std::vector<std::pair<std::string, int> >&	getListen() const;
 	const std::vector<Locations>&						getLocations() const;
 	const std::string&									getErrorPage(int code, Session &session) const;
-	const std::map<int, std::string>&					getErrorPages() const;
 	size_t												getClientMaxBodySize() const;
 
 	// Modifiable getters
 
-	std::vector<std::pair<std::string, int> >&			getListenRef();
-	std::vector<Locations>&								getLocationsRef();
 	std::map<int, std::string>&							getErrorPagesRef();
 
 	// Setters
 
 	void 												setRoot(const std::string &r);
-	void												SetDomainNames(const std::string domainName);
 	void 												setClientMaxBodySize(size_t value);
-	void												setDefaultPage(const std::string &s);
 
 	// Utils
 

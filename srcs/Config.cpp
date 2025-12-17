@@ -39,17 +39,6 @@ void	Config::CreateSocket(void)
 	}
 }
 
-/**
- * @brief
- * Get the servers.
- * 
- * @return The vector of servers.
- */
-const std::vector<Server>&	Config::getServers() const
-{
-	return Servers;
-}
-
 const std::vector<Socket *>&	Config::getSocket() const
 {
 	return (Sockets);
@@ -170,15 +159,10 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
 			}
 			else if (tokens[i] == "root")
 				conf.setRoot(strip_semicolon(tokens[i + 1]));
-			else if (tokens[i] == "index")
-				conf.setDefaultPage(strip_semicolon(tokens[i + 1]));
 			else if (tokens[i] == "error_page" && i + 2 < tokens.size())
 				conf.addErrorPage(atoi(tokens[i + 1].c_str()), conf.getRoot() + strip_semicolon(tokens[i + 2]));
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
-			else if (tokens[i] == "server_name")
-				for (int j = 1; i + j < tokens.size() && tokens[i].find(";") == std::string::npos; j++)
-					conf.SetDomainNames(strip_semicolon((tokens[i + j])));
 			else if (tokens[i] == "location")
 				conf.addLocation(parse_loc(i, tokens));
 		}

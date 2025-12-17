@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/12/16 21:45:00 by marvin           ###   ########.fr       */
+/*   Updated: 2025/12/17 18:20:55 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,8 @@ int main (int argc, char **argv)
 	{
 		Config parser;
 		parser.parseAllServerFiles(ConfigFileName);
-		all_socket = parser.getSocket();
-		Monitor	Moniteur(all_socket);
+		all_sockets = parser.getSocket();
+		Monitor	Moniteur(all_sockets);
 		Moniteur.Monitoring();
 		/*
 		Client	test();

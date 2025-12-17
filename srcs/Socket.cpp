@@ -9,7 +9,7 @@ const char *Socket::SocketError::what() const throw()
 
 
 /*<CONSTRUCTION>*/
-Socket::Socket() {};
+Socket::Socket() {}
 
 Socket::Socket(const Socket &copy)
 {

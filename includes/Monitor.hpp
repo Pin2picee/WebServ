@@ -31,7 +31,6 @@ class Monitor
 		Monitor(const Monitor &copy);
 		Monitor &operator=(const Monitor &copy);
 	public :
-		void	add_fd(int &fd);//ajoute un nouveaux socket dans le tab pour poll / a faire avant le monitoring
 		void	Monitoring();//principal
 
 	class MonitorError : public std::exception

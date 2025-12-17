@@ -35,21 +35,6 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 {
 	Response	res;
 	Session &session = getSession(g_sessions, req, res);
-	std::string host = req.headers.count("Host") ? req.headers.at("Host") : "";
-    const std::vector<std::string> &allowedHosts = _server.getDomainNames();
-    bool hostValid = false;
-
-    for (size_t i = 0; i < allowedHosts.size(); ++i)
-	{
-        if (host == allowedHosts[i] || host == "localhost")
-		{
-            hostValid = true;
-            break;
-        }
-    }
-    if (!hostValid)
-        return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
-
 	const std::vector<Locations> &locs = _server.getLocations();
 	const Locations *target = findLocation(req, locs);
 
@@ -59,7 +44,7 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 	if (session.current_page.empty())
 		session.current_page = _server.getRoot() + req.path;
 	if (!target)
-		makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
+		makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req);
 	else if (req.method == "GET")
 		handleGet(res, *target, req, session);
 	else if (req.method == "POST")
@@ -67,7 +52,7 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 	else if (req.method == "DELETE")
 		handleDelete(res, *target, req, session);
 	else
-		makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+		makeResponseFromFile(res, 405, _server.getErrorPage(405, session), req);
 	return res;
 }
 
@@ -83,19 +68,19 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 	std::string	full_path = (loc.root[0] == '/')
 							? cleanPath(loc.root + "/" + req.uri.substr(loc.path.size()))
 							: cleanPath(_server.getRoot() + "/" + loc.root + "/" + req.uri.substr(loc.path.size()));
-	struct stat	s;
 
 	full_path = urlDecode(full_path);
+	std::cout << "fullpath = " + full_path << std::endl;
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
-		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+		return makeResponseFromFile(res, 405, _server.getErrorPage(405, session), req);
 	if (req.path == "/teapot")
-		return makeResponse(res, 418, readFile(_server.getErrorPage(418, session)), getMimeType(req));
+		return makeResponseFromFile(res, 418, _server.getErrorPage(418, session), req);
 	else if (full_path.empty())
-		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
-	else if (stat(full_path.c_str(), &s) == 0 && S_ISDIR(s.st_mode))
+		return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
+	else if (pathExists(full_path))
 	{
 		if (loc.sensitive)
-			return makeResponse(res, 403, readFile(_server.getErrorPage(403, session)), getMimeType(req));
+			return makeResponseFromFile(res, 403, _server.getErrorPage(403, session), req);
 		else if (loc.autoindex)
 			return generateAutoindex(full_path, full_path.substr(_server.getRoot().size()), req, res, session);
 		else
@@ -116,14 +101,14 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 					return makeResponse(res, 200, content, getMimeType(req));
 				}
 			}
-			return makeResponse(res, 403, readFile(_server.getErrorPage(403, session)), getMimeType(req));
+			return makeResponseFromFile(res, 403, _server.getErrorPage(403, session), req);
 		}
 	}
 	else
 	{
 		std::ifstream end_ifs(full_path.c_str(), std::ios::binary);
 		if (!end_ifs)
-			return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
+			return makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req);
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
 				return _server.handleCGI(res, req, loc, session);
@@ -150,9 +135,9 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 void ResponseHandler::handlePost(Response &res, const Locations &loc, const Request &req, Session &session)
 {
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
-		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+		return makeResponseFromFile(res, 405, _server.getErrorPage(405, session), req);
 	if (req.body.size() > _server.getClientMaxBodySize())
-		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
+		return makeResponseFromFile(res, 413, _server.getErrorPage(413, session), req);
 	return getContentType(res, loc, req, session);
 }
 
@@ -184,10 +169,10 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 }
 
 //utils
-void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath,
-                                        const Request &req, Response &res, Session &session)
+void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session)
 {
-    DIR *dirPtr = opendir(fullpath.c_str());
+    const std::string fullPath = fullpath;
+    DIR *dirPtr = opendir(fullPath.c_str());
     if (!dirPtr)
         return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
 
@@ -200,13 +185,10 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
         std::string name = entry->d_name;
         if (name == "." || name == "..")
             continue;
-
-        std::string entryFullPath = fullpath + "/" + name;
+        std::string entryFullPath = fullPath + "/" + name;
         struct stat st;
         if (stat(entryFullPath.c_str(), &st) != 0)
             continue;
-
-        // Construire le href
         std::string hrefPath = locPath;
         if (hrefPath[hrefPath.size() - 1] != '/')
             hrefPath += "/";
@@ -214,53 +196,41 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
         if (S_ISDIR(st.st_mode))
             hrefPath += "/";
 
-        std::string liClass = getFileClass(name, st);
-        std::string displayName = name;
+		std::string liClass = getFileClass(name, st);
+        std::string displayName = shortenFileName(name, 30);
         if (S_ISDIR(st.st_mode))
             displayName += "/";
 
-        fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">"
+        fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" 
                  << displayName << "</a></li>\n";
     }
     closedir(dirPtr);
-
-    // Bouton "Go Back"
-    if (locPath != autoindexRoot && locPath != autoindexRoot + "/")
-    {
-        std::string parentPath = locPath;
-        if (parentPath[parentPath.size() - 1] == '/')
-            parentPath.erase(parentPath.size() - 1);
-        size_t pos = parentPath.find_last_of('/');
-        if (pos != std::string::npos)
-            parentPath = parentPath.substr(0, pos + 1);
-        else
-            parentPath = autoindexRoot + "/";
-
-        fileList << "<li class=\"go-back\"><a href=\"" << parentPath << "\">⬅️ Go Back</a></li>\n";
-    }
-
-    // Lecture du template HTML
+	if (locPath != autoindexRoot && locPath != autoindexRoot + "/")
+	{
+		std::string parentPath = locPath;
+		if (parentPath[parentPath.size() - 1] == '/')
+			parentPath.erase(parentPath.size() - 1);
+		size_t pos = parentPath.find_last_of('/');
+		if (pos != std::string::npos)
+			parentPath = parentPath.substr(0, pos + 1);
+		else
+			parentPath = autoindexRoot + "/";
+		fileList << "<li class=\"go-back\"><a href=\"" << parentPath << "\">⬅️ Go Back</a></li>\n";
+	}
     std::ifstream templateFile("./config/www/autoindex.html");
     if (!templateFile)
         return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
-
     std::stringstream buffer;
     buffer << templateFile.rdbuf();
     std::string html = buffer.str();
-
-    // Injection de la liste de fichiers
     std::string placeholder = "<!-- FILE_LIST_PLACEHOLDER -->";
     size_t pos = html.find(placeholder.c_str());
     if (pos != std::string::npos)
         html.replace(pos, placeholder.length(), fileList.str());
-
-    // Ajouter bouton retour à la home
     std::string buttonHtml = "<a href=\"/\" class=\"button\">Return to Home</a>\n";
     pos = html.find("</body>");
     if (pos != std::string::npos)
         html.insert(pos, buttonHtml);
-
-    // Envoi de la réponse
     makeResponse(res, 200, html, getMimeType(req));
 }
 
@@ -281,7 +251,6 @@ static std::string getReasonPhrase(int status_code)
 		case 201: return "Created";
 		case 204: return "No Content";
 		case 400: return "Bad Request";
-		case 401: return "Unauthorized";
 		case 403: return "Forbidden";
 		case 404: return "Not Found";
 		case 405: return "Method Not Allowed";
@@ -289,9 +258,6 @@ static std::string getReasonPhrase(int status_code)
 		case 413: return "Payload Too Large";
 		case 418: return "I'm a teapot";
 		case 500: return "Internal Server Error";
-		case 501: return "Not Implemented";
-		case 502: return "Bad Gateway";
-		case 503: return "Service Unavailable";
 		default:  return "Unknown";
 	}
 }
@@ -302,11 +268,9 @@ std::string ResponseHandler::generateDeleteFileForm(const Session &session, cons
 	std::string html = readFile(_server.getRoot() + "/" + "delete_file.html");
 	std::string userDir = cleanPath(uploadRoot + "/" + session.ID);
 	std::string fileSelectHtml;
-	struct stat info;
 	bool hasFiles = false;
 
-	if (!(stat(userDir.c_str(), &info) == 0 && (info.st_mode & S_IFDIR))
-		|| session.uploaded_files.empty())
+	if (!pathExists(userDir) || session.uploaded_files.empty())
 		fileSelectHtml = "<p>No files to delete.</p>";
 	else
 	{
@@ -357,27 +321,6 @@ std::string	ResponseHandler::responseToString(const Response &res)
 	for (size_t i = 0; i < res.headers.size(); ++i)
 		oss << "Set-Cookie: " << res.headers[i] << "\r\n";
 	oss << "\r\n" << res.body;
-	return oss.str();
-}
-
-/**
- * @brief
- * Convert a Request struct into a string in standard HTTP format.
- * 
- * @param req The Request struct that will be converted.
- * 
- * @return
- * The string HTTP message.
- */
-std::string	ResponseHandler::requestToString(const Request &req)
-{
-	std::ostringstream oss;
-
-	oss << req.method << " " << req.path << " " << req.version << "\r\n";
-	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin();
-		 it != req.headers.end(); ++it)
-		oss << it->first << ": " << it->second << "\r\n";
-	oss << "\r\n" << req.body;
 	return oss.str();
 }
 
@@ -508,7 +451,10 @@ std::string ResponseHandler::getMimeType(const std::string &path)
 	return MIME_TEXT_HTML;
 }
 
-
+void ResponseHandler::makeResponseFromFile(Response &res, int status, const std::string &path, const Request &req)
+{
+    makeResponse(res, status, readFile(path), getMimeType(req));
+}
 
 std::string createUploadDir(const std::string &root, const std::string &upload_dir, const std::string &userId)
 {
@@ -537,7 +483,7 @@ std::string createUploadDir(const std::string &root, const std::string &upload_d
 void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session)
 {
 	if (boundary.empty())
-		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+		return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
 	std::size_t fileStart = req.body.find("filename=\"");
 	if (fileStart != std::string::npos)
 	{
@@ -546,31 +492,31 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
 			return makeResponse(res, 204, "", getMimeType(req));
 		std::string Userpath = createUploadDir(_server.getRoot(), loc.upload_dir, session.ID);
 		if (Userpath.empty())
-			return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
+			return makeResponseFromFile(res, 500, _server.getErrorPage(500, session), req);
 		filename = cleanPath(Userpath + "/" + filename);
 		fileStart = req.body.find("\r\n\r\n", fileStart);
 		if (fileStart == std::string::npos)
-			return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+			return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
 		fileStart += 4;
 		std::size_t fileEnd = req.body.find(boundary, fileStart);
 		if (fileEnd == std::string::npos)
-			return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+			return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
 		fileEnd -= 2;
 		if (fileEnd - fileStart > _server.getClientMaxBodySize())
-			return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
+			return makeResponseFromFile(res, 413, _server.getErrorPage(413, session), req);
 		std::ofstream ofs(filename.c_str(), std::ios::binary);
 		if (!ofs)
-			return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), getMimeType(req));
-		ofs.write(filename.c_str(), fileEnd - fileStart);
+			return makeResponseFromFile(res, 500, _server.getErrorPage(500, session), req);
+		ofs.write(req.body.c_str() + fileStart, fileEnd - fileStart);
 		ofs.close();
 		if (std::find(session.uploaded_files.begin(), session.uploaded_files.end(), filename) != session.uploaded_files.end())
-			return makeResponse(res, 409, readFile(_server.getErrorPage(409, session)), getMimeType(req));
+			return makeResponseFromFile(res, 409, _server.getErrorPage(409, session), req);
 		session.uploaded_files.push_back(filename);
 		if (session.uploaded_files.size() && loc.autoindex)
 			addAutoindexButton(cleanPath(loc.upload_dir + "/" + session.ID));
-		return makeResponse(res, 201, readFile(_server.getErrorPage(201, session)), getMimeType(req));
+		return makeResponseFromFile(res, 201, _server.getErrorPage(201, session), req);
 	}
-	return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+	return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
 }
 
 /**
@@ -589,7 +535,7 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	if (it != req.headers.end())
 		contentType = it->second;
 	else
-		return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+		return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
 	std::string boundary;
 	std::size_t pos = contentType.find("boundary=");
 
@@ -601,7 +547,7 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	else
 	{
 		if (req.body.size() > _server.getClientMaxBodySize())
-			return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
-		return makeResponse(res, 200, readFile(_server.getErrorPage(200, session)), getMimeType(req));
+			return makeResponseFromFile(res, 413, _server.getErrorPage(413, session), req);
+		return makeResponseFromFile(res, 200, _server.getErrorPage(200, session), req);
 	}
 }

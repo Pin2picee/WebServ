@@ -13,7 +13,7 @@ std::string strip_semicolon(const std::string &s)
 	if (!s.empty() && s[s.size() - 1] == ';')
 		return s.substr(0, s.size() - 1);
 	return s;
-};
+}
 
 /**
  * @brief
@@ -29,7 +29,6 @@ void	init_default_errors(Server &conf)
 	errors[201] = root + "/errors/201.html";
 	errors[204] = root + "/errors/204.html";
 	errors[400] = root + "/errors/400.html";
-	errors[401] = root + "/errors/401.html";
 	errors[403] = root + "/errors/403.html";
 	errors[404] = root + "/errors/404.html";
 	errors[405] = root + "/errors/405.html";
@@ -37,36 +36,61 @@ void	init_default_errors(Server &conf)
 	errors[413] = root + "/errors/413.html";
 	errors[418] = root + "/errors/418.html";
 	errors[500] = root + "/errors/500.html";
-	errors[501] = root + "/errors/501.html";
-	errors[502] = root + "/errors/502.html";
-	errors[503] = root + "/errors/503.html";
+}
+
+bool removeDirectoryRecursive(const std::string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (!dir)
+        return false;
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        std::string name = entry->d_name;
+        if (name == "." || name == "..")
+            continue;
+
+        std::string fullPath = path + "/" + name;
+
+        struct stat entryStat;
+        if (stat(fullPath.c_str(), &entryStat) == -1)
+            continue;
+
+        if (S_ISDIR(entryStat.st_mode))
+        {
+            removeDirectoryRecursive(fullPath);
+            rmdir(fullPath.c_str());
+        }
+        else
+        {
+            unlink(fullPath.c_str());
+        }
+    }
+    closedir(dir);
+
+    return (rmdir(path.c_str()) == 0);
 }
 
 
 void resetUploadsDir(const std::string &uploadsPath)
 {
-	std::string rmCmd = "rm -rf " + uploadsPath;
-	if (system(rmCmd.c_str()) != 0)
-		std::cerr << "Failed to reset " << uploadsPath << std::endl;
+	if (pathExists(uploadsPath))
+	{
+		if (!removeDirectoryRecursive(uploadsPath))
+			std::cerr << "Failed to remove " << uploadsPath << std::endl;
+	}
+
 	if (mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 }
 
-std::vector<Socket *>all_socket;
+std::vector<Socket *> all_sockets;
 volatile sig_atomic_t	on = 1;
 
 void	handle_sigint(int signum)
 {
 	(void)signum;
-	for (std::vector<Socket * >::iterator it = all_socket.begin(); it != all_socket.end(); it++)
-	{
-		if (*it)
-		{
-			close((*it)->getFd());
-			delete((*it));
-		}
-	}
-	resetUploadsDir("./config/www/uploads");
 	on = 0;
 }
 
@@ -95,99 +119,64 @@ std::string readFile(const std::string& filepath)
 	return buf.str();
 }
 
-long long convertSize(const std::string &input)
+size_t convertSize(const std::string &input)
 {
 	if (input.empty())
 		throw std::invalid_argument("Empty size string");
-
 	std::string str = strip_semicolon(input);
-	while (!str.empty() && isspace(str[str.size() - 1]))
+
+	while (!str.empty() && std::isspace(static_cast<unsigned char>(str[str.size() - 1])))
 		str.erase(str.size() - 1);
-	while (!str.empty() && isspace(str[0]))
+	while (!str.empty() && std::isspace(static_cast<unsigned char>(str[0])))
 		str.erase(0, 1);
 	if (str.empty())
 		throw std::invalid_argument("Invalid size string");
-
-	long long multiplier = 1;
+	size_t multiplier = 1;
 	if (str.size() > 2)
 	{
 		std::string suffix2 = str.substr(str.size() - 2);
 		for (size_t i = 0; i < suffix2.size(); ++i)
-		suffix2[i] = std::toupper(suffix2[i]);
-		if (suffix2 == "KB" || suffix2 == "MB" || suffix2 == "GB")
-		{
-			if (suffix2 == "KB")
-				multiplier = 1000LL;
-			else if (suffix2 == "MB")
-				multiplier = 1000LL * 1000LL;
-			else if (suffix2 == "GB")
-				multiplier = 1000LL * 1000LL * 1000LL;
+			suffix2[i] = std::toupper(static_cast<unsigned char>(suffix2[i]));
+
+		if (suffix2 == "KB")
+			multiplier = 1000;
+		else if (suffix2 == "MB")
+			multiplier = 1000 * 1000;
+		else if (suffix2 == "GB")
+			multiplier = 1000 * 1000 * 1000;
+
+		if (multiplier != 1)
 			str = str.substr(0, str.size() - 2);
-		}
 	}
 	if (str.size() > 1)
 	{
-		char upper = std::toupper(str[str.size() - 1]);
+		char upper = std::toupper(static_cast<unsigned char>(str[str.size() - 1]));
+		if (upper == 'K')
+			multiplier = 1024;
+		else if (upper == 'M')
+			multiplier = 1024 * 1024;
+		else if (upper == 'G')
+			multiplier = 1024 * 1024 * 1024;
+
 		if (upper == 'K' || upper == 'M' || upper == 'G')
-		{
-			if (upper == 'K')
-				multiplier = 1024LL;
-			else if (upper == 'M')
-				multiplier = 1024LL * 1024LL;
-			else if (upper == 'G')
-				multiplier = 1024LL * 1024LL * 1024LL;
 			str = str.substr(0, str.size() - 1);
-		}
 	}
 	for (size_t i = 0; i < str.size(); ++i)
-		if (!std::isdigit(str[i]))
+	{
+		if (!std::isdigit(static_cast<unsigned char>(str[i])))
 			throw std::invalid_argument("Invalid number part in size");
-	long long base = atoll(str.c_str());
-	return base * multiplier;
-}
-
-std::string GetUploadFilename(const std::string &body)
-{
-	std::string filename;
-	std::string content;
-
-	std::istringstream stream(body);
-	std::string line;
-
-	if (!std::getline(stream, line))
-		return "";
-	if (!line.empty())
-		stripe(line, '\r', RIGHT);
-	std::string boundary = line;
-	if (std::getline(stream, line) && !line.empty())
-		stripe(line, '\r', RIGHT);
-	if (line == boundary + "--")
-		return "";
-	std::string contentDisposition;
-	while (line != "\r" && !line.empty())
-	{
-		if (!line.empty() && line.find("Content-Disposition:") != std::string::npos)
-		{
-			contentDisposition = line;
-			stripe(contentDisposition, '\r', RIGHT);
-			break ;
-		}
-		std::getline(stream, line);
 	}
-	size_t fnamePos = contentDisposition.find("filename=\"");
-	if (fnamePos != std::string::npos)
-	{
-		fnamePos += 10;
-		size_t endPos = contentDisposition.find("\"", fnamePos);
-		if (endPos != std::string::npos)
-			filename = contentDisposition.substr(fnamePos, endPos - fnamePos);
-	}
-	return filename;
+	char *end;
+	size_t base = std::strtoul(str.c_str(), &end, 10);
+	if (*end != '\0')
+		throw std::invalid_argument("Invalid number conversion");
+
+	return static_cast<size_t>(base) * multiplier;
 }
 
 void displayRequestInfo(const Request &req)
 {
-	print("displayRequestInfo :");
+	std::cout << "------- displayRequestInfo :" << std::endl;
 	// Affichage des informations simples
     std::cout << RED "Version: " RESET << req.version << std::endl;
 	std::cout << RED "Method: " RESET << req.method << std::endl;
@@ -212,7 +201,7 @@ void displayRequestInfo(const Request &req)
 
 void displayResponseInfo(const Response &res)
 {
-	print("displayResponseInfo :");
+	std::cout << "------- displayResponseInfo :" << std::endl;
 	// Affichage des informations principales
 	std::cout << RED "Version: " RESET << res.version << std::endl;
 	std::cout << RED "Status Code: " RESET << res.status_code << std::endl;
@@ -339,22 +328,9 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 	return setCookie(id, res, name, cookies, 3600, "/", true, true);
 }
 
-void print(const std::string msg)
-{
-	std::cout << "-------" << msg << std::endl;
-}
-
 time_t getCurrentTime()
 {
 	return std::time(NULL);
-}
-
-bool canDisplayFile(const std::string mime)
-{
-	return	mime == MIME_TEXT_HTML || mime == MIME_TEXT_PLAIN || mime == MIME_TEXT_CSS ||
-			mime == MIME_TEXT_JAVASCRIPT || mime == MIME_IMAGE_PNG || mime == MIME_IMAGE_JPEG ||
-			mime == MIME_IMAGE_GIF || mime == MIME_IMAGE_SVG || mime == MIME_IMAGE_WEBP ||
-			mime == MIME_IMAGE_BMP;
 }
 
 bool pathExists(const std::string &path)
@@ -497,4 +473,3 @@ std::string getFileClass(const std::string &name, const struct stat &st)
     }
     return "file";
 }
-
