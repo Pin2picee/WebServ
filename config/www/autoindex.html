@@ -59,9 +59,40 @@
     ul.file-list li:hover {
       background: rgba(255, 255, 255, 0.25);
     }
+    
+    li.go-back a {
+      /* aucun emoji en ::before pour ce bouton */
+    }
 
+    /* Emojis pour chaque type de fichier */
     .folder a::before { content: "📁 "; }
-    .file a::before { content: "📄 "; }
+    .file a::before   { content: "📄 "; }
+    .image a::before  { content: "🖼️ "; }
+    .video a::before  { content: "🎬 "; }
+    .pdf a::before    { content: "📕 "; }
+    .text a::before   { content: "📄 "; }
+
+    /* Style spécial pour les fichiers texte */
+    .text a, .image a, .file a, .video a, .pdf a, .folder a, li.go-back a {
+      background: rgba(255, 255, 255, 0.25);
+      border-left: 4px solid transparent;
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: 0.2s ease;
+    }
+
+    .text a:hover, .image a:hover, .file a:hover, .video a:hover, .pdf a:hover, .folder a:hover, li.go-back a:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.02);
+    }
+    .text a { border-left-color: #00ffcc; }
+    .image a { border-left-color: #ff9900; }
+    .file a  { border-left-color: #0072ff; }
+    .video a { border-left-color: #ff33cc; }
+    .pdf a   { border-left-color: #ff3300; }
+    .folder a { border-left-color: #008cff; }
+    li.go-back a { border-left-color: #000000; }
 
     @media (max-width: 600px) {
       h1 { font-size: 2rem; }

@@ -472,3 +472,29 @@ std::string shortenFileName(const std::string &name, size_t maxLength)
     std::string shortened = name.substr(0, keep) + ellipsis + name.substr(name.length() - keep);
     return shortened;
 }
+
+std::string getFileClass(const std::string &name, const struct stat &st)
+{
+    if (S_ISDIR(st.st_mode))
+        return "folder";
+
+    size_t dotPos = name.find_last_of('.');
+    if (dotPos != std::string::npos)
+	{
+        std::string ext = name.substr(dotPos + 1);
+        for (size_t i = 0; i < ext.size(); ++i)
+            ext[i] = std::tolower(ext[i]);
+        if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif" || ext == "bmp")
+            return "image";
+        else if (ext == "mp4" || ext == "avi" || ext == "mkv" || ext == "mov")
+            return "video";
+        else if (ext == "pdf")
+            return "pdf";
+        else if (ext == "txt" || ext == "md" || ext == "cpp" || ext == "h")
+            return "text";
+        else
+            return "file";
+    }
+    return "file";
+}
+

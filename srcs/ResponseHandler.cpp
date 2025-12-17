@@ -54,7 +54,6 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 	const Locations *target = findLocation(req, locs);
 
 	deleteSession();
-	displayRequestInfo(req);
 	if (!session.uploaded_files.size())
 		removeAutoindexButton();
 	if (session.current_page.empty())
@@ -69,7 +68,6 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 		handleDelete(res, *target, req, session);
 	else
 		makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
-	displayResponseInfo(res);
 	return res;
 }
 
@@ -87,6 +85,7 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 							: cleanPath(_server.getRoot() + "/" + loc.root + "/" + req.uri.substr(loc.path.size()));
 	struct stat	s;
 
+	full_path = urlDecode(full_path);
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
 	if (req.path == "/teapot")
@@ -185,18 +184,49 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 }
 
 //utils
-void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session)
+void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath,
+                                        const Request &req, Response &res, Session &session)
 {
-	const std::string fullPath = fullpath;
-	DIR *dirPtr = opendir(fullPath.c_str());
-	if (!dirPtr)
-		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
-	std::ostringstream fileList;
-    struct dirent *entry;
-	const std::string autoindexRoot = "/autoindex";
+    DIR *dirPtr = opendir(fullpath.c_str());
+    if (!dirPtr)
+        return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
 
+    std::ostringstream fileList;
+    struct dirent *entry;
+    const std::string autoindexRoot = "/autoindex";
+
+    while ((entry = readdir(dirPtr)) != NULL)
+    {
+        std::string name = entry->d_name;
+        if (name == "." || name == "..")
+            continue;
+
+        std::string entryFullPath = fullpath + "/" + name;
+        struct stat st;
+        if (stat(entryFullPath.c_str(), &st) != 0)
+            continue;
+
+        // Construire le href
+        std::string hrefPath = locPath;
+        if (hrefPath[hrefPath.size() - 1] != '/')
+            hrefPath += "/";
+        hrefPath += name;
+        if (S_ISDIR(st.st_mode))
+            hrefPath += "/";
+
+        std::string liClass = getFileClass(name, st);
+        std::string displayName = name;
+        if (S_ISDIR(st.st_mode))
+            displayName += "/";
+
+        fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">"
+                 << displayName << "</a></li>\n";
+    }
+    closedir(dirPtr);
+
+    // Bouton "Go Back"
     if (locPath != autoindexRoot && locPath != autoindexRoot + "/")
-	{
+    {
         std::string parentPath = locPath;
         if (parentPath[parentPath.size() - 1] == '/')
             parentPath.erase(parentPath.size() - 1);
@@ -206,57 +236,32 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
         else
             parentPath = autoindexRoot + "/";
 
-        fileList << "<li class=\"folder\"><a href=\"" << parentPath << "\">Go Back (Parent Directory)</a></li>\n";
+        fileList << "<li class=\"go-back\"><a href=\"" << parentPath << "\">⬅️ Go Back</a></li>\n";
     }
-	while ((entry = readdir(dirPtr)) != NULL)
-	{
-		std::string name = entry->d_name;
-		if (name == "." || name == "..")
-			continue;
 
-		std::string entryFullPath = fullPath + "/" + name;
-		struct stat st;
-		if (stat(entryFullPath.c_str(), &st) != 0)
-			continue;
+    // Lecture du template HTML
+    std::ifstream templateFile("./config/www/autoindex.html");
+    if (!templateFile)
+        return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
 
-		// Construire le href en conservant le location path
-		std::string hrefPath = locPath;
-		if (hrefPath[hrefPath.size() - 1] != '/')
-			hrefPath += "/";
-		hrefPath += name;
-		if (S_ISDIR(st.st_mode))
-			hrefPath += "/";
+    std::stringstream buffer;
+    buffer << templateFile.rdbuf();
+    std::string html = buffer.str();
 
-		std::string liClass = S_ISDIR(st.st_mode) ? "folder" : "file";
-		std::string displayName = shortenFileName(name, 50);
-        if (S_ISDIR(st.st_mode))
-            displayName += "/";
-		fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" 
-                 << displayName << "</a></li>\n";
-	}
-	closedir(dirPtr);
+    // Injection de la liste de fichiers
+    std::string placeholder = "<!-- FILE_LIST_PLACEHOLDER -->";
+    size_t pos = html.find(placeholder.c_str());
+    if (pos != std::string::npos)
+        html.replace(pos, placeholder.length(), fileList.str());
 
-	// Lecture du template
-	std::ifstream templateFile("./config/www/autoindex.html");
-	if (!templateFile)
-		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
+    // Ajouter bouton retour à la home
+    std::string buttonHtml = "<a href=\"/\" class=\"button\">Return to Home</a>\n";
+    pos = html.find("</body>");
+    if (pos != std::string::npos)
+        html.insert(pos, buttonHtml);
 
-	std::stringstream buffer;
-	buffer << templateFile.rdbuf();
-	std::string html = buffer.str();
-
-	// Injection de la liste de fichiers
-	std::string placeholder = "<!-- FILE_LIST_PLACEHOLDER -->";
-	size_t pos = html.find(placeholder.c_str());
-	if (pos != std::string::npos)
-		html.replace(pos, placeholder.length(), fileList.str());
-
-	std::string buttonHtml = "<a href=\"/\" class=\"button\">Return to Home</a>\n";
-	pos = html.find("</body>");
-	if (pos != std::string::npos)
-		html.insert(pos, buttonHtml);
-	// Envoi de la réponse
-	makeResponse(res, 200, html, getMimeType(req));
+    // Envoi de la réponse
+    makeResponse(res, 200, html, getMimeType(req));
 }
 
 /**
