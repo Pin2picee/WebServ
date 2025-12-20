@@ -1,5 +1,5 @@
 #include "ResponseHandler.hpp"
-
+#include "Client.hpp"
 /* constructor */
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
@@ -94,7 +94,6 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req, Cl
 			}
 			if (!found)
 				makeResponse(res, 403, readFile(_server.getErrorPage(403)), getMimeType(req));
-			
 		}
 		return res;
 	}

@@ -3,8 +3,7 @@
 # define MONITOR_HPP
 
 # include "Client.hpp"
-# include "Socket.hpp"
-
+# include "Server.hpp"
 /**
  * @brief = FUTUR instance qui va permettre de poll mes socket serveurs et client car on a le droit a un seul poll
  * @example = si monitoring lancer on ne add_fd plus et on ne rajoute plus de socket server
@@ -25,14 +24,16 @@ class Monitor
 		int		new_request(int i);// RECUP la requete + verif test_read
 		int		test_read(ssize_t count);
 		int		deconnexion(int i);//SUPPRIME LA CONNEXION SOCKET CLIENT IF !TEST_READ
+		void 	remove_fd(int index);
 	public :
 		Monitor(std::vector<Socket *> tab);
 		~Monitor();
 		Monitor(const Monitor &copy);
 		Monitor &operator=(const Monitor &copy);
 	public :
-		void	add_fd(int &fd);//ajoute un nouveaux socket dans le tab pour poll / a faire avant le monitoring
+		void	add_fd(int &fd, int event);//ajoute un nouveaux socket dans le tab pour poll / a faire avant le monitoring
 		void	Monitoring();//principal
+		
 
 	class MonitorError : public std::exception
 	{

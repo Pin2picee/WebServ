@@ -1,7 +1,9 @@
 #ifndef SOCKET_HPP
 # define SOCKET_HPP
 
-# include "Server.hpp"
+# include "Includes.hpp"
+
+class Server;
 
 // #class qui va creer un socket 
 class Socket

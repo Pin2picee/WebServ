@@ -3,14 +3,14 @@
 Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServ()))
 {
 	request_finish = false;
+	PipeAddPoll = false;
 	correct_syntax = true;
 	offset = 0;
+	InCgi = false;
+	_pid = 0;
+	OffsetCgi = 0;
+	this->ResponseGenerate = false;
 	gettimeofday(&this->start, NULL);
-	this->reponse ="HTTP/1.1 200 OK\r\n"
-						"Content-Length: 5\r\n"
-						"Content-Type: text/plain\r\n"
-						"\r\n"
-						"SALUT\r\n\r\n";
 	
 }
 
@@ -38,6 +38,13 @@ Client &Client::operator=(const Client &copy)
 		handler = copy.handler;
 		struct_request = copy.struct_request;
 		correct_syntax = copy.correct_syntax;
+		InCgi = copy.InCgi;
+		_pid = copy._pid;
+		_body = copy._body;
+		CgiOutput = copy.CgiOutput;
+		PipeAddPoll = copy.PipeAddPoll;
+		OffsetCgi = copy.OffsetCgi;
+		ResponseGenerate = copy.ResponseGenerate;
 		//pas de end car init dans deconnected;
 	}
 	return (*this);
@@ -57,7 +64,28 @@ void	Client::resetInf()
 		this->offset = 0;
 }
 
+//Reset apres CGI - ne touche pas a correct_syntax ni offset
+void	Client::resetAfterCGI()
+{
+		this->request_finish = false;
+		this->request.clear();
+}
+
 /*SET-GET*/
+
+void			Client::setBody(std::string body)
+{
+	_body = body;
+}
+void			Client::setCgiPid(pid_t pid)
+{
+	_pid = pid;
+}
+
+void			Client::setResponseGenerate(bool etat)
+{
+	this->ResponseGenerate = etat;
+}
 
 //SET + parsing
 void	Client::setRequest(std::string buf)
@@ -102,47 +130,121 @@ void	Client::setRequest(std::string buf)
 void	Client::setReponse(std::string buf)
 {
 		this->reponse = buf;
+		this->offset = 0;
 }
 
+void	Client::setCGI()
+{
+	if (this->InCgi)
+		this->InCgi = false;
+	else
+	{
+		this->InCgi = true;
+		gettimeofday(&this->cgi_start_time, NULL);
+	}
+}
+//je lis dedans
 void			Client::setPipeIn(int fd)
 {
 	this->fd_pipe_in = fd;
 }
 
+//j'ecris dedans
 void			Client::setPipeOut(int fd)
 {
 	this->fd_pipe_out = fd;
 }
 
+void			Client::setPipeAddPoll(bool	booleen)
+{
+	this->PipeAddPoll = booleen;
+}
 
-std::string	&Client::getRequest()
+const bool				&Client::getPipeAddPoll(void) const
+{
+	return (this->PipeAddPoll);
+}
+
+const std::string		&Client::getBody(void) const
+{
+	return (this->_body);
+}
+
+const pid_t			&Client::getCgiPid(void) const
+{
+	return (this->_pid);
+}
+
+const bool			&Client::getResponseGenerate() const
+{
+	return (this->ResponseGenerate);
+}
+
+const bool			&Client::getInCGI() const
+{
+	return (this->InCgi);
+}
+
+const std::string	&Client::getRequest() const
 {
 	return (this->request);
 }
 
-size_t &Client::getOffset()
+const timeval	&Client::getCgiStartTime(void) const
+{
+	return (this->cgi_start_time);
+}
+
+const int				&Client::getPipeIn() const
+{
+	return (this->fd_pipe_in);
+}
+
+const int				&Client::getPipeOut() const
+{
+	return (this->fd_pipe_out);
+}
+
+const size_t &Client::getOffset() const
 {
 	return (this->offset);
 }
 
-bool	&Client::getFinishRequest()
+const bool	&Client::getFinishRequest() const
 {
 	return (request_finish);
 }
 
-bool	&Client::getSyntax()
+const bool	&Client::getSyntax() const
 {
 	return (this->correct_syntax);
 }
 
-std::string &Client::getReponse()
+const std::string &Client::getReponse() const
 {
 	return (this->reponse);
 }
 
-Socket *Client::getMySocket()
+const Socket *Client::getMySocket() const
 {
 	return (this->my_socket);
+}
+
+const std::string	&Client::getCgiOutput() const
+{
+	return (this->CgiOutput);
+}
+
+size_t			Client::AddCgiOutput(std::string morceau)
+{
+	this->CgiOutput += morceau;
+	OffsetCgi += morceau.size();
+	return (this->OffsetCgi);
+}
+
+void			Client::ResetCgiOutput()
+{
+	this->OffsetCgi = 0;
 }
 
 void			Client::AddOffset(size_t nb)
@@ -170,19 +272,6 @@ void	Client::disconnected()
 	this->connected = false;
 	gettimeofday(&this->end, NULL);
 	view_log();
-}
-//plus besoin je vais suppr
-int	Client::ParseSyntaxRequest()
-{
-	//si erreur syntax error 400 bad REquest
-	size_t	pos;
-	std::string	line;
-
-	pos = request.find("\r\n");
-	line = request.substr(0, pos);
-	if (line.find("  ") != std::string::npos)
-		return(Syntax);
-	return (42);
 }
 
 Request	Client::ExtractRequest()

@@ -3,6 +3,8 @@
 
 # include "utils.hpp"
 
+struct Locations;
+class Client;
 /**
  * @brief
  * The class that respond to `Requests`.

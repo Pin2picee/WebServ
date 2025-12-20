@@ -3,6 +3,7 @@
 
 # include "Includes.hpp"
 
+class Client;
 /**
  * @brief
  * The structure that contains all the locations datas.
@@ -88,4 +89,5 @@ public:
 	Response 											handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
 
+Response parseCGIOutput(const std::string &output);
 #endif

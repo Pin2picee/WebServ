@@ -38,12 +38,13 @@ Monitor &Monitor::operator=(const Monitor &copy)
 	return (*this);
 }
 
-void   Monitor::add_fd(int &fd)
+void   Monitor::add_fd(int &fd, int events)
 {
-	all_fd[this->nb_fd].fd = fd; 
+	all_fd[this->nb_fd].fd = fd;
 	all_fd[this->nb_fd].events = POLLIN;
+	if (events > 1)
+		all_fd[this->nb_fd].events = POLLOUT;
 	this->nb_fd++;
-	this->nb_fd_server++;
 }
 
 Monitor::Monitor(std::vector<Socket *> tab)
@@ -158,6 +159,15 @@ int		Monitor::new_request(int i)
 	return (1);
 }
 
+void Monitor::remove_fd(int index)
+{
+    // Juste retirer de all_fd[], pas toucher aux clients
+    close(all_fd[index].fd);
+    all_fd[index] = all_fd[nb_fd - 1];
+    all_fd[nb_fd - 1].fd = -1;
+    nb_fd--;
+}
+
 int	Monitor::	new_clients(int i)
 {
 	struct sockaddr_in address;
@@ -186,10 +196,14 @@ void	Monitor::Monitoring()
 
 	std::cout << "Lancement du server" << std::endl;
 	int	poll_reveil = 0;
+	std::map<int, Client *>	tab_CGI;
 	while (on)
 	{
-		
 		poll_return = poll(this->all_fd, nb_fd, 15);
+		/**
+		 * Prendre le temps actuel pour verifier les timeouts des CGI
+		 * de tout 
+		 */
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;
 		else if (poll_return < 0)//ERROR
@@ -203,6 +217,8 @@ void	Monitor::Monitoring()
 			poll_reveil++;
 			for (size_t i = 0; i < nb_fd;)//parcours les socket
 			{
+				//est-ce un fd CGI ?
+
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
 				//deja deconnecte en general le dernier car deconnexion switch
@@ -242,6 +258,101 @@ void	Monitor::Monitoring()
 						continue;
 					}
 				}
+				if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
+				{
+					//std::cout << "C'est bien un CGI donc je rentre dans la condition" << std::endl;
+					Client *my_client = tab_CGI[all_fd[i].fd];
+					if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut())
+					{
+						std::cout << RED << "POULLOUT" << RESET << std::endl;
+						const std::string body = my_client->getBody();
+						
+						size_t	nb_written = write(all_fd[i].fd, body.c_str(), body.size());
+						if (nb_written > 0)
+						{
+							std::cout << RED << "BIZARRE car pas de body" << RESET << std::endl;
+							tab_CGI.erase(all_fd[i].fd);
+							remove_fd(i);
+							continue;
+						}
+						if (nb_written == 0)
+						{
+							std::cout << RED << "Fort probable car rien a ecrire" << RESET << std::endl;
+							tab_CGI.erase(all_fd[i].fd);
+							remove_fd(i);
+							continue;
+						}
+						else
+						{
+							std::cerr << "Erreur ecriture pipe CGI: " << strerror(errno) << std::endl;
+							tab_CGI.erase(all_fd[i].fd);
+							my_client->setCGI();
+							kill(my_client->getCgiPid(), SIGKILL);
+							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+							remove_fd(i);
+							i++;
+							continue;
+						}
+					}
+					if (all_fd[i].revents & POLLIN && all_fd[i].fd == my_client->getPipeIn())
+					{
+						std::cout << RED << "Lecture du Pipe de sortie du CGI" << RESET << std::endl;
+
+						char buffer[4096];
+						ssize_t nb_read = read(all_fd[i].fd, &buffer, sizeof(buffer));
+						if (nb_read > 0)
+						{
+							if (my_client->AddCgiOutput(std::string(buffer, nb_read)) == strlen(buffer))
+							{
+								nb_read = 0;
+								my_client->ResetCgiOutput();
+							}
+						}
+						if (nb_read == 0)
+						{
+							std::cout << "Vide" << std::endl;
+							Response new_response = parseCGIOutput(my_client->getCgiOutput());
+							my_client->setReponse(my_client->handler.responseToString(new_response));
+							my_client->setResponseGenerate(true);
+							my_client->resetAfterCGI();
+							my_client->setCGI();
+							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+							int client_socket_fd = -1;
+							for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+							{
+								if (&(it->second) == my_client)  // Comparer les adresses
+								{
+									client_socket_fd = it->first;  // ← La clé = fd du socket !
+									break;
+								}
+							}
+							for (size_t j = 0; j < nb_fd; j++)
+							{
+								if (all_fd[j].fd == client_socket_fd)
+								{
+									all_fd[j].events |= POLLOUT;
+									break;
+								}
+							}
+							tab_CGI.erase(all_fd[i].fd);
+							remove_fd(i);
+							std::cout << my_client->getReponse() << std::endl;
+							continue;
+						}
+						else
+						{
+							std::cout << "nb_read : " << nb_read << std::endl;
+							std::cerr << "Erreur lecture pipe CGI: " << strerror(errno) << std::endl;
+							tab_CGI.erase(all_fd[i].fd);
+							my_client->setCGI();
+							kill(my_client->getCgiPid(), SIGKILL);
+							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+							remove_fd(i);
+							i++;
+							continue;
+						}
+					}
+				}
 				//lecture
 				if (all_fd[i].revents & POLLIN)
 				{
@@ -258,44 +369,61 @@ void	Monitor::Monitoring()
 					all_fd[i].events |= POLLOUT;
 				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && it_client != clients.end())//cote client je peux ecrire
 				{
-					int	  nb_send;
+					int	  nb_send = 0;
 					size_t		offset;
 
-					offset = it_client->second.getOffset();// le nombre de caracteres envoyer: garder en memoire
-					
-					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0)
+					offset = it_client->second.getOffset();// le nombre de caracteres envoyer: garder en memoire	
+					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0 && it_client->second.getInCGI() == false && !it_client->second.getResponseGenerate())
 					{
-						
-						//Il faudrait avoir la struct request directement dans le corp du client puis extraire et parser la request seulement si setrequest a fini et que le booleen est = true
-						/*
-						
-						std::cout << "Method :" << request.method << std::endl;
-						std::cout << "uri :" << request.uri << std::endl;
-						std::cout << "path :" << request.path << std::endl;
-						std::cout << "version :" << request.version << std::endl;
-						std::cout << RED << "Headers : " << RESET << std::endl;
-						
-						for (std::map<std::string, std::string>::iterator it = request.headers.begin(); it != request.headers.end(); it++)
-						{
-							std::cout << it->first << ":" << it->second << std::endl;
-						}
-						*/
 						Request request = it_client->second.ExtractRequest();
+						std::cout << RED << "Ca rentre bel est bien" << RESET << std::endl;
 						Response	structResponse = it_client->second.handler.handleRequest(request, &it_client->second);
-						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
+						// Si c'est un CGI, on met juste ResponseGenerate=true pour bloquer les prochains appels
+						// La vraie réponse sera mise plus tard quand le CGI sera terminé
+						if (it_client->second.getInCGI())
+						{
+							it_client->second.setResponseGenerate(true);
+						}
+						else
+						{
+							it_client->second.setReponse(it_client->second.handler.responseToString(structResponse));
+							it_client->second.setResponseGenerate(true);
+						}
 					}
-					nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
+					if (it_client->second.getInCGI() == true && !it_client->second.getPipeAddPoll())
+					{
+
+						int	PipeIn = it_client->second.getPipeIn();
+						int	PipeOut = it_client->second.getPipeOut();
+						add_fd(PipeIn, 1);
+						add_fd(PipeOut, 2);
+						tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
+						tab_CGI.insert(std::make_pair(PipeOut, &(it_client->second)));
+						it_client->second.setPipeAddPoll(true);
+					}
+					if (it_client->second.getReponse() != "")
+						nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
 					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-						perror("ERROR : SEND FAILED \n");
+					{
+						perror("ERROR : SEND FAILED\n");
+						std::cout << all_fd[i].fd << std::endl;
+
+					}	
 					if (nb_send > 0)
 						it_client->second.AddOffset(nb_send);
-					if (it_client->second.getOffset() >= it_client->second.getReponse().length())
+					// Ne reset que si on a vraiment fini d'envoyer ET qu'on n'attend pas un CGI
+					if (it_client->second.getOffset() >= it_client->second.getReponse().length() 
+						&& !it_client->second.getInCGI() 
+						&& it_client->second.getReponse().length() > 0)
+					{
 						all_fd[i].events = POLLIN;
-						
+						it_client->second.setReponse("");
+						it_client->second.setResponseGenerate(false);
+						// Reset request_finsh pour la prochaine requête
+					}	
 				}
 				i++;
 			}
 		}
 	}
-	
 }

@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/12/02 19:11:19 by abelmoha         ###   ########.fr       */
+/*   Updated: 2025/12/16 21:51:28 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,7 @@ int main (int argc, char **argv)
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "ERROR:" << e.what() << std::endl;
+		std::cout << "ERROssR:" << e.what() << std::endl;
 	}
 	return (0);
 }

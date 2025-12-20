@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "Config.hpp"
 #include "ResponseHandler.hpp"
-
+#include "Client.hpp"
 /* Constructor */
 Server::Server() : client_max_body_size(0) {}
 
@@ -318,29 +318,18 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 		close(pipe_out[1]);
 		close(pipe_in[0]);
 
-		current->setPipeOut(pipe_in[1]);//on ecrit a la l'entre du fils le body
-		current->setPipeIn(pipe_out[0]);//on lit la sortie du fils
-		
-		// If POST method → send body to CGI
-		/*
-		if (req.method == "POST" && !req.body.empty())
-		write(pipe_in[1], req.body.c_str(), req.body.size());//WRITE SEULEMENT SI JE PEUX
-		close(pipe_in[1]);
-
-		// Read CGI output
-		char buffer[4096];
-		ssize_t bytes;
-		
-		while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)//READ SEULEMENT SI JE PEUX
-		output.append(buffer, bytes);
-		close(pipe_out[0]);
-		
-		waitpid(pid, NULL, 0);
-		*/
+		current->setPipeIn(pipe_out[0]);//Lis la sortie du CGI
+		current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
+		std::cout << GREEN <<"Je suis dans le HANDLE CGI" << RESET << std::endl; 
+		current->setBody(req.body);
+		current->setCgiPid(pid);
+		current->setCGI();//on le mets a true
 	}
-	return parseCGIOutput(output);
+	
+	Response pending;
+	pending.status_code = 0;
+	return pending;
 }
-
 
 Server::Server(const Server &copy)
 {
