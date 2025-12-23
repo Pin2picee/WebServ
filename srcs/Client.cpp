@@ -10,6 +10,8 @@ Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), han
 	_pid = 0;
 	OffsetCgi = 0;
 	this->ResponseGenerate = false;
+	fd_pipe_in = -1;
+	fd_pipe_out = -1;
 	gettimeofday(&this->start, NULL);
 	
 }
@@ -45,6 +47,8 @@ Client &Client::operator=(const Client &copy)
 		PipeAddPoll = copy.PipeAddPoll;
 		OffsetCgi = copy.OffsetCgi;
 		ResponseGenerate = copy.ResponseGenerate;
+		fd_pipe_in = copy.fd_pipe_in;
+		fd_pipe_out = copy.fd_pipe_out;
 		//pas de end car init dans deconnected;
 	}
 	return (*this);
@@ -132,16 +136,17 @@ void	Client::setReponse(std::string buf)
 		this->reponse = buf;
 		this->offset = 0;
 }
+//mets en boolen
+void	Client::setInCGI()
+{
+	if (!this->InCgi)
+		this->InCgi = true;
+}
 
-void	Client::setCGI()
+void	Client::setOutCGI()
 {
 	if (this->InCgi)
 		this->InCgi = false;
-	else
-	{
-		this->InCgi = true;
-		gettimeofday(&this->cgi_start_time, NULL);
-	}
 }
 //je lis dedans
 void			Client::setPipeIn(int fd)
@@ -153,6 +158,11 @@ void			Client::setPipeIn(int fd)
 void			Client::setPipeOut(int fd)
 {
 	this->fd_pipe_out = fd;
+}
+
+void			Client::setCGiStartTime(void)
+{
+	gettimeofday(&this->cgi_start_time, NULL);
 }
 
 void			Client::setPipeAddPoll(bool	booleen)

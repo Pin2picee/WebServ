@@ -17,8 +17,8 @@ class Client
 		std::string reponse;
 		std::string ip;
 		std::string port;
-		timeval 	start;
-		timeval 	end;
+		timeval 	start;//Connexion client
+		timeval 	end;//deco client
 		timeval 	cgi_start_time;
 		bool		connected;
 		bool		request_finish;
@@ -47,11 +47,13 @@ class Client
 		void			setReponse(std::string buf);
 		void			setPipeIn(int fd);
 		void			setPipeOut(int fd);
-		void			setCGI(void);
+		void			setInCGI(void);
+		void			setOutCGI(void);
 		void			setBody(std::string body);
 		void			setCgiPid(pid_t pid);
 		void			setPipeAddPoll(bool	booleen);
 		void			setResponseGenerate(bool etat);
+		void			setCGiStartTime(void);
 	//get
 		const std::string		&getRequest() const;
 		const std::string		&getReponse() const;

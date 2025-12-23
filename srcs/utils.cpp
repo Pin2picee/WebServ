@@ -46,15 +46,15 @@ volatile sig_atomic_t	on = 1;
 void	handle_sigint(int signum)
 {
 	(void)signum;
-	for (std::vector<Socket * >::iterator it = all_socket.begin(); it != all_socket.end(); it++)
-	{
-		if (*it)
-		{
-			close((*it)->getFd());
-			delete((*it));
-		}
-	}
 	on = 0;
+	for (std::vector<Socket*>::iterator it = all_socket.begin(); it != all_socket.end(); ++it)
+    {
+        if (*it)
+        {
+            close((*it)->getFd());
+            delete *it;
+        }
+    }
 }
 
 void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
