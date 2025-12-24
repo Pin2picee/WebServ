@@ -45,7 +45,6 @@ void init_default_errors(Server& conf)
         struct stat st;
         if (stat(fullPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
             errors[code] = fullPath;
-			
     }
     closedir(dir);
 }
