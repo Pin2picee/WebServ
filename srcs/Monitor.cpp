@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Monitor.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
+/*   Updated: 2025/12/24 19:03:41 by abelmoha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Monitor.hpp"
 
 /*<Exception>*/
@@ -21,6 +33,7 @@ Monitor::Monitor(const Monitor &copy)
 		nb_fd = copy.nb_fd;
 		nb_fd_server = copy.nb_fd_server;
 		clients = copy.clients;
+		tab_CGI = copy.tab_CGI;
 		for (size_t i = 0; i < nb_fd; i++)
 			all_fd[i] = copy.all_fd[i];
 	}
@@ -33,7 +46,9 @@ Monitor &Monitor::operator=(const Monitor &copy)
 		nb_fd = copy.nb_fd;
 		nb_fd_server = copy.nb_fd_server;
 		clients = copy.clients;
-		all_fd[5000] = copy.all_fd[5000];
+		tab_CGI = copy.tab_CGI;
+		for (size_t i = 0; i < nb_fd; i++)
+			all_fd[i] = copy.all_fd[i];
 	}
 	return (*this);
 }
@@ -101,23 +116,41 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 		clients.insert(std::pair<int, Client>(fd, nouveau));
 }
 
-int	 Monitor::deconnexion(int i)
+int Monitor::deconnexion(int i)
 {
-	/**
-	 * deconnexion cote map client + affichage du log
-	 * fermeture du socket
-	 * remplacement par le dernier
-	 * actualisation du nb de socket
-	 */
-	std::map<int, Client>::iterator it = clients.find(all_fd[i].fd);
-	if (it != clients.end())
-	it->second.disconnected();
-	close(all_fd[i].fd);
-	clients.erase(all_fd[i].fd);
-	all_fd[i] = all_fd[nb_fd - 1];
-	all_fd[nb_fd - 1].fd = -1;//poll ne le surveillera plus
-	nb_fd--;
-	return (0);
+    const int client_fd = all_fd[i].fd;
+    std::map<int, Client>::iterator it_client = clients.find(client_fd);
+    Client *client_ptr = (it_client != clients.end()) ? &it_client->second : 0;
+
+    if (client_ptr)
+        client_ptr->disconnected();
+    close(client_fd);
+    for (std::map<int, Client *>::iterator it = tab_CGI.begin(); it != tab_CGI.end(); )
+    {
+        std::map<int, Client *>::iterator cur = it++;
+        if (cur->second == client_ptr)
+            tab_CGI.erase(cur);
+    }
+    if (client_ptr && client_ptr->getCgiPid() > 0)
+    {
+        kill(client_ptr->getCgiPid(), SIGKILL);
+        waitpid(client_ptr->getCgiPid(), NULL, WNOHANG);
+    }
+    int pipe_in  = client_ptr ? client_ptr->getPipeIn()  : -1;
+    int pipe_out = client_ptr ? client_ptr->getPipeOut() : -1;
+    for (size_t j = 0; j < nb_fd; )
+    {
+        int fdj = all_fd[j].fd;
+        if (fdj == pipe_in || fdj == pipe_out)
+            remove_fd(j);
+        else
+            ++j;
+    }
+    clients.erase(client_fd);
+    all_fd[i] = all_fd[nb_fd - 1];
+    all_fd[nb_fd - 1].fd = -1;
+    nb_fd--;
+    return 0;
 }
 
 int	 Monitor::test_read(ssize_t count)
@@ -161,7 +194,6 @@ int		Monitor::new_request(int i)
 
 void Monitor::remove_fd(int index)
 {
-    // Juste retirer de all_fd[], pas toucher aux clients
     if (all_fd[index].fd > 0)
 	{
 		close(all_fd[index].fd);
@@ -182,7 +214,6 @@ int	Monitor::	new_clients(int i)
 	else if (all_fd[nb_fd].fd < 0)
 		return (std::cout << "ERROR ressources accept" << std::endl, 1);
 	add_client(all_fd[nb_fd].fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);// on l'ajoute dans ma map de clients avec le fd du server
-	
 	int ancien_flags = fcntl (all_fd[nb_fd].fd, F_GETFL);
 	fcntl(all_fd[nb_fd].fd, F_SETFL, ancien_flags | O_NONBLOCK);
 	nb_fd++;
@@ -199,7 +230,7 @@ void	Monitor::Monitoring()
 
 	std::cout << "Lancement du server" << std::endl;
 	int	poll_reveil = 0;
-	std::map<int, Client *>	tab_CGI;
+	
 	while (on)
 	{
 		poll_return = poll(this->all_fd, nb_fd, 15);
@@ -213,20 +244,17 @@ void	Monitor::Monitoring()
 			int	PipeIn = it_tab_cgi->second->getPipeIn();
 			int	PipeOut = it_tab_cgi->second->getPipeOut();
 			double resultat = (time_sec - it_tab_cgi->second->getCgiStartTime().tv_sec) + ((time_usec - it_tab_cgi->second->getCgiStartTime().tv_usec) / 1000000.0);
-			std::cout << BLUE << "resulat : " << resultat << " secondes" << RESET << std::endl;
 			if (resultat > 2.0)
 			{
-				std::cout << "TIMEOUT DETECTER" << std::endl;
+				kill(it_tab_cgi->second->getCgiPid(), SIGKILL);
 				Response new_response;
 				makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
 				it_tab_cgi->second->setReponse(it_tab_cgi->second->handler.responseToString(new_response));
+				it_tab_cgi->second->setResponseGenerate(true);
 				it_tab_cgi->second->setOutCGI();
 				it_tab_cgi->second->setPipeAddPoll(false);
-				kill(it_tab_cgi->second->getCgiPid(), SIGKILL);
-				if (PipeIn > 0)
-					close(PipeIn);
-				if (PipeOut > 0)
-					close(PipeOut);
+				it_tab_cgi->second->resetAfterCGI();
+				waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
 				int	client_socket_fd = -1;
 				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 				{
@@ -258,7 +286,10 @@ void	Monitor::Monitoring()
 			}
 		}
 		for (std::vector<int>::iterator it_erase_key = Key_Erase.begin(); it_erase_key != Key_Erase.end(); it_erase_key++)
+		{
+			//apres l'avoir erase il faut le supprimer du tab Vector pour ne pas avoir a la re Erase.->supprime de ce tab la
 			tab_CGI.erase(*it_erase_key);
+		}
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;
 		else if (poll_return < 0)//ERROR
@@ -279,7 +310,7 @@ void	Monitor::Monitoring()
 					Client *my_client = tab_CGI[all_fd[i].fd];
 					if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut() && my_client->getBody() != "")
 					{
-						std::cout << RED << "POULLOUT" << RESET << std::endl;
+						//std::cout << RED << "POULLOUT" << RESET << std::endl;
 						const std::string body = my_client->getBody();
 						
 						size_t	nb_written = write(all_fd[i].fd, body.c_str(), body.size());
@@ -297,12 +328,12 @@ void	Monitor::Monitoring()
 						}
 						else
 						{
+							kill(my_client->getCgiPid(), SIGKILL);
+							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 							std::cerr << "Erreur ecriture pipe CGI: " << strerror(errno) << std::endl;
 							tab_CGI.erase(all_fd[i].fd);
 							remove_fd(i);
 							my_client->setOutCGI();
-							kill(my_client->getCgiPid(), SIGKILL);
-							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 							i++;
 							continue;
 						}
@@ -311,26 +342,27 @@ void	Monitor::Monitoring()
 					{
 						std::cout << RED << "Lecture du Pipe de sortie du CGI" << RESET << std::endl;
 						char buffer[4096];
-						ssize_t nb_read = read(all_fd[i].fd, &buffer, sizeof(buffer));
+						ssize_t nb_read = -1;
+						if (all_fd[i].fd > 0)
+							nb_read = read(all_fd[i].fd, &buffer, sizeof(buffer));
+						//std::cout << "Le Nombre lu : " << nb_read << " et voici le bufferlen : " << strlen(buffer) << std::endl;
 						if (nb_read > 0)
 						{
-							if (my_client->AddCgiOutput(std::string(buffer, nb_read)) == strlen(buffer))
-							{
-								nb_read = 0;
-								my_client->ResetCgiOutput();
-							}
+							std::cout << "DES CHOSES A LIRE FINALEMENT" << std::endl;
+							my_client->AddCgiOutput(std::string(buffer, nb_read));
+							nb_read = 0;
+							continue;
 						}
-						if (nb_read == 0)
+						if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
 						{
 							//remettre a zero le time
-							std::cout << "Le CGI a FINI" << std::endl;
+							std::cout << "CGI renvoie rien ou renvoie deconnexion" << std::endl;
 							Response new_response = parseCGIOutput(my_client->getCgiOutput());
 							my_client->setReponse(my_client->handler.responseToString(new_response));
 							my_client->setResponseGenerate(true);
 							my_client->resetAfterCGI();
 							my_client->setOutCGI();
-							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
-							int client_socket_fd = -1;
+							waitpid(my_client->getCgiPid(), NULL, WNOHANG);							int client_socket_fd = -1;
 							for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 							{
 								if (&(it->second) == my_client)  // Comparer les adresses
@@ -350,19 +382,46 @@ void	Monitor::Monitoring()
 							if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
 								tab_CGI.erase(all_fd[i].fd);
 							remove_fd(i);
-							std::cout << my_client->getReponse() << std::endl;
+							//std::cout << my_client->getReponse() << std::endl;
+							continue;
+						}
+						if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+						{
 							continue;
 						}
 						else
 						{
+							std::cout << "DANS LE ELSE DU POLLIN : " << std::endl;
+							kill(my_client->getCgiPid(), SIGKILL);
+							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+											Response new_response;
+							makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
+							my_client->setReponse(my_client->handler.responseToString(new_response));
+							my_client->setResponseGenerate(true);
+							my_client->setOutCGI();
+							my_client->setPipeAddPoll(false);
+							my_client->resetAfterCGI();
+							int	fd_current = -1;
+							for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+							{
+								if (&(it->second) == my_client)  // Comparer les adresses
+								{
+									fd_current = it->first;  // ← La clé = fd du socket !
+									break;
+								}
+							}
+							for (size_t j = 0; j < nb_fd; j++)
+							{
+								if (all_fd[j].fd == fd_current)
+								{
+									all_fd[j].events |= POLLOUT;
+									break;
+								}
+							}
 							std::cout << "nb_read : " << nb_read << std::endl;
 							std::cerr << "Erreur lecture pipe CGI: " << strerror(errno) << std::endl;
 							tab_CGI.erase(all_fd[i].fd);
-							my_client->setOutCGI();
-							kill(my_client->getCgiPid(), SIGKILL);
-							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 							remove_fd(i);
-							i++;
 							continue;
 						}
 					}
@@ -414,21 +473,18 @@ void	Monitor::Monitoring()
 					else if (i >= nb_fd_server && !new_request(i))//client/deconnexion
 						continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
 				}
-				//ecriture
 				if (i >= this->nb_fd_server && all_fd[i].fd > 0 && it_client != clients.end() && it_client->second.getFinishRequest())
 					all_fd[i].events |= POLLOUT;
-				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && it_client != clients.end())//cote client je peux ecrire
+				if (all_fd[i].revents & POLLOUT && i >= nb_fd_server && it_client != clients.end())
 				{
 					int	  nb_send = 0;
 					size_t		offset;
 
-					offset = it_client->second.getOffset();// le nombre de caracteres envoyer: garder en memoire	
+					offset = it_client->second.getOffset();
 					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0 && it_client->second.getInCGI() == false && !it_client->second.getResponseGenerate())
 					{
 						Request request = it_client->second.ExtractRequest();
 						Response	structResponse = it_client->second.handler.handleRequest(request, &it_client->second);
-						// Si c'est un CGI, on met juste ResponseGenerate=true pour bloquer les prochains appels
-						// La vraie réponse sera mise plus tard quand le CGI sera terminé
 						if (it_client->second.getInCGI())
 							it_client->second.setResponseGenerate(true);
 						else
@@ -439,16 +495,19 @@ void	Monitor::Monitoring()
 					}
 					if (it_client->second.getInCGI() == true && !it_client->second.getPipeAddPoll())
 					{
-
 						int	PipeIn = it_client->second.getPipeIn();
 						int	PipeOut = it_client->second.getPipeOut();
 						if (PipeIn > 0)
 						{
+							int	flags = fcntl(PipeIn, F_GETFL);
+							fcntl(PipeIn, F_SETFL, flags | O_NONBLOCK);
 							add_fd(PipeIn, 1);
 							tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
 						}
 						if (PipeOut > 0)
 						{
+							int	flags = fcntl(PipeOut, F_GETFL);
+							fcntl(PipeOut, F_SETFL, flags | O_NONBLOCK);
 							add_fd(PipeOut, 2);
 							tab_CGI.insert(std::make_pair(PipeOut, &(it_client->second)));
 						}
@@ -460,20 +519,19 @@ void	Monitor::Monitoring()
 					{
 						perror("ERROR : SEND FAILED\n");
 						std::cout << all_fd[i].fd << std::endl;
-
 					}	
 					if (nb_send > 0)
 						it_client->second.AddOffset(nb_send);
-					// Ne reset que si on a vraiment fini d'envoyer ET qu'on n'attend pas un CGI
-					if (it_client->second.getOffset() >= it_client->second.getReponse().length() 
-						&& !it_client->second.getInCGI() 
+					if (it_client->second.getOffset() >= it_client->second.getReponse().length() && !it_client->second.getInCGI() 
 						&& it_client->second.getReponse().length() > 0)
 					{
 						all_fd[i].events = POLLIN;
 						it_client->second.setReponse("");
 						it_client->second.setResponseGenerate(false);
-						// Reset request_finsh pour la prochaine requête
-					}	
+						it_client->second.resetAfterCGI();
+						it_client->second.setOutCGI();
+						it_client->second.ResetCgiOutput();
+					}
 				}
 				i++;
 			}
@@ -483,10 +541,21 @@ void	Monitor::Monitoring()
 	{
 		if (it->second.getInCGI())
 		{
-			close(it->second.getPipeIn());
-			close(it->second.getPipeOut());
+			//std::cout << "=== NETTOYAGE DES CGI ===" << std::endl;
+			if (it->second.getPipeIn() > 0)
+			{
+				close(it->second.getPipeIn());
+				it->second.setPipeIn(-1);
+			}
+				
+			if (it->second.getPipeOut() > 0)
+			{
+				close(it->second.getPipeOut());
+				it->second.setPipeOut(-1);
+			}
+				
 			pid_t pid = it->second.getCgiPid();
-			kill(pid, SIGTERM);  // Essayer un arrêt propre
+			kill(pid, SIGKILL);  // Essayer un arrêt propre
 			usleep(100000);      // Attendre 100ms
 			kill(pid, SIGKILL);  // Forcer si nécessaire
 			waitpid(pid, NULL, WNOHANG);

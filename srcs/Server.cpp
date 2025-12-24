@@ -247,16 +247,22 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 
+	std::cout << "=== AVANT CGI ===" << std::endl;
+	std::cout << "PipeIn: " << current->getPipeIn() << std::endl;
+	std::cout << "PipeOut: " << current->getPipeOut() << std::endl;
+	std::cout << "CgiPid: " << current->getCgiPid() << std::endl;
+	std::cout << "PipeAddPoll: " << current->getPipeAddPoll() << std::endl;
+	std::cout << "InCGI: " << current->getInCGI() << std::endl;
 	pid_t pid = fork();
 	if (pid == -1)
 		throw std::runtime_error("Fork failed");
-
 	if (!pid)
 	{
 		// --- Child process ---
 		close(pipe_out[0]);
 		close(pipe_in[1]);
 
+		signal(SIGINT, SIG_IGN);   // ← Ignore les signaux 
 		dup2(pipe_out[1], STDOUT_FILENO);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_out[1]);
@@ -278,7 +284,6 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 												? req.headers.at("Content-Type")
 												: "text/plain"));
 		env_vars.push_back("GATEWAY_INTERFACE=CGI/1.1");
-
 		for (std::map<std::string, std::string>::const_iterator it = req.headers.begin();
 			 it != req.headers.end(); ++it)
 		{
@@ -287,8 +292,6 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 				if (key[i] == '-') key[i] = '_';
 			env_vars.push_back(key + "=" + it->second);
 		}
-
-		// Char** conversion
 		std::vector<char*> envp;
 		for (size_t i = 0; i < env_vars.size(); ++i)
 			envp.push_back(const_cast<char*>(env_vars[i].c_str()));
@@ -302,13 +305,14 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 			cgi_path = "/usr/bin/php-cgi";
 		else
 			throw std::runtime_error("Unsupported CGI extension");
-
 		// CGI arguments
 		char *argv[] = {
 			const_cast<char*>(cgi_path.c_str()),  // ex: /usr/bin/python3
 			const_cast<char*>(script_path.c_str()),   // script to execute
 			NULL
 		};
+		for (int fd = 3; fd < 1024; fd++)
+        	close(fd);
 		execve(cgi_path.c_str(), argv, envp.data());
 		exit(1); // If exec fails
 	}

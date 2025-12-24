@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
+/*   Updated: 2025/12/24 18:41:44 by abelmoha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 # include "Client.hpp"
 
 Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServ()))
@@ -73,6 +85,10 @@ void	Client::resetAfterCGI()
 {
 		this->request_finish = false;
 		this->request.clear();
+		this->fd_pipe_in = -1;
+		this->fd_pipe_out = -1;
+		this->_pid = 0;
+		this->PipeAddPoll = false;
 }
 
 /*SET-GET*/
@@ -255,6 +271,7 @@ size_t			Client::AddCgiOutput(std::string morceau)
 void			Client::ResetCgiOutput()
 {
 	this->OffsetCgi = 0;
+	this->CgiOutput = "";
 }
 
 void			Client::AddOffset(size_t nb)

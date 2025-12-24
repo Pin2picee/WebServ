@@ -17,6 +17,7 @@ class Monitor
 		std::map<int, Client>	clients;
 		std::map<int, Socket *>	all_socket;//ma map avec cle = fd, valeur = obj Socket;
 		struct  pollfd		all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
+		std::map<int, Client *>	tab_CGI;
 	private :
 		Monitor();
 		void 	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);// ajoute un client  dans mon vecteur de client

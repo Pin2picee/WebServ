@@ -47,14 +47,6 @@ void	handle_sigint(int signum)
 {
 	(void)signum;
 	on = 0;
-	for (std::vector<Socket*>::iterator it = all_socket.begin(); it != all_socket.end(); ++it)
-    {
-        if (*it)
-        {
-            close((*it)->getFd());
-            delete *it;
-        }
-    }
 }
 
 void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
