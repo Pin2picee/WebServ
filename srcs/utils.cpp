@@ -21,21 +21,32 @@ std::string strip_semicolon(const std::string &s)
  * 
  * @param conf The `Server` configuration.
  */
-void	init_default_errors(Server &conf)
+void init_default_errors(Server& conf)
 {
-	std::map<int, std::string> &errors = conf.getErrorPagesRef();
-	const std::string &root = conf.getRoot();
-
-	errors[201] = root + "/errors/201.html";
-	errors[204] = root + "/errors/204.html";
-	errors[400] = root + "/errors/400.html";
-	errors[403] = root + "/errors/403.html";
-	errors[404] = root + "/errors/404.html";
-	errors[405] = root + "/errors/405.html";
-	errors[409] = root + "/errors/409.html";
-	errors[413] = root + "/errors/413.html";
-	errors[418] = root + "/errors/418.html";
-	errors[500] = root + "/errors/500.html";
+    std::map<int, std::string>& errors = conf.getErrorPagesRef();
+    const std::string& root = conf.getRoot();
+    std::string errorDir = root + "/errors";
+    DIR* dir = opendir(errorDir.c_str());
+    if (!dir)
+        return;
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        std::string filename = entry->d_name;
+        if (filename == "." || filename == "..")
+            continue;
+        if (filename.size() < 8 || filename.substr(filename.size() - 5) != ".html")
+            continue;
+        std::string codeStr = filename.substr(0, filename.size() - 5);
+        int code = std::atoi(codeStr.c_str());
+        if (code < 100 || code > 599)
+            continue;
+        std::string fullPath = errorDir + "/" + filename;
+        struct stat st;
+        if (stat(fullPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+            errors[code] = fullPath;
+    }
+    closedir(dir);
 }
 
 bool removeDirectoryRecursive(const std::string &path)
@@ -177,16 +188,13 @@ size_t convertSize(const std::string &input)
 void displayRequestInfo(const Request &req)
 {
 	std::cout << "------- displayRequestInfo :" << std::endl;
-	// Affichage des informations simples
     std::cout << RED "Version: " RESET << req.version << std::endl;
 	std::cout << RED "Method: " RESET << req.method << std::endl;
 	std::cout << RED "URI: " RESET << req.uri << std::endl;
 	std::cout << RED "Path: " RESET << req.path << std::endl;
-	// Affichage des en-têtes (headers)
 	std::cout << RED "Headers:" RESET << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = req.headers.begin(); it != req.headers.end(); ++it)
 		std::cout << "  " CYAN << it->first << ": " RESET << it->second << std::endl;
-	// Affichage des cookies
 	if (!req.cookies.empty())
 	{
 		std::cout << RED "Cookies:" RESET << std::endl;
@@ -194,7 +202,6 @@ void displayRequestInfo(const Request &req)
 			std::cout << "  " MAGENTA << it->first << ": " RESET << it->second << std::endl;
 	}
 	return ;
-	// Affichage du corps de la requête (body)
 	std::cout << RED "Body: " RESET << std::endl;
 	std::cout << req.body << std::endl;
 }
@@ -202,20 +209,15 @@ void displayRequestInfo(const Request &req)
 void displayResponseInfo(const Response &res)
 {
 	std::cout << "------- displayResponseInfo :" << std::endl;
-	// Affichage des informations principales
 	std::cout << RED "Version: " RESET << res.version << std::endl;
 	std::cout << RED "Status Code: " RESET << res.status_code << std::endl;
 	std::cout << RED "Content-Type: " RESET << res.content_type << std::endl;
-
-	// Affichage des headers
 	if (!res.headers.empty())
 	{
 		std::cout << RED "Headers:" RESET << std::endl;
 		for (std::vector<std::string>::const_iterator it = res.headers.begin(); it != res.headers.end(); ++it)
 			std::cout << "  " CYAN << *it << RESET << std::endl;
 	}
-
-	// Affichage du corps de la réponse
 	std::cout << RED "Body: " RESET << std::endl;
 	std::cout << res.body << std::endl;
 }

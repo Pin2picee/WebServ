@@ -335,9 +335,8 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
 	(void)assignement;
 	return (*this);// rien a mettre egal a l'assignement car la seule variable est const donc deja init
 }
-	//handle requests
 
-	/**
+/**
  * @param path The request path
  *  
  * @return

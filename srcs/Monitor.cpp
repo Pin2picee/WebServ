@@ -258,21 +258,6 @@ void	Monitor::Monitoring()
 					
 					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0)
 					{
-						
-						//Il faudrait avoir la struct request directement dans le corp du client puis extraire et parser la request seulement si setrequest a fini et que le booleen est = true
-						/*
-						
-						std::cout << "Method :" << request.method << std::endl;
-						std::cout << "uri :" << request.uri << std::endl;
-						std::cout << "path :" << request.path << std::endl;
-						std::cout << "version :" << request.version << std::endl;
-						std::cout << RED << "Headers : " << RESET << std::endl;
-						
-						for (std::map<std::string, std::string>::iterator it = request.headers.begin(); it != request.headers.end(); it++)
-						{
-							std::cout << it->first << ":" << it->second << std::endl;
-						}
-						*/
 						Request request = it_client->second.ExtractRequest();
 						Response	structResponse = it_client->second.handler.handleRequest(request, g_sessions);
 						updateClientCookies(it_client->second, structResponse);

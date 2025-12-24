@@ -208,8 +208,6 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 	std::string output;
 
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
-
-	//std::cerr << "SALUT" << std::endl;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 
@@ -219,16 +217,12 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 
 	if (!pid)
 	{
-		// --- Child process ---
-		close(pipe_out[0]);
-		close(pipe_in[1]);
-
 		dup2(pipe_out[1], STDOUT_FILENO);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_out[1]);
+		close(pipe_in[1]);
+		close(pipe_out[0]);
 		close(pipe_in[0]);
-
-		// --- CGI environnement variables ---
 		std::vector<std::string> env_vars;
 
 		env_vars.push_back("REQUEST_METHOD=" + req.method);
@@ -244,7 +238,6 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 												? req.headers.at("Content-Type")
 												: "text/plain"));
 		env_vars.push_back("GATEWAY_INTERFACE=CGI/1.1");
-
 		for (std::map<std::string, std::string>::const_iterator it = req.headers.begin();
 			 it != req.headers.end(); ++it)
 		{
@@ -253,13 +246,10 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 				if (key[i] == '-') key[i] = '_';
 			env_vars.push_back(key + "=" + it->second);
 		}
-
-		// Char** conversion
 		std::vector<char*> envp;
 		for (size_t i = 0; i < env_vars.size(); ++i)
 			envp.push_back(const_cast<char*>(env_vars[i].c_str()));
 		envp.push_back(NULL);
-
 		std::string cgi_path;
 
 		if (loc.cgi_extension == ".py")
@@ -268,28 +258,21 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 			cgi_path = "/usr/bin/php-cgi";
 		else
 			throw std::runtime_error("Unsupported CGI extension");
-
-		// CGI arguments
 		char *argv[] = {
-			const_cast<char*>(cgi_path.c_str()),  // ex: /usr/bin/python3
-			const_cast<char*>(script_path.c_str()),   // script to execute
+			const_cast<char*>(cgi_path.c_str()),
+			const_cast<char*>(script_path.c_str()),
 			NULL
 		};
 		execve(cgi_path.c_str(), argv, envp.data());
-		exit(1); // If exec fails
+		exit(1);
 	}
 	else
 	{
-		// --- Parent process ---
 		close(pipe_out[1]);
 		close(pipe_in[0]);
-
-		// If POST method → send body to CGI
 		if (req.method == "POST" && !req.body.empty())
 			write(pipe_in[1], req.body.c_str(), req.body.size());
 		close(pipe_in[1]);
-
-		// Read CGI output
 		char buffer[4096];
 		ssize_t bytes;
 

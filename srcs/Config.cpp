@@ -120,7 +120,6 @@ void Config::parseAllServerFiles(const std::string &configFile)
 			}
 		}
 	}
-	//@brief : une fois la boucle finie avec tout les blocks servers: creer les socket avec un pointeur vers leurs servers blocks
 	CreateSocket();
 }
 
