@@ -223,6 +223,7 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
  * 
  * @return a `Response` structure that will answer in adequation to the delete `Request`.
  */
+
 Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
 {
 	Response res;
@@ -258,6 +259,7 @@ Response ResponseHandler::handleDelete(const Locations &loc, const Request &req)
  * @return
  * The corresponding reason phrase.
  */
+
 static std::string getReasonPhrase(int status_code)
 {
 	switch (status_code)
