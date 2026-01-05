@@ -30,7 +30,7 @@ Response ResponseHandler::handleRequest(const Request &req, Client *current)
 	else if (req.method == "GET")
 		res = handleGet(*target, req, current);
 	else if (req.method == "POST")
-		res = handlePost(*target, req);
+		res = handlePost(*target, req, current);
 	else if (req.method == "DELETE")
 		res = handleDelete(*target, req);
 	else
@@ -127,7 +127,7 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req, Cl
  * 
  * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response &ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req)
+Response &ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Client *current)
 {
 	if (boundary.empty())
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
@@ -158,7 +158,10 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 	{
 		std::string file_ext = filename.substr(filename.size() - loc.cgi_extension.size());
 		if (file_ext == loc.cgi_extension)
-			return _server.handleCGI(req, loc, current);
+		{
+			res = _server.handleCGI(req, loc, current);
+			return res;
+}		
 	}
 	return makeResponse(res, 201, readFile(_server.getErrorPage(201)), getMimeType(req));
 }
@@ -173,7 +176,7 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
  * 
  * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response &ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req)
+Response &ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req, Client *current)
 {
 	std::string contentType;
 	std::map<std::string, std::string>::const_iterator it = req.headers.find("Content-Type");
@@ -188,7 +191,7 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
 	if (pos != std::string::npos)
 	{
 		boundary = "--" + contentType.substr(pos + 9);
-		return handleFile(boundary, res, loc, req);
+		return handleFile(boundary, res, loc, req, current);
 	}
 	else
 	{
@@ -207,7 +210,7 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
  * 
  * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
+Response ResponseHandler::handlePost(const Locations &loc, const Request &req, Client *current)
 {
 	Response res;
 
@@ -215,7 +218,7 @@ Response ResponseHandler::handlePost(const Locations &loc, const Request &req)
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
 	if (req.body.size() > _server.getClientMaxBodySize())
 		return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-	return getContentType(res, loc, req);
+	return getContentType(res, loc, req, current);
 }
 
 /**

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Monitor.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/12/24 23:25:11 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/05 19:34:02 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -234,6 +234,7 @@ void	Monitor::Monitoring()
 	while (on)
 	{
 		poll_return = poll(this->all_fd, nb_fd, 15);
+		//function TIMEOUT
 		timeval	timeofday;
 		gettimeofday(&timeofday, NULL);
 		long	time_sec = timeofday.tv_sec;
@@ -289,6 +290,7 @@ void	Monitor::Monitoring()
 		{
 			//apres l'avoir erase il faut le supprimer du tab Vector pour ne pas avoir a la re Erase.->supprime de ce tab la
 			tab_CGI.erase(*it_erase_key);
+			
 		}
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;

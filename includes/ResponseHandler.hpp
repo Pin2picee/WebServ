@@ -17,12 +17,12 @@ private:
 	const Server	&_server;
 //methods
 	Response		handleGet(const Locations &loc, const Request &req, Client *current);
-	Response		handlePost(const Locations &loc, const Request &req);
+Response 			handlePost(const Locations &loc, const Request &req, Client *current);
 	Response		handleDelete(const Locations &loc, const Request &req);
 
 //utils
-	Response		&getContentType(Response &res, const Locations &loc, const Request &req);
-	Response		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req);
+Response 			&getContentType(Response &res, const Locations &loc, const Request &req, Client *current);
+	Response 		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Client *current);
 	std::string		getMimeType(const Request &req);
 public:
 	ResponseHandler(const Server &server);
