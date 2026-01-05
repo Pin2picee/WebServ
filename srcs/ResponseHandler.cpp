@@ -132,31 +132,35 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 	if (boundary.empty())
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
 	std::size_t fileStart = req.body.find("filename=\"");
-	if (fileStart != std::string::npos)
+	if (fileStart == std::string::npos)
+		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+	std::string filename = getFileName(req.body);
+	if (filename.empty())
+		return makeResponse(res, 204, "", getMimeType(req));
+	filename =  _server.getRoot() + loc.upload_dir + "/" + filename;
+	fileStart = req.body.find("\r\n\r\n", fileStart);
+	if (fileStart == std::string::npos)
+		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+	fileStart += 4;
+	std::size_t fileEnd = req.body.find(boundary, fileStart);
+	if (fileEnd == std::string::npos)
+		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+	fileEnd -= 2;
+	if (fileEnd - fileStart > _server.getClientMaxBodySize())
+		return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
+	std::cout << "filename" << " \"" << filename << "\"." << std::endl;
+	std::ofstream ofs(filename.c_str(), std::ios::binary);
+	if (!ofs)
+		return makeResponse(res, 500, readFile(_server.getErrorPage(500)), getMimeType(req));
+	ofs.write(req.body.c_str() + fileStart, fileEnd - fileStart);
+	ofs.close();
+	if (loc.cgi && filename.size() >= loc.cgi_extension.size())
 	{
-		std::string filename = getFileName(req.body);
-		if (filename.empty())
-			return makeResponse(res, 204, "", getMimeType(req));
-		filename =  _server.getRoot() + loc.upload_dir + "/" + filename;
-		fileStart = req.body.find("\r\n\r\n", fileStart);
-		if (fileStart == std::string::npos)
-			return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
-		fileStart += 4;
-		std::size_t fileEnd = req.body.find(boundary, fileStart);
-		if (fileEnd == std::string::npos)
-			return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
-		fileEnd -= 2;
-		if (fileEnd - fileStart > _server.getClientMaxBodySize())
-			return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-		std::cout << "filename" << " \"" << filename << "\"." << std::endl;
-		std::ofstream ofs(filename.c_str(), std::ios::binary);
-		if (!ofs)
-			return makeResponse(res, 500, readFile(_server.getErrorPage(500)), getMimeType(req));
-		ofs.write(req.body.c_str() + fileStart, fileEnd - fileStart);
-		ofs.close();
-		return makeResponse(res, 201, readFile(_server.getErrorPage(201)), getMimeType(req));
+		std::string file_ext = filename.substr(filename.size() - loc.cgi_extension.size());
+		if (file_ext == loc.cgi_extension)
+			return _server.handleCGI(req, loc, current);
 	}
-	return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+	return makeResponse(res, 201, readFile(_server.getErrorPage(201)), getMimeType(req));
 }
 
 /**
