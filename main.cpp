@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/12/24 01:42:06 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/06 20:10:24 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ int main (int argc, char **argv)
 	ConfigFileName = (argc == 2) ? argv[1] : "config/default.conf";
 	try
 	{
+		signal(SIGPIPE, SIG_IGN);
 		Config parser;
 		parser.parseAllServerFiles(ConfigFileName);
 		all_socket = parser.getSocket();

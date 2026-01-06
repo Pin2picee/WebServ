@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/05 19:34:02 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/06 20:17:57 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -203,7 +203,7 @@ void Monitor::remove_fd(int index)
 	}
 }
 
-int	Monitor::	new_clients(int i)
+int	Monitor::new_clients(int i)
 {
 	struct sockaddr_in address;
 	socklen_t addrlen = sizeof(address);
@@ -220,10 +220,225 @@ int	Monitor::	new_clients(int i)
 	return (0);
 }
 
+void	Monitor::Timeout()
+{
+	timeval	timeofday;
+	gettimeofday(&timeofday, NULL);
+	long	time_sec = timeofday.tv_sec;
+	long	time_usec = timeofday.tv_usec;
+	std::vector<int>	Key_Erase;
+	for (std::map<const int, Client *>::iterator it_tab_cgi = tab_CGI.begin(); it_tab_cgi != tab_CGI.end(); ++it_tab_cgi)
+	{
+		int	PipeIn = it_tab_cgi->second->getPipeIn();
+		int	PipeOut = it_tab_cgi->second->getPipeOut();
+		double resultat = (time_sec - it_tab_cgi->second->getCgiStartTime().tv_sec) + ((time_usec - it_tab_cgi->second->getCgiStartTime().tv_usec) / 1000000.0);
+		if (resultat > 2.0)
+		{
+			std::cout << "TIMEOUT" << std::endl;
+			kill(it_tab_cgi->second->getCgiPid(), SIGKILL);
+			Response new_response;
+			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
+			it_tab_cgi->second->setReponse(it_tab_cgi->second->handler.responseToString(new_response));
+			it_tab_cgi->second->setResponseGenerate(true);
+			it_tab_cgi->second->setOutCGI();
+			it_tab_cgi->second->setPipeAddPoll(false);
+			waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
+			int	client_socket_fd = -1;
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (&(it->second) == it_tab_cgi->second)  // Comparer les adresses
+				{
+					client_socket_fd = it->first;  // ← La clé = fd du socket !
+					break;
+				}
+			}
+			for (size_t j = 0; j < nb_fd;)
+			{
+				if (all_fd[j].fd == client_socket_fd)
+				{
+					all_fd[j].events |= POLLOUT;
+					break;
+				}
+				if (all_fd[j].fd == PipeOut || all_fd[j].fd == PipeIn)
+					remove_fd(j);//->remove le fd des pipes du tab poll
+				else
+					j++;//->remove le fd des pipes du tab poll
+			}
+			if (tab_CGI.find(PipeIn) != tab_CGI.end())
+				Key_Erase.push_back(PipeIn);
+			if (tab_CGI.find(PipeOut) != tab_CGI.end())
+				Key_Erase.push_back(PipeOut);
+			it_tab_cgi->second->resetAfterCGI();
+		}
+	}
+	for (std::vector<int>::iterator it_erase_key = Key_Erase.begin(); it_erase_key != Key_Erase.end(); it_erase_key++)
+		tab_CGI.erase(*it_erase_key);
+	Key_Erase.clear();
+}
+
+void	Monitor::remove_fd_CGI(Client *my_client)
+{
+	int PipeIn = my_client->getPipeIn();
+	int PipeOut = my_client->getPipeOut();
+	for (size_t i = 0; i < nb_fd;)
+	{
+		if (all_fd[i].fd == PipeOut || all_fd[i].fd == PipeIn)
+			remove_fd(i);//->remove le fd des pipes du tab poll
+		else
+			i++;//->remove le fd des pipes du tab poll
+	}
+}
+
+int	Monitor::pollout_CGI(int i, Client *my_client)
+{
+	if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut() && my_client->getBody() != "")
+	{
+		const std::string& body = my_client->getBody();
+		int	reste = body.size() - my_client->getOffsetBodyCgi(); 
+		std::cout << "Voici le body : " << body << "et voici ce qu'il reste a ecrire : " << reste << std::endl;
+		if (reste > 0)
+		{
+			int	nb_written = write(all_fd[i].fd, body.c_str(), body.size());
+			if (nb_written > 0)
+			{
+				my_client->AddOffsetBodyCgi(nb_written);
+				return (-1);
+			}
+			if (nb_written == 0)
+			{
+				kill(my_client->getCgiPid(), SIGKILL);
+				waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+				my_client->resetAfterCGI();
+				remove_fd_CGI(my_client);
+				return (-1);
+			}
+			if (nb_written < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+				return (-1);
+			else
+			{
+				kill(my_client->getCgiPid(), SIGKILL);
+				waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+				std::cerr << "Erreur ecriture pipe CGI: " << strerror(errno) << std::endl;
+				tab_CGI.erase(all_fd[i].fd);
+				remove_fd_CGI(my_client);
+				my_client->setOutCGI();
+				i++;
+				return (-1);
+			}
+		}
+	}
+	return (0);
+}
+
+int	Monitor::pollin_CGI(int i, Client *my_client)
+{
+	if ((all_fd[i].revents & POLLIN || all_fd[i].revents & POLLHUP) && all_fd[i].fd == my_client->getPipeIn())
+	{
+		char buffer[4096];
+		ssize_t nb_read = -1;
+		if (all_fd[i].fd > 0)
+			nb_read = read(all_fd[i].fd, &buffer, sizeof(buffer));
+		if (nb_read > 0)
+		{
+			my_client->AddCgiOutput(std::string(buffer, nb_read));
+			nb_read = 0;
+			return (-1);
+		}
+		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
+		{
+			Response new_response = parseCGIOutput(my_client->getCgiOutput());
+			my_client->setReponse(my_client->handler.responseToString(new_response));
+			my_client->setResponseGenerate(true);
+			my_client->setOutCGI();
+			waitpid(my_client->getCgiPid(), NULL, WNOHANG);							
+			int client_socket_fd = -1;
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (&(it->second) == my_client)  // Comparer les adresses
+				{
+					client_socket_fd = it->first;  // ← La clé = fd du socket !
+					break;
+				}
+			}
+			for (size_t j = 0; j < nb_fd; j++)
+			{
+				if (all_fd[j].fd == client_socket_fd)
+				{
+					all_fd[j].events |= POLLOUT;
+					break;
+				}
+			}
+			std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);  
+			if (it_temp != tab_CGI.end())
+			{
+				if (tab_CGI.find(it_temp->second->getPipeOut()) != tab_CGI.end())
+					tab_CGI.erase(it_temp->second->getPipeOut());
+				tab_CGI.erase(all_fd[i].fd);
+			}
+			remove_fd_CGI(my_client);
+			my_client->resetAfterCGI();
+			return (-1);
+		}
+		if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+			return (-1);
+		else
+		{
+			kill(my_client->getCgiPid(), SIGKILL);
+			waitpid(my_client->getCgiPid(), NULL, WNOHANG);
+			Response new_response;
+			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
+			my_client->setReponse(my_client->handler.responseToString(new_response));
+			my_client->setResponseGenerate(true);
+			my_client->setOutCGI();
+			my_client->setPipeAddPoll(false);
+			my_client->resetAfterCGI();
+			int	fd_current = -1;
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (&(it->second) == my_client)  // Comparer les adresses
+				{
+					fd_current = it->first;  // ← La clé = fd du socket !
+					break;
+				}
+			}
+			for (size_t j = 0; j < nb_fd; j++)
+			{
+				if (all_fd[j].fd == fd_current)
+				{
+					all_fd[j].events |= POLLOUT;
+					break;
+				}
+			}
+			std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);  
+			if (it_temp != tab_CGI.end())
+			{
+				if (tab_CGI.find(it_temp->second->getPipeOut()) != tab_CGI.end())
+					tab_CGI.erase(it_temp->second->getPipeOut());
+				tab_CGI.erase(all_fd[i].fd);
+			}
+			remove_fd_CGI(my_client);
+			return (-1);
+		}
+	}
+	return (0);
+}
+
+int	Monitor::CGI_engine(int i)
+{
+	if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
+	{
+		Client *my_client = tab_CGI[all_fd[i].fd];
+		if (pollout_CGI(i, my_client) < 0)
+			return (-1);
+		if (pollin_CGI(i, my_client) < 0)
+			return(-1);
+	}
+	return (0);
+}
+
 /**
  * @brief = Une boucle poll qui verifie chaque socket server et qui accept les connexions
  */
-
 void	Monitor::Monitoring()
 {
 	int poll_return;
@@ -233,65 +448,12 @@ void	Monitor::Monitoring()
 	
 	while (on)
 	{
+		for (std::map<int, Client *>::iterator itt = tab_CGI.begin(); itt != tab_CGI.end(); itt++)
+		{
+			std::cout << "ce qu'il reste dans le tab CGI " << itt->first << " Le pipeIN " << itt->second->getPipeIn() << " Le pipeOut " << itt->second->getPipeOut() << std::endl;
+		}
 		poll_return = poll(this->all_fd, nb_fd, 15);
-		//function TIMEOUT
-		timeval	timeofday;
-		gettimeofday(&timeofday, NULL);
-		long	time_sec = timeofday.tv_sec;
-		long	time_usec = timeofday.tv_usec;
-		std::vector<int>	Key_Erase;
-		for (std::map<const int, Client *>::iterator it_tab_cgi = tab_CGI.begin(); it_tab_cgi != tab_CGI.end(); ++it_tab_cgi)
-		{
-			int	PipeIn = it_tab_cgi->second->getPipeIn();
-			int	PipeOut = it_tab_cgi->second->getPipeOut();
-			double resultat = (time_sec - it_tab_cgi->second->getCgiStartTime().tv_sec) + ((time_usec - it_tab_cgi->second->getCgiStartTime().tv_usec) / 1000000.0);
-			if (resultat > 2.0)
-			{
-				kill(it_tab_cgi->second->getCgiPid(), SIGKILL);
-				Response new_response;
-				makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
-				it_tab_cgi->second->setReponse(it_tab_cgi->second->handler.responseToString(new_response));
-				it_tab_cgi->second->setResponseGenerate(true);
-				it_tab_cgi->second->setOutCGI();
-				it_tab_cgi->second->setPipeAddPoll(false);
-				it_tab_cgi->second->resetAfterCGI();
-				waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
-				int	client_socket_fd = -1;
-				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-				{
-					if (&(it->second) == it_tab_cgi->second)  // Comparer les adresses
-					{
-						client_socket_fd = it->first;  // ← La clé = fd du socket !
-						break;
-					}
-				}
-				for (size_t j = 0; j < nb_fd; j++)
-				{
-					if (all_fd[j].fd == client_socket_fd)
-					{
-						all_fd[j].events |= POLLOUT;
-						break;
-					}
-				}
-				if (tab_CGI.find(PipeIn) != tab_CGI.end())
-					Key_Erase.push_back(PipeIn);
-				if (tab_CGI.find(PipeOut) != tab_CGI.end())
-					Key_Erase.push_back(PipeOut);
-				for (size_t i = 0; i < nb_fd; i++)
-				{
-					if (all_fd[i].fd == PipeOut)
-						remove_fd(i);//->remove le fd des pipes du tab poll
-					if (all_fd[i].fd == PipeIn)
-						remove_fd(i);//->remove le fd des pipes du tab poll
-				}
-			}
-		}
-		for (std::vector<int>::iterator it_erase_key = Key_Erase.begin(); it_erase_key != Key_Erase.end(); it_erase_key++)
-		{
-			//apres l'avoir erase il faut le supprimer du tab Vector pour ne pas avoir a la re Erase.->supprime de ce tab la
-			tab_CGI.erase(*it_erase_key);
-			
-		}
+		Timeout();
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;
 		else if (poll_return < 0)//ERROR
@@ -307,127 +469,8 @@ void	Monitor::Monitoring()
 			{
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
-				if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
-				{
-					Client *my_client = tab_CGI[all_fd[i].fd];
-					if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut() && my_client->getBody() != "")
-					{
-						//std::cout << RED << "POULLOUT" << RESET << std::endl;
-						const std::string body = my_client->getBody();
-						
-						size_t	nb_written = write(all_fd[i].fd, body.c_str(), body.size());
-						if (nb_written > 0)
-						{
-							remove_fd(i);
-							tab_CGI.erase(all_fd[i].fd);
-							continue;
-						}
-						if (nb_written == 0)
-						{
-							remove_fd(i);
-							tab_CGI.erase(all_fd[i].fd);
-							continue;
-						}
-						else
-						{
-							kill(my_client->getCgiPid(), SIGKILL);
-							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
-							std::cerr << "Erreur ecriture pipe CGI: " << strerror(errno) << std::endl;
-							tab_CGI.erase(all_fd[i].fd);
-							remove_fd(i);
-							my_client->setOutCGI();
-							i++;
-							continue;
-						}
-					}
-					if ((all_fd[i].revents & POLLIN || all_fd[i].revents & POLLHUP) && all_fd[i].fd == my_client->getPipeIn())
-					{
-						std::cout << RED << "Lecture du Pipe de sortie du CGI" << RESET << std::endl;
-						char buffer[4096];
-						ssize_t nb_read = -1;
-						if (all_fd[i].fd > 0)
-							nb_read = read(all_fd[i].fd, &buffer, sizeof(buffer));
-						//std::cout << "Le Nombre lu : " << nb_read << " et voici le bufferlen : " << strlen(buffer) << std::endl;
-						if (nb_read > 0)
-						{
-							std::cout << "DES CHOSES A LIRE FINALEMENT" << std::endl;
-							my_client->AddCgiOutput(std::string(buffer, nb_read));
-							nb_read = 0;
-							continue;
-						}
-						if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
-						{
-							//remettre a zero le time
-							std::cout << "CGI renvoie rien ou renvoie deconnexion" << std::endl;
-							Response new_response = parseCGIOutput(my_client->getCgiOutput());
-							my_client->setReponse(my_client->handler.responseToString(new_response));
-							my_client->setResponseGenerate(true);
-							my_client->resetAfterCGI();
-							my_client->setOutCGI();
-							waitpid(my_client->getCgiPid(), NULL, WNOHANG);							int client_socket_fd = -1;
-							for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-							{
-								if (&(it->second) == my_client)  // Comparer les adresses
-								{
-									client_socket_fd = it->first;  // ← La clé = fd du socket !
-									break;
-								}
-							}
-							for (size_t j = 0; j < nb_fd; j++)
-							{
-								if (all_fd[j].fd == client_socket_fd)
-								{
-									all_fd[j].events |= POLLOUT;
-									break;
-								}
-							}
-							if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
-								tab_CGI.erase(all_fd[i].fd);
-							remove_fd(i);
-							//std::cout << my_client->getReponse() << std::endl;
-							continue;
-						}
-						if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-						{
-							continue;
-						}
-						else
-						{
-							std::cout << "DANS LE ELSE DU POLLIN : " << std::endl;
-							kill(my_client->getCgiPid(), SIGKILL);
-							waitpid(my_client->getCgiPid(), NULL, WNOHANG);
-											Response new_response;
-							makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
-							my_client->setReponse(my_client->handler.responseToString(new_response));
-							my_client->setResponseGenerate(true);
-							my_client->setOutCGI();
-							my_client->setPipeAddPoll(false);
-							my_client->resetAfterCGI();
-							int	fd_current = -1;
-							for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-							{
-								if (&(it->second) == my_client)  // Comparer les adresses
-								{
-									fd_current = it->first;  // ← La clé = fd du socket !
-									break;
-								}
-							}
-							for (size_t j = 0; j < nb_fd; j++)
-							{
-								if (all_fd[j].fd == fd_current)
-								{
-									all_fd[j].events |= POLLOUT;
-									break;
-								}
-							}
-							std::cout << "nb_read : " << nb_read << std::endl;
-							std::cerr << "Erreur lecture pipe CGI: " << strerror(errno) << std::endl;
-							tab_CGI.erase(all_fd[i].fd);
-							remove_fd(i);
-							continue;
-						}
-					}
-				}
+				if (CGI_engine(i) < 0)
+					continue;
 				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
 				{
 					i++;
@@ -539,23 +582,25 @@ void	Monitor::Monitoring()
 			}
 		}
 	}
-	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+	clean_CGI();
+}
+
+void	Monitor::clean_CGI()
+{
+		for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 	{
 		if (it->second.getInCGI())
 		{
-			//std::cout << "=== NETTOYAGE DES CGI ===" << std::endl;
 			if (it->second.getPipeIn() > 0)
 			{
 				close(it->second.getPipeIn());
 				it->second.setPipeIn(-1);
 			}
-				
 			if (it->second.getPipeOut() > 0)
 			{
 				close(it->second.getPipeOut());
 				it->second.setPipeOut(-1);
 			}
-				
 			pid_t pid = it->second.getCgiPid();
 			kill(pid, SIGKILL);  // Essayer un arrêt propre
 			usleep(100000);      // Attendre 100ms

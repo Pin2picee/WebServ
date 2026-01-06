@@ -246,13 +246,6 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 	//std::cerr << "SALUT" << std::endl;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
-
-	std::cout << "=== AVANT CGI ===" << std::endl;
-	std::cout << "PipeIn: " << current->getPipeIn() << std::endl;
-	std::cout << "PipeOut: " << current->getPipeOut() << std::endl;
-	std::cout << "CgiPid: " << current->getCgiPid() << std::endl;
-	std::cout << "PipeAddPoll: " << current->getPipeAddPoll() << std::endl;
-	std::cout << "InCGI: " << current->getInCGI() << std::endl;
 	pid_t pid = fork();
 	if (pid == -1)
 		throw std::runtime_error("Fork failed");

@@ -127,7 +127,7 @@ Response ResponseHandler::handleGet(const Locations &loc, const Request &req, Cl
  * 
  * @return a `Response` structure that will answer in adequation to the post `Request`.
  */
-Response &ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Client *current)
+Response &ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req)
 {
 	if (boundary.empty())
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
@@ -158,10 +158,7 @@ Response &ResponseHandler::handleFile(std::string &boundary, Response &res, cons
 	{
 		std::string file_ext = filename.substr(filename.size() - loc.cgi_extension.size());
 		if (file_ext == loc.cgi_extension)
-		{
-			res = _server.handleCGI(req, loc, current);
-			return res;
-}		
+			return res;		
 	}
 	return makeResponse(res, 201, readFile(_server.getErrorPage(201)), getMimeType(req));
 }
@@ -187,18 +184,19 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
 		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
 	std::string boundary;
 	std::size_t pos = contentType.find("boundary=");
-
 	if (pos != std::string::npos)
 	{
 		boundary = "--" + contentType.substr(pos + 9);
-		return handleFile(boundary, res, loc, req, current);
+		return handleFile(boundary, res, loc, req);
 	}
 	else
 	{
+		std::cout << GREEN << "dans " << RESET << std::endl;
 		if (req.body.size() > _server.getClientMaxBodySize())
 			return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-		return makeResponse(res, 200, readFile(_server.getErrorPage(200)), getMimeType(req));
 	}
+	res = _server.handleCGI(req, loc, current);
+	return (res);
 }
 
 /**

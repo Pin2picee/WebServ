@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/12/24 18:41:44 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/06 20:18:35 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServ()))
 {
+	OffsetBodyCgi = 0;
 	request_finish = false;
 	PipeAddPoll = false;
 	correct_syntax = true;
@@ -61,6 +62,7 @@ Client &Client::operator=(const Client &copy)
 		ResponseGenerate = copy.ResponseGenerate;
 		fd_pipe_in = copy.fd_pipe_in;
 		fd_pipe_out = copy.fd_pipe_out;
+		OffsetBodyCgi = copy.OffsetBodyCgi;
 		//pas de end car init dans deconnected;
 	}
 	return (*this);
@@ -83,12 +85,13 @@ void	Client::resetInf()
 //Reset apres CGI - ne touche pas a correct_syntax ni offset
 void	Client::resetAfterCGI()
 {
-		this->request_finish = false;
-		this->request.clear();
-		this->fd_pipe_in = -1;
-		this->fd_pipe_out = -1;
-		this->_pid = 0;
-		this->PipeAddPoll = false;
+	this->OffsetBodyCgi = 0;
+	this->request_finish = false;
+	this->request.clear();
+	this->fd_pipe_in = -1;
+	this->fd_pipe_out = -1;
+	this->_pid = 0;
+	this->PipeAddPoll = false;
 }
 
 /*SET-GET*/
@@ -184,6 +187,15 @@ void			Client::setCGiStartTime(void)
 void			Client::setPipeAddPoll(bool	booleen)
 {
 	this->PipeAddPoll = booleen;
+}
+
+void			Client::AddOffsetBodyCgi(size_t nb)
+{
+	this->OffsetBodyCgi += nb;
+}
+const size_t			&Client::getOffsetBodyCgi() const
+{
+	return (this->OffsetBodyCgi);
 }
 
 const bool				&Client::getPipeAddPoll(void) const

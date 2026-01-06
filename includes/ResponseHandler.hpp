@@ -22,7 +22,7 @@ Response 			handlePost(const Locations &loc, const Request &req, Client *current
 
 //utils
 Response 			&getContentType(Response &res, const Locations &loc, const Request &req, Client *current);
-	Response 		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Client *current);
+	Response 		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req);
 	std::string		getMimeType(const Request &req);
 public:
 	ResponseHandler(const Server &server);

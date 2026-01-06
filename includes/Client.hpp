@@ -31,6 +31,7 @@ class Client
 		int			fd_pipe_in;//ecriture a l'entre du fils pour le body donc 1 car entre du pipe
 		pid_t		_pid;
 		size_t		OffsetCgi;
+		size_t		OffsetBodyCgi;
 
 		Client();
 	public :// a changer
@@ -58,6 +59,8 @@ class Client
 		const std::string		&getRequest() const;
 		const std::string		&getReponse() const;
 		const size_t			&getOffset() const;
+		const size_t			&getOffsetBodyCgi() const;
+
 		const bool			&getFinishRequest() const;
 		const bool			&getResponseGenerate() const;
 		const Socket		*getMySocket() const;
@@ -77,6 +80,9 @@ class Client
 		void			resetAfterCGI();
 		Request			ExtractRequest();
 		void			AddOffset(size_t nb);
+		void			AddOffsetBodyCgi(size_t nb);
+
+
 		size_t			AddCgiOutput(std::string morceau);
 		void			view_log();//utiliser seulement par deconected car end pas encore init;affiche les temps de connexions avec l'ip et port + socket serveur
 		void			disconnected();//met a false + view_log()

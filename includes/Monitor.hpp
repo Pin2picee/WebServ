@@ -26,6 +26,13 @@ class Monitor
 		int		test_read(ssize_t count);
 		int		deconnexion(int i);//SUPPRIME LA CONNEXION SOCKET CLIENT IF !TEST_READ
 		void 	remove_fd(int index);
+		void	Timeout();
+		void	clean_CGI();
+		int		CGI_engine(int current_fd);
+		int		pollout_CGI(int i, Client *my_client);
+		int		pollin_CGI(int i, Client *my_client);
+		void	remove_fd_CGI(Client *my_client);
+
 	public :
 		Monitor(std::vector<Socket *> tab);
 		~Monitor();
