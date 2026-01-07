@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/06 20:17:57 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/07 16:18:10 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -346,6 +346,7 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 		}
 		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
 		{
+			std::cout << "EGAL 0" << std::endl;
 			Response new_response = parseCGIOutput(my_client->getCgiOutput());
 			my_client->setReponse(my_client->handler.responseToString(new_response));
 			my_client->setResponseGenerate(true);
@@ -383,6 +384,7 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 			return (-1);
 		else
 		{
+			std::cout << "else" << std::endl;
 			kill(my_client->getCgiPid(), SIGKILL);
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 			Response new_response;
@@ -448,10 +450,6 @@ void	Monitor::Monitoring()
 	
 	while (on)
 	{
-		for (std::map<int, Client *>::iterator itt = tab_CGI.begin(); itt != tab_CGI.end(); itt++)
-		{
-			std::cout << "ce qu'il reste dans le tab CGI " << itt->first << " Le pipeIN " << itt->second->getPipeIn() << " Le pipeOut " << itt->second->getPipeOut() << std::endl;
-		}
 		poll_return = poll(this->all_fd, nb_fd, 15);
 		Timeout();
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout

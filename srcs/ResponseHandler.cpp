@@ -181,7 +181,7 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
 	if (it != req.headers.end())
 		contentType = it->second;
 	else
-		return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+		contentType = "application/octet-stream";
 	std::string boundary;
 	std::size_t pos = contentType.find("boundary=");
 	if (pos != std::string::npos)
