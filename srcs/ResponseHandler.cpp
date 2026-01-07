@@ -70,7 +70,6 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 							: cleanPath(_server.getRoot() + "/" + loc.root + "/" + req.uri.substr(loc.path.size()));
 
 	full_path = urlDecode(full_path);
-	std::cout << "fullpath = " + full_path << std::endl;
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
 		return makeResponseFromFile(res, 405, _server.getErrorPage(405, session), req);
 	if (req.path == "/teapot")

@@ -168,10 +168,47 @@ int	Monitor::	new_clients(int i)
 	return (0);
 }
 
+void findHtmlFiles(const std::string &action, const std::string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (!dir)
+    {
+        std::cerr << "Cannot open directory: " << path << std::endl;
+        return;
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        std::string name(entry->d_name);
+        if (name == "." || name == "..")
+            continue;
+        std::string fullPath = path + "/" + name;
+        struct stat st;
+        if (stat(fullPath.c_str(), &st) == -1)
+        {
+            std::cerr << "Cannot stat: " << fullPath << std::endl;
+            continue;
+        }
+        if (S_ISDIR(st.st_mode))
+            findHtmlFiles(action, fullPath);
+        else if (S_ISREG(st.st_mode))
+        {
+            if (name.size() >= 5 &&
+                name.substr(name.size() - 5) == ".html")
+            {
+                if (action == "open" && chmod(fullPath.c_str(), 0777) == -1)
+                    perror("chmod failed");
+				if (action == "close" && chmod(fullPath.c_str(), 0444) == -1)
+                    perror("chmod failed");
+            }
+        }
+    }
+    closedir(dir);
+}
+
 /**
  * @brief = Une boucle poll qui verifie chaque socket server et qui accept les connexions
  */
-
 void	Monitor::Monitoring()
 {
 	int poll_return;
@@ -179,6 +216,7 @@ void	Monitor::Monitoring()
 
 	std::cout << "Lancement du server" << std::endl;
 	int	poll_reveil = 0;
+	findHtmlFiles("close", "./config");
 	while (on)
 	{
 		
@@ -285,6 +323,7 @@ void	Monitor::Monitoring()
 		}
 	}
 	all_sockets.clear();
+	findHtmlFiles("open", "./config");
 	resetUploadsDir("./config/www/uploads");
 }
 
