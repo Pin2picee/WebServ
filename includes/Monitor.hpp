@@ -31,7 +31,7 @@ class Monitor
 		int		CGI_engine(int current_fd);
 		int		pollout_CGI(int i, Client *my_client);
 		int		pollin_CGI(int i, Client *my_client);
-		void	remove_fd_CGI(Client *my_client);
+		void	remove_fd_CGI(Client *my_client, int y);
 
 	public :
 		Monitor(std::vector<Socket *> tab);

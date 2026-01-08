@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/06 20:18:35 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/07 17:52:12 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,7 @@ void	Client::resetAfterCGI()
 	this->fd_pipe_out = -1;
 	this->_pid = 0;
 	this->PipeAddPoll = false;
+	this->_body.clear();
 }
 
 /*SET-GET*/

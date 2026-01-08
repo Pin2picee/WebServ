@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/07 16:30:58 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/08 22:12:45 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -276,14 +276,27 @@ void	Monitor::Timeout()
 	Key_Erase.clear();
 }
 
-void	Monitor::remove_fd_CGI(Client *my_client)
+void	Monitor::remove_fd_CGI(Client *my_client, int y)
 {
 	int PipeIn = my_client->getPipeIn();
 	int PipeOut = my_client->getPipeOut();
-	for (size_t i = 0; i < nb_fd;)
-	{
+	for (size_t i = nb_fd_server; i < nb_fd && i >= nb_fd_server;)
+	{ 
 		if (all_fd[i].fd == PipeOut || all_fd[i].fd == PipeIn)
-			remove_fd(i);//->remove le fd des pipes du tab poll
+		{
+			if (all_fd[i].fd == PipeOut && (y == 1 || y == 3))
+			{
+				remove_fd(i);
+				my_client->setPipeOut(-1);
+			}
+				
+			if (all_fd[i].fd == PipeIn && (y == 2 || y == 3))
+			{
+				remove_fd(i);//->remove le fd des pipes du tab poll
+				my_client->setPipeIn(-1);
+			}
+				
+		}
 		else
 			i++;//->remove le fd des pipes du tab poll
 	}
@@ -291,40 +304,55 @@ void	Monitor::remove_fd_CGI(Client *my_client)
 
 int	Monitor::pollout_CGI(int i, Client *my_client)
 {
-	if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut() && my_client->getBody() != "")
+	if (all_fd[i].fd == my_client->getPipeOut())
 	{
+		std::cout << "SAU" << std::endl;
+	}
+	if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut())
+	{
+		std::cout << RED << "POLLOUT" << RESET << std::endl;
 		const std::string& body = my_client->getBody();
 		int	reste = body.size() - my_client->getOffsetBodyCgi(); 
-		std::cout << "Voici le body : " << body << "et voici ce qu'il reste a ecrire : " << reste << std::endl;
+		
+		std::cerr << "Voici le body : " << body << "et voici ce qu'il reste a ecrire : " << reste << " Voici ce que j'ai deja ecrit : " << my_client->getOffsetBodyCgi() << " et le fd : " << my_client->getPipeOut() << std::endl;
 		if (reste > 0)
 		{
-			int	nb_written = write(all_fd[i].fd, body.c_str(), body.size());
+			int	nb_written = write(all_fd[i].fd, body.c_str() + my_client->getOffsetBodyCgi(), reste);
 			if (nb_written > 0)
 			{
+				std::cout << "----------------j'ecrit ------------------" << std::endl;
 				my_client->AddOffsetBodyCgi(nb_written);
 				return (-1);
 			}
 			if (nb_written == 0)
 			{
-				kill(my_client->getCgiPid(), SIGKILL);
-				waitpid(my_client->getCgiPid(), NULL, WNOHANG);
-				my_client->resetAfterCGI();
-				remove_fd_CGI(my_client);
+				std::cout << "WHAT" << std::endl;
 				return (-1);
 			}
 			if (nb_written < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+			{
+				std::cout << "----------------j'attend ------------------" << std::endl;
 				return (-1);
+			}
+				
 			else
 			{
 				kill(my_client->getCgiPid(), SIGKILL);
 				waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 				std::cerr << "Erreur ecriture pipe CGI: " << strerror(errno) << std::endl;
 				tab_CGI.erase(all_fd[i].fd);
-				remove_fd_CGI(my_client);
+				remove_fd_CGI(my_client, 3);
 				my_client->setOutCGI();
 				i++;
 				return (-1);
 			}
+		}
+		else
+		{
+			std::cout << "----------------JE PASSE ICI ------------------" << std::endl;
+			tab_CGI.erase(all_fd[i].fd);
+			remove_fd_CGI(my_client, 1);
+			close(my_client->getPipeOut());
 		}
 	}
 	return (0);
@@ -375,12 +403,15 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 					tab_CGI.erase(it_temp->second->getPipeOut());
 				tab_CGI.erase(all_fd[i].fd);
 			}
-			remove_fd_CGI(my_client);
+			remove_fd_CGI(my_client, 3);
 			my_client->resetAfterCGI();
+			my_client->setPipeAddPoll(false);
 			return (-1);
 		}
 		if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		{
 			return (-1);
+		}
 		else
 		{
 			kill(my_client->getCgiPid(), SIGKILL);
@@ -416,7 +447,7 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 					tab_CGI.erase(it_temp->second->getPipeOut());
 				tab_CGI.erase(all_fd[i].fd);
 			}
-			remove_fd_CGI(my_client);
+			remove_fd_CGI(my_client, 3);
 			return (-1);
 		}
 	}
@@ -429,9 +460,15 @@ int	Monitor::CGI_engine(int i)
 	{
 		Client *my_client = tab_CGI[all_fd[i].fd];
 		if (pollout_CGI(i, my_client) < 0)
+		{
+			std::cout << "Ca boucle la dedans POLLOUT" << std::endl;
 			return (-1);
+		}
 		if (pollin_CGI(i, my_client) < 0)
+		{
 			return(-1);
+		}
+			
 	}
 	return (0);
 }
@@ -448,6 +485,7 @@ void	Monitor::Monitoring()
 	
 	while (on)
 	{
+
 		poll_return = poll(this->all_fd, nb_fd, 15);
 		Timeout();
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
@@ -466,7 +504,10 @@ void	Monitor::Monitoring()
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
 				if (CGI_engine(i) < 0)
+				{
 					continue;
+				}
+					
 				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
 				{
 					i++;
@@ -538,19 +579,19 @@ void	Monitor::Monitoring()
 					{
 						int	PipeIn = it_client->second.getPipeIn();
 						int	PipeOut = it_client->second.getPipeOut();
-						if (PipeIn > 0)
-						{
-							int	flags = fcntl(PipeIn, F_GETFL);
-							fcntl(PipeIn, F_SETFL, flags | O_NONBLOCK);
-							add_fd(PipeIn, 1);
-							tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
-						}
 						if (PipeOut > 0)
 						{
 							int	flags = fcntl(PipeOut, F_GETFL);
 							fcntl(PipeOut, F_SETFL, flags | O_NONBLOCK);
 							add_fd(PipeOut, 2);
 							tab_CGI.insert(std::make_pair(PipeOut, &(it_client->second)));
+						}
+						if (PipeIn > 0)
+						{
+							int	flags = fcntl(PipeIn, F_GETFL);
+							fcntl(PipeIn, F_SETFL, flags | O_NONBLOCK);
+							add_fd(PipeIn, 1);
+							tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
 						}
 						it_client->second.setPipeAddPoll(true);
 					}
