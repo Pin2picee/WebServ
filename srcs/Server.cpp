@@ -240,11 +240,8 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 {
 	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
 	std::string output;
-
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
-
-	//std::cerr << "SALUT" << std::endl;
-	std::cout << "req.body = " << req.body << std::endl;
+	
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 	pid_t pid = fork();
