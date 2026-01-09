@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/08 22:12:45 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/09 15:39:17 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -280,26 +280,25 @@ void	Monitor::remove_fd_CGI(Client *my_client, int y)
 {
 	int PipeIn = my_client->getPipeIn();
 	int PipeOut = my_client->getPipeOut();
-	for (size_t i = nb_fd_server; i < nb_fd && i >= nb_fd_server;)
-	{ 
-		if (all_fd[i].fd == PipeOut || all_fd[i].fd == PipeIn)
-		{
-			if (all_fd[i].fd == PipeOut && (y == 1 || y == 3))
-			{
-				remove_fd(i);
-				my_client->setPipeOut(-1);
-			}
-				
-			if (all_fd[i].fd == PipeIn && (y == 2 || y == 3))
-			{
-				remove_fd(i);//->remove le fd des pipes du tab poll
-				my_client->setPipeIn(-1);
-			}
-				
-		}
-		else
-			i++;//->remove le fd des pipes du tab poll
-	}
+ 	for (size_t i = nb_fd_server; i < nb_fd;)
+    {
+        bool removed = false;
+        
+        if (all_fd[i].fd == PipeOut && (y == 1 || y == 3))
+        {
+            remove_fd(i);
+            my_client->setPipeOut(-1);
+            removed = true;
+        }
+        if (all_fd[i].fd == PipeIn && (y == 2 || y == 3))  // ← else if !
+        {
+            remove_fd(i);
+            my_client->setPipeIn(-1);
+            removed = true;
+        }
+        if (!removed)
+            i++;
+    }
 }
 
 int	Monitor::pollout_CGI(int i, Client *my_client)
@@ -349,10 +348,13 @@ int	Monitor::pollout_CGI(int i, Client *my_client)
 		}
 		else
 		{
-			std::cout << "----------------JE PASSE ICI ------------------" << std::endl;
+			std::cout << "----------------JE PASSE ICI ------------------ Le fd erase : " << all_fd[i].fd << my_client->getPipeAddPoll() <<  std::endl;
 			tab_CGI.erase(all_fd[i].fd);
 			remove_fd_CGI(my_client, 1);
 			close(my_client->getPipeOut());
+			my_client->setPipeOut(-1);
+			my_client->setPipeAddPoll(false);
+			return (-1);
 		}
 	}
 	return (0);
@@ -374,6 +376,7 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 		}
 		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
 		{
+			std::cout << my_client->getPipeAddPoll() << " : PipeAddPoll" << std::endl;
 			Response new_response = parseCGIOutput(my_client->getCgiOutput());
 			my_client->setReponse(my_client->handler.responseToString(new_response));
 			my_client->setResponseGenerate(true);
@@ -507,7 +510,6 @@ void	Monitor::Monitoring()
 				{
 					continue;
 				}
-					
 				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
 				{
 					i++;
@@ -593,7 +595,12 @@ void	Monitor::Monitoring()
 							add_fd(PipeIn, 1);
 							tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
 						}
-						it_client->second.setPipeAddPoll(true);
+						if (it_client->second.getPipeIn() > 0)
+						{
+							std::cout << "Ajouter dans le tab POLL" << std::endl;
+							it_client->second.setPipeAddPoll(true);
+						}
+							
 					}
 					if (it_client->second.getReponse() != "")
 						nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
