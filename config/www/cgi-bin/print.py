@@ -3,6 +3,10 @@ import sys
 import os
 import urllib.parse
 
+# DEBUG
+sys.stderr.write(f"[CGI] PID={os.getpid()} CONTENT_LENGTH={os.environ.get('CONTENT_LENGTH', 'NOT SET')}\n")
+sys.stderr.flush()
+
 # --- Lire les données ---
 method = os.environ.get("REQUEST_METHOD", "GET").upper()
 input_text = ""
@@ -12,8 +16,12 @@ if method == "POST":
         length = int(os.environ.get("CONTENT_LENGTH", 0))
     except (TypeError, ValueError):
         length = 0
+    sys.stderr.write(f"[CGI] About to read {length} bytes\n")
+    sys.stderr.flush()
     if length > 0:
         input_text = sys.stdin.read(length)
+    sys.stderr.write(f"[CGI] Read: '{input_text}'\n")
+    sys.stderr.flush()
 elif method == "GET":
     input_text = os.environ.get("QUERY_STRING", "")
 

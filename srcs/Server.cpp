@@ -244,6 +244,7 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
 
 	//std::cerr << "SALUT" << std::endl;
+	std::cout << "req.body = " << req.body << std::endl;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 	pid_t pid = fork();
@@ -316,13 +317,8 @@ Response Server::handleCGI(const Request &req, const Locations &loc, Client *cur
 		close(pipe_in[0]);
 
 		current->setPipeIn(pipe_out[0]);//Lis la sortie du CGI
-		if (req.body != "")
-		{
-			current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
-			current->setBody(req.body);
-		}
-		else
-			close(pipe_in[1]);
+		current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
+		current->setBody(req.body);
 		std::cout << GREEN <<"Je suis dans le HANDLE CGI" << RESET << std::endl; 
 		current->setCgiPid(pid);
 		current->setCGiStartTime();//demarrage timing CGI

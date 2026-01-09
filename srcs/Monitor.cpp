@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/09 15:39:17 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/09 18:39:52 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -303,37 +303,37 @@ void	Monitor::remove_fd_CGI(Client *my_client, int y)
 
 int	Monitor::pollout_CGI(int i, Client *my_client)
 {
-	if (all_fd[i].fd == my_client->getPipeOut())
+	std::cout << RED << "[pollout_CGI] fd=" << all_fd[i].fd << " revents=" << all_fd[i].revents 
+			  << " pipeOut=" << my_client->getPipeOut() << " body.size=" << my_client->getBody().size() 
+			  << " OffsetBodyCgi=" << my_client->getOffsetBodyCgi() << RESET << std::endl;
+	
+	// Gérer POLLHUP : le CGI a fermé son stdin sans lire, ou a crashé
+	if ((all_fd[i].revents & POLLOUT || all_fd[i].revents & POLLHUP) && all_fd[i].fd == my_client->getPipeOut() && my_client->getPipeOut() > 0)
 	{
-		std::cout << "SAU" << std::endl;
-	}
-	if (all_fd[i].revents & POLLOUT && all_fd[i].fd == my_client->getPipeOut())
-	{
-		std::cout << RED << "POLLOUT" << RESET << std::endl;
+		std::cout << "POLLOUT" << std::endl;
 		const std::string& body = my_client->getBody();
 		int	reste = body.size() - my_client->getOffsetBodyCgi(); 
-		
-		std::cerr << "Voici le body : " << body << "et voici ce qu'il reste a ecrire : " << reste << " Voici ce que j'ai deja ecrit : " << my_client->getOffsetBodyCgi() << " et le fd : " << my_client->getPipeOut() << std::endl;
 		if (reste > 0)
 		{
+			std::cout << "RESTE > 0" << std::endl;
 			int	nb_written = write(all_fd[i].fd, body.c_str() + my_client->getOffsetBodyCgi(), reste);
 			if (nb_written > 0)
 			{
-				std::cout << "----------------j'ecrit ------------------" << std::endl;
+				std::cout << "nb_written > 0" << std::endl;
 				my_client->AddOffsetBodyCgi(nb_written);
 				return (-1);
 			}
 			if (nb_written == 0)
 			{
-				std::cout << "WHAT" << std::endl;
+				std::cout << "nb_written == 0" << std::endl;
 				return (-1);
 			}
 			if (nb_written < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 			{
-				std::cout << "----------------j'attend ------------------" << std::endl;
+				std::cout << "nb_written < 0 && errno" << std::endl;
+				// Pas prêt à écrire, retourner 0 pour permettre de traiter les autres fds
 				return (-1);
 			}
-				
 			else
 			{
 				kill(my_client->getCgiPid(), SIGKILL);
@@ -348,20 +348,18 @@ int	Monitor::pollout_CGI(int i, Client *my_client)
 		}
 		else
 		{
-			std::cout << "----------------JE PASSE ICI ------------------ Le fd erase : " << all_fd[i].fd << my_client->getPipeAddPoll() <<  std::endl;
+			std::cout << "reste < 0" << std::endl;
 			tab_CGI.erase(all_fd[i].fd);
 			remove_fd_CGI(my_client, 1);
-			close(my_client->getPipeOut());
-			my_client->setPipeOut(-1);
-			my_client->setPipeAddPoll(false);
 			return (-1);
 		}
 	}
 	return (0);
 }
 
-int	Monitor::pollin_CGI(int i, Client *my_client)
+int	Monitor::pollin_CGI(int &i, Client *my_client)
 {
+
 	if ((all_fd[i].revents & POLLIN || all_fd[i].revents & POLLHUP) && all_fd[i].fd == my_client->getPipeIn())
 	{
 		char buffer[4096];
@@ -376,7 +374,6 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 		}
 		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
 		{
-			std::cout << my_client->getPipeAddPoll() << " : PipeAddPoll" << std::endl;
 			Response new_response = parseCGIOutput(my_client->getCgiOutput());
 			my_client->setReponse(my_client->handler.responseToString(new_response));
 			my_client->setResponseGenerate(true);
@@ -408,11 +405,13 @@ int	Monitor::pollin_CGI(int i, Client *my_client)
 			}
 			remove_fd_CGI(my_client, 3);
 			my_client->resetAfterCGI();
+			my_client->setOutCGI();
 			my_client->setPipeAddPoll(false);
 			return (-1);
 		}
 		if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 		{
+			// Rien à lire pour l'instant, retourner 0 pour permettre de traiter les autres fds (pipeOut)
 			return (-1);
 		}
 		else
@@ -464,7 +463,6 @@ int	Monitor::CGI_engine(int i)
 		Client *my_client = tab_CGI[all_fd[i].fd];
 		if (pollout_CGI(i, my_client) < 0)
 		{
-			std::cout << "Ca boucle la dedans POLLOUT" << std::endl;
 			return (-1);
 		}
 		if (pollin_CGI(i, my_client) < 0)
@@ -508,6 +506,7 @@ void	Monitor::Monitoring()
 				bool client_disconnected = false;
 				if (CGI_engine(i) < 0)
 				{
+					i++;
 					continue;
 				}
 				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
@@ -565,8 +564,14 @@ void	Monitor::Monitoring()
 					size_t		offset;
 
 					offset = it_client->second.getOffset();
+					//std::cout << "[POLLOUT CLIENT] offset=" << offset 
+					//		  << " InCGI=" << it_client->second.getInCGI()
+					//		  << " ResponseGenerate=" << it_client->second.getResponseGenerate()
+					//		  << " FinishRequest=" << it_client->second.getFinishRequest()
+					//		  << " Syntax=" << it_client->second.getSyntax() << std::endl;
 					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0 && it_client->second.getInCGI() == false && !it_client->second.getResponseGenerate())
 					{
+						//std::cout << "[POLLOUT CLIENT] Calling handleRequest" << std::endl;
 						Request request = it_client->second.ExtractRequest();
 						Response	structResponse = it_client->second.handler.handleRequest(request, &it_client->second);
 						if (it_client->second.getInCGI())
@@ -577,6 +582,7 @@ void	Monitor::Monitoring()
 							it_client->second.setResponseGenerate(true);
 						}
 					}
+					std::cout << "the client InCGI ? : " << it_client->second.getInCGI() << " & the client PipeAddPoll ? : " << it_client->second.getPipeAddPoll() << std::endl;
 					if (it_client->second.getInCGI() == true && !it_client->second.getPipeAddPoll())
 					{
 						int	PipeIn = it_client->second.getPipeIn();
@@ -595,12 +601,13 @@ void	Monitor::Monitoring()
 							add_fd(PipeIn, 1);
 							tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
 						}
+						std::cout << "PipeOut : " << PipeOut << "PipeIn : " << PipeIn;
 						if (it_client->second.getPipeIn() > 0)
 						{
-							std::cout << "Ajouter dans le tab POLL" << std::endl;
 							it_client->second.setPipeAddPoll(true);
+							// Retirer POLLOUT du socket client pendant que le CGI tourne
+							all_fd[i].events = POLLIN;
 						}
-							
 					}
 					if (it_client->second.getReponse() != "")
 						nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
@@ -614,11 +621,13 @@ void	Monitor::Monitoring()
 					if (it_client->second.getOffset() >= it_client->second.getReponse().length() && !it_client->second.getInCGI() 
 						&& it_client->second.getReponse().length() > 0)
 					{
+						std::cout << "-------------------------------------" << std::endl;
 						all_fd[i].events = POLLIN;
 						it_client->second.setReponse("");
 						it_client->second.setResponseGenerate(false);
 						it_client->second.resetAfterCGI();
 						it_client->second.setOutCGI();
+						it_client->second.resetInf();
 						it_client->second.ResetCgiOutput();
 					}
 				}

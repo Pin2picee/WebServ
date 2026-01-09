@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/07 17:52:12 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/09 17:10:31 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,17 +82,17 @@ void	Client::resetInf()
 		this->offset = 0;
 }
 
-//Reset apres CGI - ne touche pas a correct_syntax ni offset
+//Reset apres CGI - ne touche pas a correct_syntax, offset, body ni request_finish
 void	Client::resetAfterCGI()
 {
 	this->OffsetBodyCgi = 0;
-	this->request_finish = false;
+	// Ne pas remettre request_finish à false ici : la nouvelle requête peut déjà être arrivée
 	this->request.clear();
 	this->fd_pipe_in = -1;
 	this->fd_pipe_out = -1;
 	this->_pid = 0;
 	this->PipeAddPoll = false;
-	this->_body.clear();
+	// Ne pas effacer _body ici : il sera écrasé par setBody() lors de la prochaine requête
 }
 
 /*SET-GET*/
