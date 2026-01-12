@@ -182,19 +182,6 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
 		contentType = it->second;
 	else
 		contentType = "application/octet-stream";
-	std::string boundary;
-	std::size_t pos = contentType.find("boundary=");
-	if (pos != std::string::npos)
-	{
-		boundary = "--" + contentType.substr(pos + 9);
-		return handleFile(boundary, res, loc, req);
-	}
-	else
-	{
-		std::cout << GREEN << "dans " << RESET << std::endl;
-		if (req.body.size() > _server.getClientMaxBodySize())
-			return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
-	}
 	size_t	size_path = req.path.size();
 	size_t	point = req.path.rfind('.');
 	if (point == std::string::npos)
@@ -213,6 +200,22 @@ Response &ResponseHandler::getContentType(Response &res, const Locations &loc, c
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405)), getMimeType(req));
 	res = _server.handleCGI(req, loc, current);
 	return (res);
+	if (!contentType.empty() && contentType.find("multipart/form-data") != std::string::npos)
+	{
+		std::size_t pos = contentType.find("boundary=");
+        if (pos == std::string::npos || pos + 9 >= contentType.size())
+            return makeResponse(res, 400, readFile(_server.getErrorPage(400)), getMimeType(req));
+        std::string boundary = contentType.substr(pos + 9);
+        std::size_t end = boundary.find(';');
+        if (end != std::string::npos)
+            boundary = boundary.substr(0, end);
+		boundary = "--" + boundary;
+        return handleFile(boundary, res, loc, req);
+	}
+	if (req.body.size() > _server.getClientMaxBodySize())
+		return makeResponse(res, 413, readFile(_server.getErrorPage(413)), getMimeType(req));
+    return makeResponse(res, 200, readFile("config/www/index.html"), getMimeType(req));
+
 }
 
 /**
