@@ -227,4 +227,41 @@ std::string urlDecode(const std::string &str)
     return result;
 }
 
-
+// Mets en ReadOnly les fichiers .html du serveur et les remets en normal selon l'action
+void findHtmlFiles(const std::string &action, const std::string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (!dir)
+    {
+        std::cerr << "Cannot open directory: " << path << std::endl;
+        return;
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        std::string name(entry->d_name);
+        if (name == "." || name == "..")
+            continue;
+        std::string fullPath = path + "/" + name;
+        struct stat st;
+        if (stat(fullPath.c_str(), &st) == -1)
+        {
+            std::cerr << "Cannot stat: " << fullPath << std::endl;
+            continue;
+        }
+        if (S_ISDIR(st.st_mode))
+            findHtmlFiles(action, fullPath);
+        else if (S_ISREG(st.st_mode))
+        {
+            if (name.size() >= 5 &&
+                name.substr(name.size() - 5) == ".html")
+            {
+                if (action == "open" && chmod(fullPath.c_str(), 0777) == -1)
+                    perror("chmod failed");
+				if (action == "close" && chmod(fullPath.c_str(), 0444) == -1)
+                    perror("chmod failed");
+            }
+        }
+    }
+    closedir(dir);
+}

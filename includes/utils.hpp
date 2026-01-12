@@ -58,6 +58,7 @@ void		displayRequestInfo(const Request &req);
 std::string getFileName(const std::string &fileBody);
 std::string makeJsonError(const std::string &msg);
 std::string urlDecode(const std::string &str);
+void 		findHtmlFiles(const std::string &action, const std::string &path);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 

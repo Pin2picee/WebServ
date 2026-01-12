@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/12 19:16:48 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/12 20:00:25 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ Monitor::Monitor(std::vector<Socket *> tab)
 	{
 		all_fd[nb_fd].fd = (*it)->getFd();
 		all_fd[nb_fd].events = POLLIN;
-		all_socket.insert(std::make_pair((*it)->getFd(), *it));
+		all_sockets.insert(std::make_pair((*it)->getFd(), *it));
 		nb_fd++;
 		it++;
 	}
@@ -88,7 +88,7 @@ Monitor::Monitor(std::vector<Socket *> tab)
 /*AJOUT DU CLIENT DANS LA MAP FD:CLIENT*/
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
-	Client  nouveau(all_socket.at(fd_server));
+	Client  nouveau(all_sockets.at(fd_server));
 	uint32_t	ip_adress = ntohl(ip);
 	uint16_t	port_adress = ntohs(port);
 	std::ostringstream	oss;
@@ -521,11 +521,11 @@ void	Monitor::Monitoring()
 	int poll_return;
 
 	std::cout << "Lancement du server" << std::endl;
-	int	poll_reveil = 0;
-	
+	findHtmlFiles("close", "./config");//
 	while (on)
 	{
 		poll_return = poll(this->all_fd, nb_fd, 15);
+		
 		Timeout();
 		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
 			continue ;
@@ -537,7 +537,6 @@ void	Monitor::Monitoring()
 		}
 		else if (poll_return > 0)//un ou plusieurs socket pret
 		{
-			poll_reveil++;
 			for (size_t i = 0; i < nb_fd;)//parcours les socket
 			{
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
@@ -606,6 +605,7 @@ void	Monitor::Monitoring()
 					{
 						Request request = it_client->second.ExtractRequest();
 						Response	structResponse = it_client->second.handler.handleRequest(request, &it_client->second);
+						updateClientCookies(it_client->second, structResponse);
 						if (it_client->second.getInCGI())
 							it_client->second.setResponseGenerate(true);
 						else
@@ -623,7 +623,39 @@ void	Monitor::Monitoring()
 			}
 		}
 	}
+	findHtmlFiles("open", "./config");
+	resetUploadsDir("./config/www/uploads");
 	clean_CGI();
+}
+
+static void parseSetCookie(const std::string &header, std::string &name, std::string &value)
+{
+    size_t start = header.find("Set-Cookie: ");
+    if (start == std::string::npos)
+        return;
+    start += strlen("Set-Cookie: ");
+    size_t end = header.find(';', start);
+    std::string cookie_pair = header.substr(start, end - start);
+
+    size_t eq = cookie_pair.find('=');
+    if (eq != std::string::npos)
+    {
+        name = cookie_pair.substr(0, eq);
+        value = cookie_pair.substr(eq + 1);
+    }
+}
+
+void Monitor::updateClientCookies(Client &client, const Response &resp)
+{
+    if (!client.getCookies().empty())
+        return;
+    for (std::vector<std::string>::const_iterator it = resp.headers.begin(); it != resp.headers.end(); ++it)
+    {
+        std::string name, value;
+        parseSetCookie(*it, name, value);
+        if (!name.empty() && !value.empty())
+            client.setCookies(name, value);
+    }
 }
 
 void	Monitor::clean_CGI()

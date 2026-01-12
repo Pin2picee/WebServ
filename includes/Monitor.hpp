@@ -15,7 +15,7 @@ class Monitor
 		size_t				nb_fd;
 		size_t				nb_fd_server;
 		std::map<int, Client>	clients;
-		std::map<int, Socket *>	all_socket;//ma map avec cle = fd, valeur = obj Socket;
+		std::map<int, Socket *>	all_sockets;//ma map avec cle = fd, valeur = obj Socket;
 		struct  pollfd		all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
 		std::map<int, Client *>	tab_CGI;
 	private :
@@ -35,6 +35,8 @@ class Monitor
 		void	reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool timeout);
 		void	AddCgiPollFd(Client *current, int i);
 		void	AfterSend(Client *current, int i, int nb_send);
+		void 	updateClientCookies(Client &client, const Response &resp)
+
 	public :
 		Monitor(std::vector<Socket *> tab);
 		~Monitor();
