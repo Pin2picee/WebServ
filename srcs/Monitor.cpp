@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/09 19:09:29 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/12 16:32:44 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,6 +116,11 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 		clients.insert(std::pair<int, Client>(fd, nouveau));
 }
 
+/*
+==========
+Supprime le Client de la map Client
+==========
+*/
 int Monitor::deconnexion(int i)
 {
     const int client_fd = all_fd[i].fd;
@@ -153,6 +158,7 @@ int Monitor::deconnexion(int i)
     return 0;
 }
 
+//Verifie si deconnecte ou doit attendre
 int	 Monitor::test_read(ssize_t count)
 {
 	if (count > 0)
@@ -168,6 +174,11 @@ int	 Monitor::test_read(ssize_t count)
 		return (0);
 }
 
+/*
+=================
+Extrait les données d'une requete client pour le stocker dans l'objet client .
+=================
+*/
 int		Monitor::new_request(int i)
 {
 	ssize_t count;
@@ -203,6 +214,12 @@ void Monitor::remove_fd(int index)
 	}
 }
 
+/*
+==========
+Accepte les connexion sur les sockets Server et Ajoute le client dans ma map Client en cours .
+==========
+*/
+
 int	Monitor::new_clients(int i)
 {
 	struct sockaddr_in address;
@@ -219,6 +236,12 @@ int	Monitor::new_clients(int i)
 	nb_fd++;
 	return (0);
 }
+
+/*
+==================
+Verifie le temps d'attente de chaque CGI en cours qui sont stocker dans la map Tab_CGI
+==================
+*/
 
 void	Monitor::Timeout()
 {
@@ -244,6 +267,7 @@ void	Monitor::Timeout()
 			it_tab_cgi->second->setPipeAddPoll(false);
 			waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
 			int	client_socket_fd = -1;
+			//reactivation DU POLLOUT du Client pour envoyer la reponse TIMEOUT
 			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 			{
 				if (&(it->second) == it_tab_cgi->second)  // Comparer les adresses
@@ -276,6 +300,11 @@ void	Monitor::Timeout()
 	Key_Erase.clear();
 }
 
+/*
+==================
+Suppresion des Pipes des CGI CLIENT du tableau POLLFD
+==================
+*/
 void	Monitor::remove_fd_CGI(Client *my_client, int y)
 {
 	int PipeIn = my_client->getPipeIn();
@@ -365,6 +394,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			my_client->setOutCGI();
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);							
 			int client_socket_fd = -1;
+			//reactivation du POLLOUT COTE CLIENT pour renvoyer la reonse
 			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 			{
 				if (&(it->second) == my_client)  // Comparer les adresses
@@ -395,10 +425,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			return (-1);
 		}
 		if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-		{
-			// Rien à lire pour l'instant, retourner 0 pour permettre de traiter les autres fds (pipeOut)
 			return (-1);
-		}
 		else
 		{
 			kill(my_client->getCgiPid(), SIGKILL);
@@ -411,6 +438,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			my_client->setPipeAddPoll(false);
 			my_client->resetAfterCGI();
 			int	fd_current = -1;
+			//Reactivation du POLLOUT du client pour envoyer le resultat
 			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 			{
 				if (&(it->second) == my_client)  // Comparer les adresses
@@ -441,6 +469,11 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 	return (0);
 }
 
+/*
+============
+Gere entré et sortie des pipes CGI pour envoyer body et recup l'output du CGI
+============
+*/
 int	Monitor::CGI_engine(int i)
 {
 	if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
