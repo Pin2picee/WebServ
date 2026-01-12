@@ -546,6 +546,6 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	{
 		if (req.body.size() > _server.getClientMaxBodySize())
 			return makeResponseFromFile(res, 413, _server.getErrorPage(413, session), req);
-		return makeResponseFromFile(res, 200, _server.getErrorPage(200, session), req);
+		return makeResponseFromFile(res, 200, "", req);
 	}
 }
