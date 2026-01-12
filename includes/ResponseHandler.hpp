@@ -14,23 +14,26 @@ class ResponseHandler
 private:
 	const Server	&_server;
 //methods
-	Response		handleGet(const Locations &loc, const Request &req);
-	Response		handlePost(const Locations &loc, const Request &req);
-	Response		handleDelete(const Locations &loc, const Request &req);
+	void	handleGet(Response &res, const Locations &loc, const Request &req, Session &session);
+	void	handlePost(Response &res, const Locations &loc, const Request &req, Session &session);
+	void	handleDelete(Response &res, const Locations &loc, const Request &req, Session &session);
 
 //utils
-	Response		&getContentType(Response &res, const Locations &loc, const Request &req);
-	Response		&handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req);
 	std::string		getMimeType(const Request &req);
+	std::string		getMimeType(const std::string &path);
+	void			getContentType(Response &res, const Locations &loc, const Request &req, Session &session);
+	void			makeResponseFromFile(Response &res, int status, const std::string &path, const Request &req);
+	void			generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session);
+	std::string		generateDeleteFileForm(const Session &session, const std::string &uploadRoot = "./config/www/uploads");
+	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
 public:
-	ResponseHandler(const Server &server);
 	~ResponseHandler();
+	ResponseHandler(const Server &server);
 	ResponseHandler(const ResponseHandler &copy);
 	ResponseHandler &operator=(const ResponseHandler &assignement);
 
 	//handle requests
-	Response		handleRequest(const Request &req);
-	std::string		requestToString(const Request &req);
+	Response		handleRequest(const Request &req, std::map<std::string, Session> &g_sessions);
 	std::string		responseToString(const Response &res);
 };
 

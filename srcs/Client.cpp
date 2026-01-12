@@ -99,14 +99,14 @@ void	Client::setRequest(std::string buf)
 	}
 }
 
-void	Client::setReponse(std::string buf)
+void	Client::setCookies(std::string name, std::string value)
 {
-		this->reponse = buf;
+	this->cookies[name] = value;
 }
 
-std::string	&Client::getRequest()
+void	Client::setReponse(std::string buf)
 {
-	return (this->request);
+	this->reponse = buf;
 }
 
 size_t &Client::getOffset()
@@ -129,9 +129,9 @@ std::string &Client::getReponse()
 	return (this->reponse);
 }
 
-Socket *Client::getMySocket()
+std::map<std::string, std::string> &Client::getCookies()
 {
-	return (this->my_socket);
+    return this->cookies;
 }
 
 void			Client::AddOffset(size_t nb)
@@ -159,19 +159,6 @@ void	Client::disconnected()
 	this->connected = false;
 	gettimeofday(&this->end, NULL);
 	view_log();
-}
-//plus besoin je vais suppr
-int	Client::ParseSyntaxRequest()
-{
-	//si erreur syntax error 400 bad REquest
-	size_t	pos;
-	std::string	line;
-
-	pos = request.find("\r\n");
-	line = request.substr(0, pos);
-	if (line.find("  ") != std::string::npos)
-		return(Syntax);
-	return (42);
 }
 
 Request	Client::ExtractRequest()
@@ -219,6 +206,8 @@ Request	Client::ExtractRequest()
 			j--;
 		it->second = it->second.substr(i, (j - i) + 1);
 	}
+	tmp.cookies = this->cookies;
+	parseCookies(tmp);
 	pos += 4;
 	tmp.body = request.substr(pos);
 	return (tmp);

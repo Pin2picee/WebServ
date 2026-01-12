@@ -30,7 +30,6 @@ public:
 	void						parseAllServerFiles(const std::string &configFile);
 
 	//getter
-	const std::vector<Server>&	getServers() const;
 	const std::vector<Socket *>&		getSocket() const;
 };
 

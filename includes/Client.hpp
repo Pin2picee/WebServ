@@ -4,11 +4,11 @@
 # include "Socket.hpp"
 # include "ResponseHandler.hpp"
 
-enum 
+enum HeaderType
 {
 	Syntax,
 	Method,
-	Uri,
+	Uri
 };
 
 class Client
@@ -26,6 +26,7 @@ class Client
 		bool	request_finish;
 		bool	correct_syntax;
 		size_t  offset;
+		std::map<std::string, std::string>	cookies;
 
 		Client();
 	public :// a changer
@@ -39,15 +40,14 @@ class Client
 		
 	//set
 		void			setRequest(std::string buf);
-		int				ParseSyntaxRequest(void);
+		void			setCookies(std::string name, std::string value);
 		void			setReponse(std::string buf);
 	//get
-		std::string		&getRequest();
 		std::string		&getReponse();
 		size_t			&getOffset();
 		bool			&getFinishRequest();
-		Socket			*getMySocket();
 		bool			&getSyntax();
+		std::map<std::string, std::string> &getCookies();
 	//method
 		void			resetInf();
 		Request			ExtractRequest();
