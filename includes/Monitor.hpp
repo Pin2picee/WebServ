@@ -32,7 +32,9 @@ class Monitor
 		int		pollout_CGI(int i, Client *my_client);
 		int		pollin_CGI(int &i, Client *my_client);
 		void	remove_fd_CGI(Client *my_client, int y);
-
+		void	reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool timeout);
+		void	AddCgiPollFd(Client *current, int i);
+		void	AfterSend(Client *current, int i, int nb_send);
 	public :
 		Monitor(std::vector<Socket *> tab);
 		~Monitor();

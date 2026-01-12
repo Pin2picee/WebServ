@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/12 16:32:44 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/12 17:31:57 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -266,28 +266,7 @@ void	Monitor::Timeout()
 			it_tab_cgi->second->setOutCGI();
 			it_tab_cgi->second->setPipeAddPoll(false);
 			waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
-			int	client_socket_fd = -1;
-			//reactivation DU POLLOUT du Client pour envoyer la reponse TIMEOUT
-			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-			{
-				if (&(it->second) == it_tab_cgi->second)  // Comparer les adresses
-				{
-					client_socket_fd = it->first;  // ← La clé = fd du socket !
-					break;
-				}
-			}
-			for (size_t j = 0; j < nb_fd;)
-			{
-				if (all_fd[j].fd == client_socket_fd)
-				{
-					all_fd[j].events |= POLLOUT;
-					break;
-				}
-				if (all_fd[j].fd == PipeOut || all_fd[j].fd == PipeIn)
-					remove_fd(j);//->remove le fd des pipes du tab poll
-				else
-					j++;//->remove le fd des pipes du tab poll
-			}
+			reactive_pollout(it_tab_cgi->second, it_tab_cgi->second->getPipeIn(), it_tab_cgi->second->getPipeOut(), true);
 			if (tab_CGI.find(PipeIn) != tab_CGI.end())
 				Key_Erase.push_back(PipeIn);
 			if (tab_CGI.find(PipeOut) != tab_CGI.end())
@@ -298,6 +277,32 @@ void	Monitor::Timeout()
 	for (std::vector<int>::iterator it_erase_key = Key_Erase.begin(); it_erase_key != Key_Erase.end(); it_erase_key++)
 		tab_CGI.erase(*it_erase_key);
 	Key_Erase.clear();
+}
+
+void	Monitor::reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool timeout)
+{
+	int	fd_current = -1;
+			//Reactivation du POLLOUT du client pour envoyer le resultat
+	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+	{
+		if (&(it->second) == my_client)  // Comparer les adresses
+		{
+			fd_current = it->first;  // ← La clé = fd du socket !
+			break;
+		}
+	}
+	for (size_t j = 0; j < nb_fd;)
+	{
+		if (all_fd[j].fd == fd_current)
+		{
+			all_fd[j].events |= POLLOUT;
+			break;
+		}
+		if (timeout && (all_fd[j].fd == PipeOut || all_fd[j].fd == PipeIn))
+			remove_fd(j);//->remove le fd des pipes du tab poll
+		else
+			j++;
+	}
 }
 
 /*
@@ -393,24 +398,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			my_client->setResponseGenerate(true);
 			my_client->setOutCGI();
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);							
-			int client_socket_fd = -1;
-			//reactivation du POLLOUT COTE CLIENT pour renvoyer la reonse
-			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-			{
-				if (&(it->second) == my_client)  // Comparer les adresses
-				{
-					client_socket_fd = it->first;  // ← La clé = fd du socket !
-					break;
-				}
-			}
-			for (size_t j = 0; j < nb_fd; j++)
-			{
-				if (all_fd[j].fd == client_socket_fd)
-				{
-					all_fd[j].events |= POLLOUT;
-					break;
-				}
-			}
+			reactive_pollout(my_client, my_client->getPipeIn(), my_client->getPipeOut(), false);
 			std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);  
 			if (it_temp != tab_CGI.end())
 			{
@@ -437,24 +425,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			my_client->setOutCGI();
 			my_client->setPipeAddPoll(false);
 			my_client->resetAfterCGI();
-			int	fd_current = -1;
-			//Reactivation du POLLOUT du client pour envoyer le resultat
-			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-			{
-				if (&(it->second) == my_client)  // Comparer les adresses
-				{
-					fd_current = it->first;  // ← La clé = fd du socket !
-					break;
-				}
-			}
-			for (size_t j = 0; j < nb_fd; j++)
-			{
-				if (all_fd[j].fd == fd_current)
-				{
-					all_fd[j].events |= POLLOUT;
-					break;
-				}
-			}
+			reactive_pollout(my_client, my_client->getPipeIn(), my_client->getPipeOut(), false);
 			std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);  
 			if (it_temp != tab_CGI.end())
 			{
@@ -487,6 +458,62 @@ int	Monitor::CGI_engine(int i)
 	return (0);
 }
 
+/*
+==========
+Ajoute les Pipes d'un CGI client dans le tab PollFd
+==========
+*/
+
+void	Monitor::AddCgiPollFd(Client *current, int i)
+{
+	if (current->getInCGI() == true && !current->getPipeAddPoll())
+	{
+		int	PipeIn = current->getPipeIn();
+		int	PipeOut = current->getPipeOut();
+		if (PipeOut > 0)
+		{
+			int	flags = fcntl(PipeOut, F_GETFL);
+			fcntl(PipeOut, F_SETFL, flags | O_NONBLOCK);
+			add_fd(PipeOut, 2);
+			tab_CGI.insert(std::make_pair(PipeOut, current));
+		}
+		if (PipeIn > 0)
+		{
+			int	flags = fcntl(PipeIn, F_GETFL);
+			fcntl(PipeIn, F_SETFL, flags | O_NONBLOCK);
+			add_fd(PipeIn, 1);
+			tab_CGI.insert(std::make_pair(PipeIn, current));
+		}
+		if (current->getPipeIn() > 0)
+		{
+			current->setPipeAddPoll(true);
+			// Retirer POLLOUT du socket client pendant que le CGI tourne
+			all_fd[i].events = POLLIN;
+		}
+	}
+}
+
+void	Monitor::AfterSend(Client *current, int i, int nb_send)
+{
+	if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+	{
+		perror("ERROR : SEND FAILED\n");
+		std::cout << all_fd[i].fd << std::endl;
+	}	
+	if (nb_send > 0)
+		current->AddOffset(nb_send);
+	if (current->getOffset() >= current->getReponse().length() && !current->getInCGI() 
+		&& current->getReponse().length() > 0)
+	{
+		all_fd[i].events = POLLIN;
+		current->setReponse("");
+		current->setResponseGenerate(false);
+		current->resetAfterCGI();
+		current->setOutCGI();
+		current->resetInf();
+		current->ResetCgiOutput();
+	}
+}
 /**
  * @brief = Une boucle poll qui verifie chaque socket server et qui accept les connexions
  */
@@ -556,7 +583,7 @@ void	Monitor::Monitoring()
 						i++;
 						continue;
 					}
-				}				
+				}
 				//lecture
 				if (all_fd[i].revents & POLLIN)
 				{
@@ -588,51 +615,10 @@ void	Monitor::Monitoring()
 							it_client->second.setResponseGenerate(true);
 						}
 					}
-					if (it_client->second.getInCGI() == true && !it_client->second.getPipeAddPoll())
-					{
-						int	PipeIn = it_client->second.getPipeIn();
-						int	PipeOut = it_client->second.getPipeOut();
-						if (PipeOut > 0)
-						{
-							int	flags = fcntl(PipeOut, F_GETFL);
-							fcntl(PipeOut, F_SETFL, flags | O_NONBLOCK);
-							add_fd(PipeOut, 2);
-							tab_CGI.insert(std::make_pair(PipeOut, &(it_client->second)));
-						}
-						if (PipeIn > 0)
-						{
-							int	flags = fcntl(PipeIn, F_GETFL);
-							fcntl(PipeIn, F_SETFL, flags | O_NONBLOCK);
-							add_fd(PipeIn, 1);
-							tab_CGI.insert(std::make_pair(PipeIn, &(it_client->second)));
-						}
-						if (it_client->second.getPipeIn() > 0)
-						{
-							it_client->second.setPipeAddPoll(true);
-							// Retirer POLLOUT du socket client pendant que le CGI tourne
-							all_fd[i].events = POLLIN;
-						}
-					}
+					AddCgiPollFd(&it_client->second, i);
 					if (it_client->second.getReponse() != "")
 						nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
-					if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-					{
-						perror("ERROR : SEND FAILED\n");
-						std::cout << all_fd[i].fd << std::endl;
-					}	
-					if (nb_send > 0)
-						it_client->second.AddOffset(nb_send);
-					if (it_client->second.getOffset() >= it_client->second.getReponse().length() && !it_client->second.getInCGI() 
-						&& it_client->second.getReponse().length() > 0)
-					{
-						all_fd[i].events = POLLIN;
-						it_client->second.setReponse("");
-						it_client->second.setResponseGenerate(false);
-						it_client->second.resetAfterCGI();
-						it_client->second.setOutCGI();
-						it_client->second.resetInf();
-						it_client->second.ResetCgiOutput();
-					}
+					AfterSend(&it_client->second, i, nb_send);
 				}
 				i++;
 			}
