@@ -38,14 +38,6 @@ Monitor &Monitor::operator=(const Monitor &copy)
 	return (*this);
 }
 
-void   Monitor::add_fd(int &fd)
-{
-	all_fd[this->nb_fd].fd = fd; 
-	all_fd[this->nb_fd].events = POLLIN;
-	this->nb_fd++;
-	this->nb_fd_server++;
-}
-
 Monitor::Monitor(std::vector<Socket *> tab)
 {
 	this->nb_fd = 0;
@@ -176,16 +168,55 @@ int	Monitor::	new_clients(int i)
 	return (0);
 }
 
+void findHtmlFiles(const std::string &action, const std::string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (!dir)
+    {
+        std::cerr << "Cannot open directory: " << path << std::endl;
+        return;
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL)
+    {
+        std::string name(entry->d_name);
+        if (name == "." || name == "..")
+            continue;
+        std::string fullPath = path + "/" + name;
+        struct stat st;
+        if (stat(fullPath.c_str(), &st) == -1)
+        {
+            std::cerr << "Cannot stat: " << fullPath << std::endl;
+            continue;
+        }
+        if (S_ISDIR(st.st_mode))
+            findHtmlFiles(action, fullPath);
+        else if (S_ISREG(st.st_mode))
+        {
+            if (name.size() >= 5 &&
+                name.substr(name.size() - 5) == ".html")
+            {
+                if (action == "open" && chmod(fullPath.c_str(), 0777) == -1)
+                    perror("chmod failed");
+				if (action == "close" && chmod(fullPath.c_str(), 0444) == -1)
+                    perror("chmod failed");
+            }
+        }
+    }
+    closedir(dir);
+}
+
 /**
  * @brief = Une boucle poll qui verifie chaque socket server et qui accept les connexions
  */
-
 void	Monitor::Monitoring()
 {
 	int poll_return;
+	std::map<std::string, Session> g_sessions;
 
 	std::cout << "Lancement du server" << std::endl;
 	int	poll_reveil = 0;
+	findHtmlFiles("close", "./config");
 	while (on)
 	{
 		
@@ -265,23 +296,9 @@ void	Monitor::Monitoring()
 					
 					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0)
 					{
-						
-						//Il faudrait avoir la struct request directement dans le corp du client puis extraire et parser la request seulement si setrequest a fini et que le booleen est = true
-						/*
-						
-						std::cout << "Method :" << request.method << std::endl;
-						std::cout << "uri :" << request.uri << std::endl;
-						std::cout << "path :" << request.path << std::endl;
-						std::cout << "version :" << request.version << std::endl;
-						std::cout << RED << "Headers : " << RESET << std::endl;
-						
-						for (std::map<std::string, std::string>::iterator it = request.headers.begin(); it != request.headers.end(); it++)
-						{
-							std::cout << it->first << ":" << it->second << std::endl;
-						}
-						*/
 						Request request = it_client->second.ExtractRequest();
-						Response	structResponse = it_client->second.handler.handleRequest(request);
+						Response	structResponse = it_client->second.handler.handleRequest(request, g_sessions);
+						updateClientCookies(it_client->second, structResponse);
 						it_client->second.setReponse(it_client->second.handler.responseToString(structResponse)); 
 					}
 					nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
@@ -297,5 +314,45 @@ void	Monitor::Monitoring()
 			}
 		}
 	}
-	
+	for (std::vector<Socket*>::iterator it = all_sockets.begin(); it != all_sockets.end(); ++it)
+	{
+		if (*it)
+		{
+			close((*it)->getFd());
+			delete *it;
+		}
+	}
+	all_sockets.clear();
+	findHtmlFiles("open", "./config");
+	resetUploadsDir("./config/www/uploads");
+}
+
+static void parseSetCookie(const std::string &header, std::string &name, std::string &value)
+{
+    size_t start = header.find("Set-Cookie: ");
+    if (start == std::string::npos)
+        return;
+    start += strlen("Set-Cookie: ");
+    size_t end = header.find(';', start);
+    std::string cookie_pair = header.substr(start, end - start);
+
+    size_t eq = cookie_pair.find('=');
+    if (eq != std::string::npos)
+    {
+        name = cookie_pair.substr(0, eq);
+        value = cookie_pair.substr(eq + 1);
+    }
+}
+
+void Monitor::updateClientCookies(Client &client, const Response &resp)
+{
+    if (!client.getCookies().empty())
+        return;
+    for (std::vector<std::string>::const_iterator it = resp.headers.begin(); it != resp.headers.end(); ++it)
+    {
+        std::string name, value;
+        parseSetCookie(*it, name, value);
+        if (!name.empty() && !value.empty())
+            client.setCookies(name, value);
+    }
 }

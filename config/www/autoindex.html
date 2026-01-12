@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Webserv Autoindex</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;  
+      align-items: center;      
+      text-align: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      padding-top: 50px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+      animation: float 2s ease-in-out infinite alternate;
+      margin-bottom: 30px;
+    }
+
+    @keyframes float {
+      from { transform: translateY(0); }
+      to { transform: translateY(-15px); }
+    }
+
+    ul.file-list {
+      width: 90%;
+      max-width: 600px;
+      text-align: left;
+      margin-top: 20px;
+      padding: 0;
+    }
+
+    ul.file-list li {
+      background: rgba(255, 255, 255, 0.15);
+      margin: 8px 0;
+      border-radius: 8px;
+      transition: 0.2s ease;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    ul.file-list li a {
+      display: block;
+      padding: 12px 20px;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    ul.file-list li:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+    
+    li.go-back a {
+      /* aucun emoji en ::before pour ce bouton */
+    }
+
+    /* Emojis pour chaque type de fichier */
+    .folder a::before { content: "📁 "; }
+    .file a::before   { content: "📄 "; }
+    .image a::before  { content: "🖼️ "; }
+    .video a::before  { content: "🎬 "; }
+    .pdf a::before    { content: "📕 "; }
+    .text a::before   { content: "📄 "; }
+
+    /* Style spécial pour les fichiers texte */
+    .text a, .image a, .file a, .video a, .pdf a, .folder a, li.go-back a {
+      background: rgba(255, 255, 255, 0.25);
+      border-left: 4px solid transparent;
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: 0.2s ease;
+    }
+
+    .text a:hover, .image a:hover, .file a:hover, .video a:hover, .pdf a:hover, .folder a:hover, li.go-back a:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(1.02);
+    }
+    .text a { border-left-color: #00ffcc; }
+    .image a { border-left-color: #ff9900; }
+    .file a  { border-left-color: #0072ff; }
+    .video a { border-left-color: #ff33cc; }
+    .pdf a   { border-left-color: #ff3300; }
+    .folder a { border-left-color: #008cff; }
+    li.go-back a { border-left-color: #000000; }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      ul.file-list { padding: 0 10px; }
+    }
+
+    a.button {
+      display: inline-block;
+      padding: 12px 25px;
+      background: white;
+      color: #0072ff;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.2s ease;
+      margin-top: 15px;
+    }
+
+    a.button:hover {
+      background: #e8f2ff;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>Files in your directory 📂</h1>
+
+  <ul class="file-list">
+    <!-- FILE_LIST_PLACEHOLDER -->
+  </ul>
+</body>
+</html>

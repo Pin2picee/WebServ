@@ -5,6 +5,21 @@
 
 /**
  * @brief
+ * A structure that will register the session infos of each client who generate a cookie.
+ * 
+ * @param current_page		The last web page the client connect to.
+ * @param uploaded_files	The files the client uploaded.
+ */
+struct Session
+{
+	std::string ID;
+    std::string current_page;
+    std::vector<std::string> uploaded_files;
+    time_t expiryTime;
+};
+
+/**
+ * @brief
  * The structure that contains all the locations datas.
  * 
  * @param cgi			`true` if the cgi it's on, `false` if it's off.
@@ -19,18 +34,20 @@
 struct Locations
 {
 	bool						cgi;
+	bool						sensitive;
 	bool						autoindex;
 	std::string					root;
 	std::string					path;
 	std::string					upload_dir;
 	std::string					cgi_extension;
+	std::string					cgi_path;
 	std::vector<std::string>	methods;
 	std::vector<std::string>	index_files;
 
 	Locations()
-		: cgi(false), autoindex(false),
-		  root(RED "none"), path(RED "none"),
-		  upload_dir(RED "none"), cgi_extension(RED "none") {}
+		: cgi(false), sensitive(false), autoindex(false),
+		  root(""), path(""),
+		  upload_dir(""), cgi_extension("") {}
 };
 
 struct Response;
@@ -49,12 +66,13 @@ struct Request;
 class Server
 {
 private:
-	std::string											root;
 	std::vector<std::pair<std::string, int> >			listen;
-	std::vector<Locations>								locations;
-	std::map<int, std::string>							error_pages;
+	std::string											root;
 	size_t												client_max_body_size;
+	std::map<int, std::string>							error_pages;
+	std::vector<Locations>								locations;
 
+	void parseCGIOutput(Response &res, const std::string &output, Session &session) const;
 public:
 	Server();
 	~Server();
@@ -65,14 +83,11 @@ public:
 	const std::string&									getRoot() const;
 	const std::vector<std::pair<std::string, int> >&	getListen() const;
 	const std::vector<Locations>&						getLocations() const;
-	const std::string&									getErrorPage(int code) const;
-	const std::map<int, std::string>&					getErrorPages() const;
+	const std::string&									getErrorPage(int code, Session &session) const;
 	size_t												getClientMaxBodySize() const;
 
 	// Modifiable getters
 
-	std::vector<std::pair<std::string, int> >&			getListenRef();
-	std::vector<Locations>&								getLocationsRef();
 	std::map<int, std::string>&							getErrorPagesRef();
 
 	// Setters
@@ -85,7 +100,11 @@ public:
 	void 												addLocation(const Locations& loc);
 	void 												addListen(const std::string& ip, int port);
 	void 												addErrorPage(int code, const std::string& path);
-	Response 											handleCGI(const Request &req, const Locations &loc) const;
+	void 												handleCGI(Response &res, const Request &req, const Locations &loc, Session &session) const;
 };
+
+Session	&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res);
+void	removeUploadFileSession(Session &session, std::string deletePath);
+void	deleteSession(void);
 
 #endif

@@ -39,17 +39,6 @@ void	Config::CreateSocket(void)
 	}
 }
 
-/**
- * @brief
- * Get the servers.
- * 
- * @return The vector of servers.
- */
-const std::vector<Server>&	Config::getServers() const
-{
-	return Servers;
-}
-
 const std::vector<Socket *>&	Config::getSocket() const
 {
 	return (Sockets);
@@ -65,7 +54,7 @@ const std::vector<Socket *>&	Config::getSocket() const
  * 
  * @return A `Location` structure that will be autmatically added to the corresponding `Server` structure.
  */
-Locations	parse_loc(size_t &i, std::vector<std::string> tokens, std::string root)
+Locations	parse_loc(size_t &i, std::vector<std::string> tokens)
 {
 	Locations loc;
 
@@ -78,19 +67,21 @@ Locations	parse_loc(size_t &i, std::vector<std::string> tokens, std::string root
 		else if (tokens[i] == "index")
 			fill_tokens(loc.index_files, tokens, i);
 		else if (tokens[i] == "autoindex")
-			loc.autoindex = (strip_semicolon(tokens[++(i)]) == "on");
+			loc.autoindex = (strip_semicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "upload_dir")
-			loc.upload_dir = strip_semicolon(tokens[++(i)]);
+			loc.upload_dir = strip_semicolon(tokens[++i]);
 		else if (tokens[i] == "cgi")
-			loc.cgi = (strip_semicolon(tokens[++(i)]) == "on");
+			loc.cgi = (strip_semicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "cgi_extension")
-			loc.cgi_extension = strip_semicolon(tokens[++(i)]);
+			loc.cgi_extension = strip_semicolon(tokens[++i]);
+		else if (tokens[i] == "cgi_path")
+			loc.cgi_path = strip_semicolon(tokens[++i]);
 		else if (tokens[i] == "root")
-			loc.root = strip_semicolon(tokens[++(i)]);
-		++(i);
+			loc.root = strip_semicolon(tokens[++i]);
+		else if (tokens[i] == "sensitive")
+			loc.sensitive = (strip_semicolon(tokens[++i]) == "on");
+		++i;
 	}
-	if (loc.root.empty())
-		loc.root = root;
 	return (loc);
 }
 
@@ -129,7 +120,6 @@ void Config::parseAllServerFiles(const std::string &configFile)
 			}
 		}
 	}
-	//@brief : une fois la boucle finie avec tout les blocks servers: creer les socket avec un pointeur vers leurs servers blocks
 	CreateSocket();
 }
 
@@ -173,7 +163,7 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
 			else if (tokens[i] == "location")
-				conf.addLocation(parse_loc(i, tokens, conf.getRoot()));
+				conf.addLocation(parse_loc(i, tokens));
 		}
 	}
 	init_default_errors(conf);

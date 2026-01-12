@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Upload File</title>
+  <title>No files uploaded</title>
   <style>
     body {
       height: 100vh;
@@ -13,20 +13,16 @@
       font-family: Arial, sans-serif;
       background: linear-gradient(to right, #00c6ff, #0072ff);
       color: white;
+      text-align: center;
     }
 
-    form {
-      background: rgba(255,255,255,0.15);
-      padding: 20px 30px;
-      border-radius: 10px;
-      backdrop-filter: blur(5px);
+    .message {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
     }
 
-    input[type="file"] {
-      margin-bottom: 15px;
-    }
-
-    /* Style bouton identique à la page Webserv Test */
+    /* Bouton identique à la page Upload File */
     a.button {
       display: inline-block;
       padding: 12px 25px;
@@ -46,15 +42,9 @@
   </style>
 </head>
 <body>
-
-  <h2>Upload a File</h2>
-
-  <form action="/uploads" method="POST" enctype="multipart/form-data">
-    <input type="file" name="file">
-    <button type="submit">Upload</button>
-  </form>
-
-  <!-- Bouton pour revenir à l'accueil avec le même style que Webserv Test -->
+  <div class="message">
+    No files uploaded yet.
+  </div>
   <a href="index.html" class="button">Return to home</a>
-                  </body>
+</body>
 </html>

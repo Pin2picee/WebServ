@@ -30,6 +30,8 @@
 # include <algorithm>
 # include <cstdlib>
 # include <csignal>
+# include <ctime>
+#include <sys/stat.h>
 
 // Text colors
 # define RESET   "\033[0m"
@@ -45,28 +47,44 @@
 # define UNDERLINE  "\033[4m"
 
 //=== MIME (Multipurpose Internet Mail Extensions) content types ===//
+
 // Text types
-# define MIME_TEXT_PLAIN	   "text/plain"
-# define MIME_TEXT_HTML		"text/html"
-# define MIME_TEXT_CSS		 "text/css"
-# define MIME_TEXT_JAVASCRIPT  "application/javascript"
+#define MIME_TEXT_PLAIN             "text/plain"
+#define MIME_TEXT_HTML              "text/html"
+#define MIME_TEXT_CSS               "text/css"
+#define MIME_TEXT_JAVASCRIPT        "application/javascript"
+#define MIME_TEXT_XML               "text/xml"
+#define MIME_TEXT_CSV               "text/csv"
 
 // Data / JSON
-# define MIME_APPLICATION_JSON "application/json"
-# define MIME_APPLICATION_XML  "application/xml"
+#define MIME_APPLICATION_JSON       "application/json"
+#define MIME_APPLICATION_XML        "application/xml"
+#define MIME_APPLICATION_PDF        "application/pdf"
+#define MIME_APPLICATION_ZIP        "application/zip"
+#define MIME_APPLICATION_GZIP       "application/gzip"
 
 // Images
-# define MIME_IMAGE_PNG		"image/png"
-# define MIME_IMAGE_JPEG	   "image/jpeg"
-# define MIME_IMAGE_GIF		"image/gif"
-# define MIME_IMAGE_SVG		"image/svg+xml"
+#define MIME_IMAGE_PNG              "image/png"
+#define MIME_IMAGE_JPEG             "image/jpeg"
+#define MIME_IMAGE_GIF              "image/gif"
+#define MIME_IMAGE_SVG              "image/svg+xml"
+#define MIME_IMAGE_WEBP             "image/webp"
+#define MIME_IMAGE_BMP              "image/bmp"
 
 // Fonts
-# define MIME_FONT_WOFF		"font/woff"
-# define MIME_FONT_WOFF2	   "font/woff2"
-# define MIME_FONT_TTF		 "font/ttf"
+#define MIME_FONT_WOFF              "font/woff"
+#define MIME_FONT_WOFF2             "font/woff2"
+#define MIME_FONT_TTF               "font/ttf"
+#define MIME_FONT_OTF               "font/otf"
+
+// Audio / Video
+#define MIME_AUDIO_MP3              "audio/mpeg"
+#define MIME_AUDIO_WAV              "audio/wav"
+#define MIME_VIDEO_MP4              "video/mp4"
+#define MIME_VIDEO_WEBM             "video/webm"
 
 // Binary / Misc
-# define MIME_APPLICATION_OCTET_STREAM "application/octet-stream"
+#define MIME_APPLICATION_OCTET_STREAM "application/octet-stream"
+
 
 #endif
