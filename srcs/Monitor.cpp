@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/12 18:11:49 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/12 19:16:48 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -463,7 +463,6 @@ int	Monitor::CGI_engine(int i)
 Ajoute les Pipes d'un CGI client dans le tab PollFd
 ==========
 */
-
 void	Monitor::AddCgiPollFd(Client *current, int i)
 {
 	if (current->getInCGI() == true && !current->getPipeAddPoll())
@@ -583,7 +582,7 @@ void	Monitor::Monitoring()
 						i++;
 						continue;
 					}
-				}
+				}				
 				//lecture
 				if (all_fd[i].revents & POLLIN)
 				{
