@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/12 20:59:25 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/13 23:11:45 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,7 +339,7 @@ Request	Client::ExtractRequest()
 	size_t qmark = tmp.uri.find('?');
 	tmp.path = tmp.uri.substr(0, qmark);
 	tmp.query = "";
-	if (qmark != std::string::npos)
+	if (qmark != std::string::npos && qmark + 10 < tmp.uri.size())
 		tmp.query = tmp.uri.substr(qmark + 10);
 
 	//extract HEADERS LINES
