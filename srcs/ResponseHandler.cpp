@@ -535,11 +535,13 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 		contentType = it->second;
 	else
 		contentType = "application/octet-stream";
-	size_t	size_path = req.path.size();
-	size_t	point = req.path.rfind('.');
-	if (point != std::string::npos)
+	if (loc.cgi)
 	{
-		std::string	extension_path = req.path.substr(req.path.rfind('.'));
+		size_t	size_path = req.path.size();
+		size_t	point = req.path.rfind('.');
+		if (point == std::string::npos)
+			return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+		std::string	extension_path = req.path.substr(point);
 		std::vector<std::string>	pack_extension_CGI;
 		pack_extension_CGI.push_back(".cgi");
 		pack_extension_CGI.push_back(".py");
