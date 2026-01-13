@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Monitor.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/13 18:22:25 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/13 20:06:30 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -526,9 +526,13 @@ void	Monitor::Monitoring()
 {
 	int poll_return;
 	std::map<std::string, Session> g_sessions;
+	std::string uploadsPath = "./config/www/uploads";
 
 	std::cout << "Lancement du server" << std::endl;
-	findHtmlFiles("close", "./config");//
+	findHtmlFiles("close", "./config");
+	// create uploads file if not here
+	if (!pathExists(uploadsPath) && mkdir(uploadsPath.c_str(), 0755) == -1)
+		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 	while (on)
 	{
 		poll_return = poll(this->all_fd, nb_fd, 15);
@@ -630,7 +634,7 @@ void	Monitor::Monitoring()
 		}
 	}
 	findHtmlFiles("open", "./config");
-	resetUploadsDir("./config/www/uploads");
+	resetUploadsDir(uploadsPath);
 	clean_CGI();
 }
 

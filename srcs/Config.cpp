@@ -54,14 +54,21 @@ const std::vector<Socket *>&	Config::getSocket() const
  * 
  * @return A `Location` structure that will be autmatically added to the corresponding `Server` structure.
  */
-Locations	parse_loc(size_t &i, std::vector<std::string> tokens)
+Locations	parse_loc(size_t &i, std::vector<std::string> tokens, size_t &t_size)
 {
 	Locations loc;
 
 	loc.path = tokens[i + 1];
+	if (loc.path.empty())
+		throw std::runtime_error("empty location path");
 	i += 2;
-	while (i < tokens.size() && tokens[i] != "}")
+	while (i < t_size && tokens[i] != "}")
 	{
+		if (tokens[i - 1] == "#")
+		{
+			i++;
+			continue;
+		}
 		if (tokens[i] == "methods")
 			fill_tokens(loc.methods, tokens, i);
 		else if (tokens[i] == "index")
@@ -98,26 +105,20 @@ void Config::parseAllServerFiles(const std::string &configFile)
 		throw std::runtime_error("Cannot open config file : " + configFile);
 
 	std::vector<std::string> tokens = tokenize(ifs);
+	size_t size = tokens.size();
 
-	for (size_t i = 0; i < tokens.size(); ++i)
+	for (size_t i = 0; i < size; ++i)
 	{
-		if (tokens[i] == "server")
+		if ((i != 0 && tokens[i - 1][0] != '#' && tokens[i] == "server")
+		|| (i == 0 && tokens[i] == "server"))
 		{
-			try
-			{
-				if (i + 1 >= tokens.size() || tokens[i + 1] != "{")
-					throw std::runtime_error("Expected '{' after 'server'");
-				i += 2;
-				if (i >= tokens.size())
-					throw std::runtime_error("EOF after open brace");
-				Server server = parse(tokens, i);
-				Servers.push_back(server);
-			}
-			catch (const std::exception &e)
-			{
-				std::cerr << RED BOLD << "Error: " << e.what() << RESET << std::endl;
-				return;
-			}
+			if (i + 1 >= size || tokens[i + 1] != "{")
+				throw std::runtime_error("Expected '{' after 'server'");
+			i += 2;
+			if (i >= size)
+				throw std::runtime_error("EOF after open brace");
+			Server server = parse(tokens, size, i);
+			Servers.push_back(server);
 		}
 	}
 	CreateSocket();
@@ -132,40 +133,63 @@ void Config::parseAllServerFiles(const std::string &configFile)
  * 
  * @return A `Server` struct that will be automatically added in the vector of `Structs` of `Config` class.
  */
-Server Config::parse(const std::vector<std::string> &tokens, size_t &i)
+Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, size_t &i)
 {
 	Server conf;
 	int bracketCount = 1;
 
-	for (; i < tokens.size() && bracketCount > 0; ++i)
+	for (; i < t_size && bracketCount > 0; ++i)
 	{
 		if (tokens[i] == "{")
 			++bracketCount;
 		else if (tokens[i] == "}")
 			--bracketCount;
-		else if (i + 1 < tokens.size())
+		else if (i + 1 < t_size)
 		{
+			if (i != 0 && tokens[i - 1] == "#")
+				continue;
 			if (tokens[i] == "listen")
 			{
 				std::string ip_port = strip_semicolon(tokens[i + 1]);
 				size_t colon = ip_port.find(':');
 				if (colon == std::string::npos)
 					throw std::runtime_error("Invalid listen format : " + ip_port);
-	
 				std::string ip = ip_port.substr(0, colon);
+				if (ip != "127.0.0.1" && ip != "localhost")
+					throw std::runtime_error("IP adress should be \"127.0.0.1\" or \"localhost\", not " + ip);
 				int port = atoi(ip_port.substr(colon + 1).c_str());
 				conf.addListen(ip, port);
 			}
 			else if (tokens[i] == "root")
 				conf.setRoot(strip_semicolon(tokens[i + 1]));
-			else if (tokens[i] == "error_page" && i + 2 < tokens.size())
-				conf.addErrorPage(atoi(tokens[i + 1].c_str()), conf.getRoot() + strip_semicolon(tokens[i + 2]));
+			else if (tokens[i] == "error_pages")
+				conf.addErrorDir(strip_semicolon(tokens[i + 1]));
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
 			else if (tokens[i] == "location")
-				conf.addLocation(parse_loc(i, tokens));
+				conf.addLocation(parse_loc(i, tokens, t_size));
 		}
 	}
+	if (bracketCount)
+		throw std::runtime_error("Server not closed properly");
+	else if (conf.getErrorDir().empty())
+		throw std::runtime_error("No error directory found");
+	else if (conf.getRoot().empty())
+		throw std::runtime_error("No root found");
+	const std::vector<Locations> &locations = conf.getLocations();
+	bool hasPost;
+	for (size_t i = 0; i < locations.size(); ++i)
+	{
+		if (!locations[i].methods.size())
+			throw std::runtime_error("No methods allowed on \"location " + locations[i].path + "\"");
+		for (size_t j = 0; j < locations[i].methods.size(); ++j)
+			if (locations[i].methods[j] == "POST")
+				hasPost = true;
+		if (hasPost)
+			break;
+	}
+	if (!conf.getClientMaxBodySize() && hasPost)
+		throw std::runtime_error("No client max body size found");
 	init_default_errors(conf);
 	return conf;
 }

@@ -24,8 +24,7 @@ std::string strip_semicolon(const std::string &s)
 void init_default_errors(Server& conf)
 {
     std::map<int, std::string>& errors = conf.getErrorPagesRef();
-    const std::string& root = conf.getRoot();
-    std::string errorDir = root + "/errors";
+    std::string errorDir = conf.getRoot() + "/" + conf.getErrorDir();
     DIR* dir = opendir(errorDir.c_str());
     if (!dir)
         return;
@@ -86,12 +85,8 @@ bool removeDirectoryRecursive(const std::string &path)
 
 void resetUploadsDir(const std::string &uploadsPath)
 {
-	if (pathExists(uploadsPath))
-	{
-		if (!removeDirectoryRecursive(uploadsPath))
+	if (pathExists(uploadsPath) && !removeDirectoryRecursive(uploadsPath))
 			std::cerr << "Failed to remove " << uploadsPath << std::endl;
-	}
-
 	if (mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 }
