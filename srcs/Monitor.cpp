@@ -291,17 +291,24 @@ void	Monitor::reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool 
 			break;
 		}
 	}
+	int	count = 0;
+	bool pass = false;
 	for (size_t j = 0; j < nb_fd;)
 	{
 		if (all_fd[j].fd == fd_current)
 		{
 			all_fd[j].events |= POLLOUT;
-			break;
+			pass = true;
 		}
 		if (timeout && (all_fd[j].fd == PipeOut || all_fd[j].fd == PipeIn))
+		{
 			remove_fd(j);//->remove le fd des pipes du tab poll
+			count++;
+		}
 		else
 			j++;
+		if (pass && count > 1)
+			break;
 	}
 }
 
