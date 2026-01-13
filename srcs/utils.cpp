@@ -85,12 +85,8 @@ bool removeDirectoryRecursive(const std::string &path)
 
 void resetUploadsDir(const std::string &uploadsPath)
 {
-	if (pathExists(uploadsPath))
-	{
-		if (!removeDirectoryRecursive(uploadsPath))
+	if (pathExists(uploadsPath) && !removeDirectoryRecursive(uploadsPath))
 			std::cerr << "Failed to remove " << uploadsPath << std::endl;
-	}
-
 	if (mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 }
