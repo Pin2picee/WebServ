@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Socket.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/12/23 20:34:22 by abelmoha          #+#    #+#             */
+/*   Updated: 2025/12/23 20:34:22 by abelmoha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "Socket.hpp"
 
 /*<EXCEPTION>*/
@@ -40,7 +52,6 @@ Socket &Socket::operator=(const Socket &assignement)
  */
 Socket::Socket(std::string ip, int port, Server *refBlock)
 {
-
 	this->_port = port;
 	this->_ip = ip;
 	this->BlockServer = refBlock;

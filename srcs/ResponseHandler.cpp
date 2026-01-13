@@ -1,5 +1,5 @@
 #include "ResponseHandler.hpp"
-
+#include "Client.hpp"
 /* constructor */
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
@@ -31,7 +31,7 @@ const Locations *findLocation(const Request &req, const std::vector<Locations> &
  * 
  * @return a `Response` structure that will answer in adequation to the `Request`.
  */
-Response ResponseHandler::handleRequest(const Request &req, std::map<std::string, Session> &g_sessions)
+Response ResponseHandler::handleRequest(const Request &req, std::map<std::string, Session> &g_sessions, Client *current)
 {
 	Response	res;
 	Session &session = getSession(g_sessions, req, res);
@@ -46,9 +46,9 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 	if (!target)
 		makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req);
 	else if (req.method == "GET")
-		handleGet(res, *target, req, session);
+		handleGet(res, *target, req, session, current);
 	else if (req.method == "POST")
-		handlePost(res, *target, req, session);
+		handlePost(res, *target, req, session, current);
 	else if (req.method == "DELETE")
 		handleDelete(res, *target, req, session);
 	else
@@ -63,7 +63,7 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
  */
-void ResponseHandler::handleGet(Response &res, const Locations &loc, const Request &req, Session &session)
+void ResponseHandler::handleGet(Response &res, const Locations &loc, const Request &req, Session &session, Client *current)
 {
 	std::string	full_path = (loc.root[0] == '/')
 							? cleanPath(loc.root + "/" + req.uri.substr(loc.path.size()))
@@ -110,7 +110,7 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 			return makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req);
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
-				return _server.handleCGI(res, req, loc, session);
+				return _server.handleCGI(req, loc, current);
 		else
 		{
 			std::ostringstream buf;
@@ -131,13 +131,13 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
  */
-void ResponseHandler::handlePost(Response &res, const Locations &loc, const Request &req, Session &session)
+void ResponseHandler::handlePost(Response &res, const Locations &loc, const Request &req, Session &session, Client *current)
 {
 	if (std::find(loc.methods.begin(), loc.methods.end(), "POST") == loc.methods.end())
 		return makeResponseFromFile(res, 405, _server.getErrorPage(405, session), req);
 	if (req.body.size() > _server.getClientMaxBodySize())
 		return makeResponseFromFile(res, 413, _server.getErrorPage(413, session), req);
-	return getContentType(res, loc, req, session);
+	return getContentType(res, loc, req, session, current);
 }
 
 /**
@@ -243,6 +243,7 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
  * @return
  * The corresponding reason phrase.
  */
+
 static std::string getReasonPhrase(int status_code)
 {
 	switch (status_code)
@@ -396,7 +397,6 @@ std::string ResponseHandler::getMimeType(const Request &req)
 	return getMimeType(req.path);
 }
 
-
 std::string ResponseHandler::getMimeType(const std::string &path)
 {
 	if (path.find(".html") != std::string::npos)
@@ -526,7 +526,7 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
  * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
  * @param req The `Request` struct of `handleRequest` that will be processed.
  */
-void	ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req, Session &session)
+void	ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req, Session& session, Client *current)
 {
 	std::string contentType;
 	std::map<std::string, std::string>::const_iterator it = req.headers.find("Content-Type");
@@ -534,19 +534,37 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	if (it != req.headers.end())
 		contentType = it->second;
 	else
-		return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
-	std::string boundary;
-	std::size_t pos = contentType.find("boundary=");
+		contentType = "application/octet-stream";
+	size_t	size_path = req.path.size();
+	size_t	point = req.path.rfind('.');
+	if (point == std::string::npos)
+		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+	std::string	extension_path = req.path.substr(req.path.rfind('.'));
+	std::vector<std::string>	pack_extension_CGI;
+	pack_extension_CGI.push_back(".cgi");
+	pack_extension_CGI.push_back(".py");
+	pack_extension_CGI.push_back(".php");
+	pack_extension_CGI.push_back(".pl");
+	pack_extension_CGI.push_back(".rb");
+	pack_extension_CGI.push_back(".sh");
 
-	if (pos != std::string::npos)
+	std::vector<std::string>::iterator itt = std::find(pack_extension_CGI.begin(), pack_extension_CGI.end(), extension_path);
+	if (size_path >= 5 && pack_extension_CGI.end() == itt)
+		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+	return _server.handleCGI(req, loc, current);
+	if (!contentType.empty() && contentType.find("multipart/form-data") != std::string::npos)
 	{
-		boundary = "--" + contentType.substr(pos + 9);
-		return handleFile(boundary, res, loc, req, session);
+		std::size_t pos = contentType.find("boundary=");
+        if (pos == std::string::npos || pos + 9 >= contentType.size())
+            return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+        std::string boundary = contentType.substr(pos + 9);
+        std::size_t end = boundary.find(';');
+        if (end != std::string::npos)
+            boundary = boundary.substr(0, end);
+		boundary = "--" + boundary;
+        return handleFile(boundary, res, loc, req, session);
 	}
-	else
-	{
-		if (req.body.size() > _server.getClientMaxBodySize())
-			return makeResponseFromFile(res, 413, _server.getErrorPage(413, session), req);
-		return makeResponseFromFile(res, 200, "", req);
-	}
+	if (req.body.size() > _server.getClientMaxBodySize())
+		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
+    return makeResponse(res, 200, readFile("config/www/index.html"), getMimeType(req));
 }

@@ -2,6 +2,7 @@
 # define CONFIG_HPP
 
 # include "Socket.hpp"
+# include "Server.hpp"
 
 /**
  * @brief

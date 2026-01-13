@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "Config.hpp"
 #include "ResponseHandler.hpp"
-
+#include "Client.hpp"
 /* Constructor */
 Server::Server() : client_max_body_size(0) {}
 
@@ -156,13 +156,16 @@ void	Server::addLocation(const Locations& loc)
  * 
  * @return a Response struct.
  */
-void Server::parseCGIOutput(Response &res, const std::string &output, Session &session) const
+Response parseCGIOutput(const std::string &output)
 {
-	makeResponse(res, 202, readFile(getErrorPage(200, session)), MIME_TEXT_HTML);//202 to avoid creating a cookie too early
-	res.status_code = 200;
+	Response res;
+	res.status_code = 200; // default value
+	res.content_type = "text/html"; // default value
+
+	// Separate headers from body
 	size_t header_end = output.find("\r\n\r\n");
 	if (header_end == std::string::npos)
-		header_end = output.find("\n\n");
+		header_end = output.find("\n\n"); // case where the script only use \n
 
 	std::string header_part = output.substr(0, header_end);
 	std::string body_part;
@@ -189,8 +192,9 @@ void Server::parseCGIOutput(Response &res, const std::string &output, Session &s
 			res.status_code = std::atoi(status_str.c_str());
 		}
 	}
+
 	res.body = body_part;
-	getErrorPage(res.status_code, session);
+	return res;
 }
 
 /**
@@ -202,21 +206,23 @@ void Server::parseCGIOutput(Response &res, const std::string &output, Session &s
  * 
  * @return A Response struct.
  */
-void Server::handleCGI(Response &res, const Request &req, const Locations &loc, Session &session) const
+void Server::handleCGI(const Request &req, const Locations &loc, Client *current) const
 {
 	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
 	std::string output;
-
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
-
 	pid_t pid = fork();
 	if (pid == -1)
 		throw std::runtime_error("Fork failed");
-
 	if (!pid)
 	{
+		// --- Child process ---
+		close(pipe_out[0]);
+		close(pipe_in[1]);
+
+		signal(SIGINT, SIG_IGN);   // ← Ignore les signaux 
 		dup2(pipe_out[1], STDOUT_FILENO);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_out[1]);
@@ -258,11 +264,14 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 			cgi_path = "/usr/bin/php-cgi";
 		else
 			throw std::runtime_error("Unsupported CGI extension");
+		// CGI arguments
 		char *argv[] = {
 			const_cast<char*>(cgi_path.c_str()),
 			const_cast<char*>(script_path.c_str()),
 			NULL
 		};
+		for (int fd = 3; fd < 1024; fd++)
+        	close(fd);
 		execve(cgi_path.c_str(), argv, envp.data());
 		exit(1);
 	}
@@ -270,19 +279,15 @@ void Server::handleCGI(Response &res, const Request &req, const Locations &loc, 
 	{
 		close(pipe_out[1]);
 		close(pipe_in[0]);
-		if (req.method == "POST" && !req.body.empty())
-			write(pipe_in[1], req.body.c_str(), req.body.size());
-		close(pipe_in[1]);
-		char buffer[4096];
-		ssize_t bytes;
 
-		while ((bytes = read(pipe_out[0], buffer, sizeof(buffer))) > 0)
-			output.append(buffer, bytes);
-		close(pipe_out[0]);
-
-		waitpid(pid, NULL, 0);
+		current->setPipeIn(pipe_out[0]);//Lis la sortie du CGI
+		current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
+		current->setBody(req.body);
+		std::cout << GREEN <<"Je suis dans le HANDLE CGI" << RESET << std::endl; 
+		current->setCgiPid(pid);
+		current->setCGiStartTime();//demarrage timing CGI
+		current->setInCGI();//on le mets a true
 	}
-	return parseCGIOutput(res, output, session);
 }
 
 Server::Server(const Server &copy)
@@ -346,3 +351,4 @@ void removeUploadFileSession(Session &session, std::string deletePath)
 	if (it != session.uploaded_files.end())
 		session.uploaded_files.erase(it);
 }
+

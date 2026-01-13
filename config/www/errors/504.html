@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>504 Gateway Timeout</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      height:100vh; display:flex; justify-content:center; align-items:center; text-align:center;
+      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color:white; background: linear-gradient(135deg,#6a4c93,#1a1a2e); padding:20px;
+    }
+    .container { max-width:500px; width:100%; }
+    h1 { font-size:4rem; margin-bottom:20px; text-shadow:2px 2px 5px rgba(0,0,0,0.5); }
+    .shrug { font-size:4rem; margin-bottom:20px; display:inline-block; animation:float 2s ease-in-out infinite alternate; }
+    @keyframes float { from{transform:translateY(0);} to{transform:translateY(-15px);} }
+    p { font-size:1.5rem; margin-bottom:20px; }
+    a.button { display:inline-block; padding:10px 25px; background-color:#fff; color:#1a1a2e; border-radius:5px; text-decoration:none; font-weight:bold; transition:0.3s; }
+    a.button:hover { background-color:#6a4c93; color:white; }
+    @media(max-width:600px){ h1{font-size:2.5rem;} p{font-size:1rem;} .shrug{font-size:2.5rem;} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>504 Gateway Timeout</h1>
+    <div class="shrug">⏱️</div>
+    <p>The server did not receive a timely response from the upstream service. Please try again.</p>
+    <a class="button" href="/">Back to Home</a>
+  </div>
+</body>
+</html>

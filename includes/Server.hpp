@@ -3,6 +3,7 @@
 
 # include "Includes.hpp"
 
+class Client;
 /**
  * @brief
  * A structure that will register the session infos of each client who generate a cookie.
@@ -71,8 +72,6 @@ private:
 	size_t												client_max_body_size;
 	std::map<int, std::string>							error_pages;
 	std::vector<Locations>								locations;
-
-	void parseCGIOutput(Response &res, const std::string &output, Session &session) const;
 public:
 	Server();
 	~Server();
@@ -100,11 +99,11 @@ public:
 	void 												addLocation(const Locations& loc);
 	void 												addListen(const std::string& ip, int port);
 	void 												addErrorPage(int code, const std::string& path);
-	void 												handleCGI(Response &res, const Request &req, const Locations &loc, Session &session) const;
+	void 												handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
 
 Session	&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res);
 void	removeUploadFileSession(Session &session, std::string deletePath);
 void	deleteSession(void);
-
+Response parseCGIOutput(const std::string &output);
 #endif

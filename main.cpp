@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2025/12/17 18:20:55 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/12 20:48:54 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,28 +25,24 @@ int main (int argc, char **argv)
 	ConfigFileName = (argc == 2) ? argv[1] : "config/default.conf";
 	try
 	{
+		signal(SIGPIPE, SIG_IGN);
 		Config parser;
 		parser.parseAllServerFiles(ConfigFileName);
-		all_sockets = parser.getSocket();
-		Monitor	Moniteur(all_sockets);
+		all_socket = parser.getSocket();
+		Monitor	Moniteur(all_socket);
 		Moniteur.Monitoring();
-		/*
-		Client	test();
-		
-		test.setRequest("GET /api/users HTTP/1.1\r\nHost: localhost \r\nUser-Agent:\r\n\r\n");
-		Request nv = test.ExtractRequest();
-		std::cout << "Methode :" << nv.method << std::endl;
-		std::cout << "uri :" << nv.uri << std::endl;
-		std::cout << "path :" << nv.path << std::endl;
-		std::cout << "Version :" << nv.version << std::endl;
-		for (std::map<std::string, std::string>::iterator it = nv.headers.begin(); it != nv.headers.end(); it++ )
-		std::cout << "HEADERS :" << it->first << ":" << it->second << std::endl;
-		std::cout << "body :" << nv.body << std::endl;
-		*/
+		for (std::vector<Socket*>::iterator it = all_socket.begin(); it != all_socket.end(); ++it)
+    	{
+			if (*it)
+			{
+				close((*it)->getFd());
+				delete *it;
+			}
+    	}
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "ERROR:" << e.what() << std::endl;
+		std::cout << "ERROssR:" << e.what() << std::endl;
 	}
 	return (0);
 }

@@ -3,6 +3,7 @@
 
 # include "Server.hpp"
 # include "Socket.hpp"
+class Socket;
 
 /**
  * @brief
@@ -73,6 +74,7 @@ std::string shortenFileName(const std::string &name, size_t maxLength);
 std::string getFileClass(const std::string &name, const struct stat &st);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
+void 		findHtmlFiles(const std::string &action, const std::string &path);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 
@@ -99,7 +101,7 @@ inline void	makeResponse(Response &res, int status, const std::string &body, con
 	res.version = "HTTP/1.1";
 }
 
-extern std::vector<Socket *> all_sockets;
+extern std::vector<Socket *> all_socket;
 extern volatile sig_atomic_t	on;
 
 void	handle_sigint(int signum);
