@@ -208,7 +208,7 @@ Response parseCGIOutput(const std::string &output)
  */
 void Server::handleCGI(const Request &req, const Locations &loc, Client *current) const
 {
-	std::string script_path = loc.root + loc.path + req.uri.substr(loc.path.size());
+	std::string script_path = this->root + req.path + req.uri.substr(req.path.size());
 	std::string output;
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
@@ -283,7 +283,6 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		current->setPipeIn(pipe_out[0]);//Lis la sortie du CGI
 		current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
 		current->setBody(req.body);
-		std::cout << GREEN <<"Je suis dans le HANDLE CGI" << RESET << std::endl; 
 		current->setCgiPid(pid);
 		current->setCGiStartTime();//demarrage timing CGI
 		current->setInCGI();//on le mets a true

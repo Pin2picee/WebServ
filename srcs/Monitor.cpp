@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/13 15:04:40 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/13 17:47:43 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -367,7 +367,6 @@ int	Monitor::pollout_CGI(int i, Client *my_client)
 		}
 		else
 		{
-			std::cout << "reste < 0" << std::endl;
 			tab_CGI.erase(all_fd[i].fd);
 			remove_fd_CGI(my_client, 1);
 			return (-1);

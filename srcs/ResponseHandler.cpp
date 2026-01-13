@@ -551,7 +551,6 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	std::vector<std::string>::iterator itt = std::find(pack_extension_CGI.begin(), pack_extension_CGI.end(), extension_path);
 	if (size_path >= 5 && pack_extension_CGI.end() == itt)
 		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
-	return _server.handleCGI(req, loc, current);
 	if (!contentType.empty() && contentType.find("multipart/form-data") != std::string::npos)
 	{
 		std::size_t pos = contentType.find("boundary=");
@@ -566,5 +565,8 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	}
 	if (req.body.size() > _server.getClientMaxBodySize())
 		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
-    return makeResponse(res, 200, readFile("config/www/index.html"), getMimeType(req));
+	std::string Path = _server.getRoot() + req.path;
+	if (!access(Path.c_str(), F_OK))
+		return _server.handleCGI(req, loc, current);
+    return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 }
