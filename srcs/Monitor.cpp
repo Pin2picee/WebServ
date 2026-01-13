@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/13 20:05:39 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/13 20:06:26 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -629,6 +629,7 @@ void	Monitor::Monitoring()
 	findHtmlFiles("open", "./config");
 	resetUploadsDir(uploadsPath);
 	clean_CGI();
+
 }
 
 static void parseSetCookie(const std::string &header, std::string &name, std::string &value)
