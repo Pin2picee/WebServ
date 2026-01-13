@@ -6,7 +6,7 @@
 /*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/13 20:04:28 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/13 20:05:39 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -519,11 +519,12 @@ void	Monitor::Monitoring()
 {
 	int poll_return;
 	std::map<std::string, Session> g_sessions;
+	std::string uploadsPath = "./config/www/uploads";
 
 	std::cout << "Lancement du server" << std::endl;
 	findHtmlFiles("close", "./config");
 	// create uploads file if not here
-	if (!pathExists("./config/www/uploads") && mkdir("./config/www/uploads", 0755) == -1)
+	if (!pathExists(uploadsPath) && mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 	while (on)
 	{
@@ -626,7 +627,7 @@ void	Monitor::Monitoring()
 		}
 	}
 	findHtmlFiles("open", "./config");
-	resetUploadsDir("./config/www/uploads");
+	resetUploadsDir(uploadsPath);
 	clean_CGI();
 }
 
