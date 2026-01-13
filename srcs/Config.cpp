@@ -177,7 +177,7 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, siz
 	else if (conf.getRoot().empty())
 		throw std::runtime_error("No root found");
 	const std::vector<Locations> &locations = conf.getLocations();
-	bool hasPost;
+	bool hasPost = false;
 	for (size_t i = 0; i < locations.size(); ++i)
 	{
 		if (!locations[i].methods.size())

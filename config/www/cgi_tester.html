@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CGI Scripts Tester</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+      color: white;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+      animation: fadeInDown 0.6s ease;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: 0.9;
+      margin-bottom: 40px;
+      font-size: 1.1rem;
+    }
+
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 30px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
+      text-decoration: none;
+      color: white;
+      transition: 0.3s;
+    }
+
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateX(-5px);
+    }
+
+    .cgi-card {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: 0.3s;
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: fadeInUp 0.5s ease forwards;
+      opacity: 0;
+    }
+
+    .cgi-card:nth-child(1) { animation-delay: 0.1s; }
+    .cgi-card:nth-child(2) { animation-delay: 0.2s; }
+    .cgi-card:nth-child(3) { animation-delay: 0.3s; }
+    .cgi-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .cgi-header {
+      padding: 20px 25px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.3s;
+    }
+
+    .cgi-header:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .cgi-title {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .cgi-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .cgi-name {
+      font-size: 1.3rem;
+      font-weight: bold;
+    }
+
+    .cgi-description {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+
+    .toggle-icon {
+      font-size: 1.5rem;
+      transition: transform 0.3s;
+    }
+
+    .cgi-card.active .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .cgi-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .cgi-card.active .cgi-content {
+      max-height: 1000px;
+    }
+
+    .cgi-inner {
+      padding: 25px;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .info-box {
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .method-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .method-btn {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .method-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .method-btn.active {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      border-color: #4CAF50;
+      transform: scale(1.05);
+    }
+
+    .method-btn.active.post {
+      background: linear-gradient(135deg, #2196F3, #1976D2);
+      border-color: #2196F3;
+    }
+
+    .method-btn.active.delete {
+      background: linear-gradient(135deg, #f44336, #c62828);
+      border-color: #f44336;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      font-size: 0.95rem;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .body-section {
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+
+    .body-section.show {
+      display: block;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        max-height: 0;
+      }
+      to {
+        opacity: 1;
+        max-height: 500px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 2rem; }
+      .cgi-name { font-size: 1.1rem; }
+      .method-selector { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-btn">← Retour</a>
+    
+    <h1>🚀 CGI Scripts Tester</h1>
+    <p class="subtitle">Testez vos scripts CGI avec les méthodes HTTP de votre choix</p>
+
+    <!-- CGI 1: test.py -->
+    <div class="cgi-card">
+      <div class="cgi-header" onclick="toggleCard(this)">
+        <div class="cgi-title">
+          <div class="cgi-icon">🎨</div>
+          <div>
+            <div class="cgi-name">test.py</div>
+            <div class="cgi-description">Animation CGI avec design moderne</div>
+          </div>
+        </div>
+        <div class="toggle-icon">▼</div>
+      </div>
+      <div class="cgi-content">
+        <div class="cgi-inner">
+          <div class="info-box">
+            Ce CGI génère une page HTML avec des animations CSS (gradient, pulsation).
+          </div>
+          
+          <form id="form-test" action="/cgi-bin/test.py" method="GET" onsubmit="return handleSubmit(event, 'test')">
+            <div class="form-group">
+              <label class="form-label">Méthode HTTP :</label>
+              <div class="method-selector">
+                <button type="button" class="method-btn active" onclick="selectMethod(this, 'test', 'GET')">GET</button>
+                <button type="button" class="method-btn post" onclick="selectMethod(this, 'test', 'POST')">POST</button>
+                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'test', 'DELETE')">DELETE</button>
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="body-test" onchange="toggleBody('test')">
+              <label for="body-test">Ajouter un body à la requête</label>
+            </div>
+
+            <div id="body-test-section" class="body-section">
+              <div class="form-group">
+                <label class="form-label">Body (données à envoyer) :</label>
+                <textarea id="body-test-data" placeholder="Ex: name=John&age=25&city=Paris"></textarea>
+              </div>
+            </div>
+
+            <button type="submit">🚀 Exécuter la requête</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- CGI 2: print.py -->
+    <div class="cgi-card">
+      <div class="cgi-header" onclick="toggleCard(this)">
+        <div class="cgi-title">
+          <div class="cgi-icon">📝</div>
+          <div>
+            <div class="cgi-name">print.py</div>
+            <div class="cgi-description">Echo des données GET/POST reçues</div>
+          </div>
+        </div>
+        <div class="toggle-icon">▼</div>
+      </div>
+      <div class="cgi-content">
+        <div class="cgi-inner">
+          <div class="info-box">
+            Affiche toutes les données reçues (GET query string ou POST body).
+          </div>
+          
+          <form id="form-print" action="/cgi-bin/print.py" method="GET" onsubmit="return handleSubmit(event, 'print')">
+            <div class="form-group">
+              <label class="form-label">Méthode HTTP :</label>
+              <div class="method-selector">
+                <button type="button" class="method-btn active" onclick="selectMethod(this, 'print', 'GET')">GET</button>
+                <button type="button" class="method-btn post" onclick="selectMethod(this, 'print', 'POST')">POST</button>
+                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'print', 'DELETE')">DELETE</button>
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="body-print" onchange="toggleBody('print')">
+              <label for="body-print">Ajouter un body à la requête</label>
+            </div>
+
+            <div id="body-print-section" class="body-section">
+              <div class="form-group">
+                <label class="form-label">Body (données à envoyer) :</label>
+                <textarea id="body-print-data" placeholder="Ex: message=Hello World&user=42student&status=active"></textarea>
+              </div>
+            </div>
+
+            <button type="submit">📤 Exécuter la requête</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- CGI 3: boucle.py -->
+    <div class="cgi-card">
+      <div class="cgi-header" onclick="toggleCard(this)">
+        <div class="cgi-title">
+          <div class="cgi-icon">⚠️</div>
+          <div>
+            <div class="cgi-name">boucle.py</div>
+            <div class="cgi-description">Boucle infinie (test timeout)</div>
+          </div>
+        </div>
+        <div class="toggle-icon">▼</div>
+      </div>
+      <div class="cgi-content">
+        <div class="cgi-inner">
+          <div class="info-box" style="background: rgba(255,0,0,0.2);">
+            ⚠️ ATTENTION : Ce script contient une boucle infinie. Utilisez-le pour tester le timeout CGI de votre serveur.
+          </div>
+          
+          <form id="form-boucle" action="/cgi-bin/boucle.py" method="GET" onsubmit="return handleSubmit(event, 'boucle')">
+            <div class="form-group">
+              <label class="form-label">Méthode HTTP :</label>
+              <div class="method-selector">
+                <button type="button" class="method-btn active" onclick="selectMethod(this, 'boucle', 'GET')">GET</button>
+                <button type="button" class="method-btn post" onclick="selectMethod(this, 'boucle', 'POST')">POST</button>
+                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'boucle', 'DELETE')">DELETE</button>
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="body-boucle" onchange="toggleBody('boucle')">
+              <label for="body-boucle">Ajouter un body à la requête</label>
+            </div>
+
+            <div id="body-boucle-section" class="body-section">
+              <div class="form-group">
+                <label class="form-label">Body (données à envoyer) :</label>
+                <textarea id="body-boucle-data" placeholder="Ex: test=timeout"></textarea>
+              </div>
+            </div>
+
+            <button type="submit" style="background: linear-gradient(135deg, #ff6b6b, #c92a2a);">
+              💣 Lancer (timeout attendu)
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- CGI 4: rien.py -->
+    <div class="cgi-card">
+      <div class="cgi-header" onclick="toggleCard(this)">
+        <div class="cgi-title">
+          <div class="cgi-icon">🔇</div>
+          <div>
+            <div class="cgi-name">rien.py</div>
+            <div class="cgi-description">Script vide (test réponse vide)</div>
+          </div>
+        </div>
+        <div class="toggle-icon">▼</div>
+      </div>
+      <div class="cgi-content">
+        <div class="cgi-inner">
+          <div class="info-box">
+            Ce script ne produit aucune sortie. Testez comment votre serveur gère une réponse CGI vide.
+          </div>
+          
+          <form id="form-rien" action="/cgi-bin/rien.py" method="GET" onsubmit="return handleSubmit(event, 'rien')">
+            <div class="form-group">
+              <label class="form-label">Méthode HTTP :</label>
+              <div class="method-selector">
+                <button type="button" class="method-btn active" onclick="selectMethod(this, 'rien', 'GET')">GET</button>
+                <button type="button" class="method-btn post" onclick="selectMethod(this, 'rien', 'POST')">POST</button>
+                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'rien', 'DELETE')">DELETE</button>
+              </div>
+            </div>
+
+            <div class="checkbox-group">
+              <input type="checkbox" id="body-rien" onchange="toggleBody('rien')">
+              <label for="body-rien">Ajouter un body à la requête</label>
+            </div>
+
+            <div id="body-rien-section" class="body-section">
+              <div class="form-group">
+                <label class="form-label">Body (données à envoyer) :</label>
+                <textarea id="body-rien-data" placeholder="Ex: data=empty_test"></textarea>
+              </div>
+            </div>
+
+            <button type="submit">🔇 Exécuter la requête</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleCard(header) {
+      const card = header.parentElement;
+      const allCards = document.querySelectorAll('.cgi-card');
+      
+      allCards.forEach(c => {
+        if (c !== card) {
+          c.classList.remove('active');
+        }
+      });
+      
+      card.classList.toggle('active');
+    }
+
+    function selectMethod(btn, formId, method) {
+      const form = document.getElementById('form-' + formId);
+      const buttons = btn.parentElement.querySelectorAll('.method-btn');
+      
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      form.method = method;
+    }
+
+    function toggleBody(formId) {
+      const checkbox = document.getElementById('body-' + formId);
+      const section = document.getElementById('body-' + formId + '-section');
+      
+      if (checkbox.checked) {
+        section.classList.add('show');
+      } else {
+        section.classList.remove('show');
+      }
+    }
+
+    function handleSubmit(event, formId) {
+      const form = document.getElementById('form-' + formId);
+      const checkbox = document.getElementById('body-' + formId);
+      const bodyData = document.getElementById('body-' + formId + '-data');
+      const method = form.method.toUpperCase();
+      
+      if (checkbox.checked && bodyData.value.trim()) {
+        if (method === 'GET') {
+          event.preventDefault();
+          const url = form.action + '?' + bodyData.value;
+          window.location.href = url;
+          return false;
+        }
+      } else if (method !== 'GET') {
+        event.preventDefault();
+        const formData = new FormData();
+        fetch(form.action, {
+          method: method,
+          body: method === 'POST' || method === 'DELETE' ? null : undefined
+        }).then(response => response.text())
+          .then(html => {
+            const newWindow = window.open();
+            newWindow.document.write(html);
+            newWindow.document.close();
+          });
+        return false;
+      }
+      
+      return true;
+    }
+  </script>
+</body>
+</html>
