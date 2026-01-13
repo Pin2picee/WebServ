@@ -35,7 +35,6 @@ public:
 
 	//handle requests
 	Response		handleRequest(const Request &req, std::map<std::string, Session> &g_sessions, Client *current);
-	std::string		requestToString(const Request &req);
 	std::string		responseToString(const Response &res);
 };
 

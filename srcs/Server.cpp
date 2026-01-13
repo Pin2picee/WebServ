@@ -78,6 +78,18 @@ const std::vector<Locations>&	Server::getLocations() const
 
 /**
  * @brief
+ * Get the error dir.
+ * 
+ * @return the error dir.
+ */
+const std::string&	Server::getErrorDir() const
+{
+	return error_dir;
+}
+
+
+/**
+ * @brief
  * Get the error pages, the variable can be modifiable.
  * 
  * @return the error pages.
@@ -129,12 +141,11 @@ void	Server::addListen(const std::string& ip, int port)
  * @brief
  * Add an error page.
  * 
- * @param code the error page code.
- * @param path the path that will be assigned to `error_pages`[`code`].
+ * @param dir the error directory path after server root path.
  */
-void	Server::addErrorPage(int code, const std::string& path)
+void	Server::addErrorDir(const std::string& dir)
 {
-	error_pages[code] = path;
+	error_dir = dir;
 }
 
 /**

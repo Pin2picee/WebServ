@@ -18,7 +18,7 @@ private:
 	std::vector<Socket * >		Sockets;
 
 	std::vector<std::string>	tokenize(std::istream &ifs);
-	Server						parse(const std::vector<std::string> &tokens, size_t &i);
+	Server						parse(const std::vector<std::string> &tokens, size_t &t_size, size_t &i);
 	void						CreateSocket(void);
 
 public:

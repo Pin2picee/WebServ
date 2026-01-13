@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/12 20:48:54 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/13 19:12:03 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ int main (int argc, char **argv)
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "ERROssR:" << e.what() << std::endl;
+		std::cerr << RED BOLD << "Error: " << e.what() << RESET << std::endl;
 	}
 	return (0);
 }

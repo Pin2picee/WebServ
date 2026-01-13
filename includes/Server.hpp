@@ -71,6 +71,7 @@ private:
 	std::string											root;
 	size_t												client_max_body_size;
 	std::map<int, std::string>							error_pages;
+	std::string											error_dir;
 	std::vector<Locations>								locations;
 public:
 	Server();
@@ -81,6 +82,7 @@ public:
 
 	const std::string&									getRoot() const;
 	const std::vector<std::pair<std::string, int> >&	getListen() const;
+	const std::string&									getErrorDir() const;
 	const std::vector<Locations>&						getLocations() const;
 	const std::string&									getErrorPage(int code, Session &session) const;
 	size_t												getClientMaxBodySize() const;
@@ -98,7 +100,7 @@ public:
 
 	void 												addLocation(const Locations& loc);
 	void 												addListen(const std::string& ip, int port);
-	void 												addErrorPage(int code, const std::string& path);
+	void 												addErrorDir(const std::string& path);
 	void 												handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
 

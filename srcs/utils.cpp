@@ -24,8 +24,7 @@ std::string strip_semicolon(const std::string &s)
 void init_default_errors(Server& conf)
 {
     std::map<int, std::string>& errors = conf.getErrorPagesRef();
-    const std::string& root = conf.getRoot();
-    std::string errorDir = root + "/errors";
+    std::string errorDir = conf.getRoot() + "/" + conf.getErrorDir();
     DIR* dir = opendir(errorDir.c_str());
     if (!dir)
         return;
