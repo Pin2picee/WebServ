@@ -537,20 +537,21 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 		contentType = "application/octet-stream";
 	size_t	size_path = req.path.size();
 	size_t	point = req.path.rfind('.');
-	if (point == std::string::npos)
-		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
-	std::string	extension_path = req.path.substr(req.path.rfind('.'));
-	std::vector<std::string>	pack_extension_CGI;
-	pack_extension_CGI.push_back(".cgi");
-	pack_extension_CGI.push_back(".py");
-	pack_extension_CGI.push_back(".php");
-	pack_extension_CGI.push_back(".pl");
-	pack_extension_CGI.push_back(".rb");
-	pack_extension_CGI.push_back(".sh");
+	if (point != std::string::npos)
+	{
+		std::string	extension_path = req.path.substr(req.path.rfind('.'));
+		std::vector<std::string>	pack_extension_CGI;
+		pack_extension_CGI.push_back(".cgi");
+		pack_extension_CGI.push_back(".py");
+		pack_extension_CGI.push_back(".php");
+		pack_extension_CGI.push_back(".pl");
+		pack_extension_CGI.push_back(".rb");
+		pack_extension_CGI.push_back(".sh");
 
-	std::vector<std::string>::iterator itt = std::find(pack_extension_CGI.begin(), pack_extension_CGI.end(), extension_path);
-	if (size_path >= 5 && pack_extension_CGI.end() == itt)
-		return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+		std::vector<std::string>::iterator itt = std::find(pack_extension_CGI.begin(), pack_extension_CGI.end(), extension_path);
+		if (size_path >= 5 && pack_extension_CGI.end() == itt)
+			return makeResponse(res, 405, readFile(_server.getErrorPage(405, session)), getMimeType(req));
+	}
 	if (!contentType.empty() && contentType.find("multipart/form-data") != std::string::npos)
 	{
 		std::size_t pos = contentType.find("boundary=");
