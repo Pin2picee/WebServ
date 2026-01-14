@@ -194,6 +194,8 @@ subject, including (but not limited to):
 AI tools (ChatGPT) were used **as an assistance tool only**, specifically for:
 - Understanding error messages and debugging compilation issues  
 - Clarifying C++98 language rules and system call behavior  
+- Affining knowledges on RFC norm
+
 - Improving documentation clarity (README wording and structure)  
 
 All architectural decisions, implementation, and code writing were performed by the  
