@@ -19,6 +19,7 @@ class Monitor
 		struct  pollfd			all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
 		std::map<int, Client *>	tab_CGI;
 	private :
+		Monitor();
 		void 	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);// ajoute un client  dans mon vecteur de client
 		int		new_clients(int i);//ajoute un nouveau socket non bloquant pour le client
 		int		new_request(int i);// RECUP la requete + verif test_read

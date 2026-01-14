@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 15:26:14 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/14 16:23:59 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,8 @@ const char *Monitor::MonitorError::what() const throw()
 /*</Exception>*/
 
 /*<Construction>*/
+Monitor::Monitor() {}
+
 Monitor::~Monitor() {}
 
 Monitor::Monitor(const Monitor &copy)
