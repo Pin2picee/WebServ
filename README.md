@@ -6,6 +6,11 @@
 
 ## <a name="table-of-contents"></a>📑 Table of Contents
 - [Description](#description)
+  - [Socket Programming](#socket-programming)
+  - [Multiplexing I/O](#multiplexing-io)
+  - [HTTP Request Parsing](#http-request-parsing)
+  - [Configuration File Parsing](#configuration-file-parsing)
+  - [CGI Execution](#cgi-execution)
 - [Features](#features)
 - [Task Distribution](#task-distribution)
 - [Instructions](#instructions)
@@ -14,6 +19,7 @@
   - [Execution](#execution)
 - [Authorized System Calls](#authorized-system-calls)
 - [Resources](#resources)
+- [Notes](#notes)
 
 ---
 
