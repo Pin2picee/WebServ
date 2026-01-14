@@ -3,18 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-<<<<<<< HEAD
-<<<<<<< HEAD
-/*   Updated: 2026/01/14 17:05:57 by abelmoha         ###   ########.fr       */
-=======
-/*   Updated: 2026/01/14 16:54:50 by marvin           ###   ########.fr       */
->>>>>>> a45f21e (valid readme)
-=======
-/*   Updated: 2026/01/14 17:19:11 by marvin           ###   ########.fr       */
->>>>>>> 637ba8a (good query)
+/*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
+/*   Updated: 2026/01/14 17:31:20 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
