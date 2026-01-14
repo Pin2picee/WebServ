@@ -60,25 +60,19 @@ bool removeDirectoryRecursive(const std::string &path)
         std::string name = entry->d_name;
         if (name == "." || name == "..")
             continue;
-
         std::string fullPath = path + "/" + name;
-
         struct stat entryStat;
         if (stat(fullPath.c_str(), &entryStat) == -1)
             continue;
-
         if (S_ISDIR(entryStat.st_mode))
         {
             removeDirectoryRecursive(fullPath);
             rmdir(fullPath.c_str());
         }
         else
-        {
             unlink(fullPath.c_str());
-        }
     }
     closedir(dir);
-
     return (rmdir(path.c_str()) == 0);
 }
 

@@ -319,12 +319,13 @@ Server &Server::operator=(const Server &assignement)
 	return (*this);
 }
 
-std::map<std::string, Session> g_sessions;
-
 Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res)
 {
 	std::map<std::string, std::string>::const_iterator it = req.cookies.find("User");
-	if (it == req.cookies.end())
+	std::map<std::string, Session>::const_iterator sess_it;
+	if (it != req.cookies.end())
+		sess_it = g_sessions.find(it->second);
+	if (it == req.cookies.end() || sess_it == g_sessions.end())
 	{
 		std::string id = generateSessionId();
 		Session &newSession = g_sessions[id];
@@ -334,22 +335,29 @@ Session &getSession(std::map<std::string, Session> &g_sessions, const Request &r
 	}
 	std::string sessionId = it->second;
 	setCookie(sessionId, res, "User", req.cookies);
-	g_sessions[it->second].ID = sessionId;
-	return g_sessions[it->second];
+	g_sessions[sessionId].ID = sessionId;
+	return g_sessions[sessionId];
 }
 
-void	deleteSession(void)
+void	deleteSession(std::map<std::string, Session> &g_sessions)
 {
+	std::cout << "faut delete bro" << std::endl;
 	time_t now = getCurrentTime();
+	std::cout << "time now = " << now << std::endl;
 	for (std::map<std::string, Session>::iterator it = g_sessions.begin();
-		it != g_sessions.end();)
+		it != g_sessions.end(); )
 	{
+		std::cout << "expiry time = " << it->second.expiryTime << std::endl;	
 		if (it->second.expiryTime <= now)
-    	{
+		{
+			std::cout << "session deleted = ./config/www/uploads/" + it->second.ID  << std::endl;
+			removeDirectoryRecursive("./config/www/uploads/" + it->second.ID);			
 			std::map<std::string, Session>::iterator toDelete = it;
-            g_sessions.erase(toDelete);
+			++it;                     // avancer AVANT erase
+			g_sessions.erase(toDelete); // erase invalide toDelete, pas it
 		}
-		++it;
+		else
+			++it;
 	}
 }
 
