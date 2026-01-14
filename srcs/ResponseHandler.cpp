@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ResponseHandler.cpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
+/*   Updated: 2026/01/14 01:44:31 by abelmoha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "ResponseHandler.hpp"
 #include "Client.hpp"
 /* constructor */
@@ -34,11 +46,13 @@ const Locations *findLocation(const Request &req, const std::vector<Locations> &
 Response ResponseHandler::handleRequest(const Request &req, std::map<std::string, Session> &g_sessions, Client *current)
 {
 	Response	res;
-	deleteSession(g_sessions);
 	Session &session = getSession(g_sessions, req, res);
 	const std::vector<Locations> &locs = _server.getLocations();
 	const Locations *target = findLocation(req, locs);
 
+	deleteSession();
+	if (!session.uploaded_files.size())
+		removeAutoindexButton();
 	if (session.current_page.empty())
 		session.current_page = _server.getRoot() + req.path;
 	if (!target)
