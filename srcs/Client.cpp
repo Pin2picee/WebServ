@@ -7,10 +7,14 @@
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
 <<<<<<< HEAD
+<<<<<<< HEAD
 /*   Updated: 2026/01/14 17:05:57 by abelmoha         ###   ########.fr       */
 =======
 /*   Updated: 2026/01/14 16:54:50 by marvin           ###   ########.fr       */
 >>>>>>> a45f21e (valid readme)
+=======
+/*   Updated: 2026/01/14 17:19:11 by marvin           ###   ########.fr       */
+>>>>>>> 637ba8a (good query)
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -347,6 +351,7 @@ Request	Client::ExtractRequest()
 		qmark += 9;
 	if (qmark != std::string::npos)
 		tmp.query = tmp.uri.substr(qmark + 1);
+
 	while (pos != pos_finish)
 	{
 		pos += 2;//on bypass \r\n
