@@ -66,6 +66,8 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 /*</CONSTRUCTION>*/
 
 /*<DESTRUCTION>*/
+Socket::Socket() {}
+
 Socket::~Socket()
 {
 	close(this->Fd);

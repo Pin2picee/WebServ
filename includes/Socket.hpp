@@ -15,6 +15,7 @@ class Socket
 		std::string			_ip;
 		Server				*BlockServer;
 	private :
+		Socket();
 		void		set_socket_addr();//methode qui definie les valeurs a implement
 	public:
 		Socket(std::string ip, int port, Server *ref);
