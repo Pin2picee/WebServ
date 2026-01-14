@@ -136,17 +136,21 @@ From the root of the repository:
 
 ```bash
 make
+make clean
+make fclean
+make re
 ```
 
 ### <a name="Execution"></a>Execution
 
 ```bash
-./webserv path/to/config_file.conf
+./webserv \(path/to/config_file.conf\)
 ```
 
 Example:
 
 ```bash
+./webserv
 ./webserv configs/default.conf
 ```
 
