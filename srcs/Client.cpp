@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 16:28:55 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/14 17:05:57 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,10 +339,15 @@ Request	Client::ExtractRequest()
 	size_t qmark = tmp.uri.find('?');
 	tmp.path = tmp.uri.substr(0, qmark);
 	tmp.query = "";
-	if (qmark != std::string::npos && qmark + 10 < tmp.uri.size())
-		tmp.query = tmp.uri.substr(qmark + 10);
-
-	//extract HEADERS LINES
+    
+	if (qmark != std::string::npos && tmp.uri.find("filename=", qmark) != std::string::npos)
+	{
+		qmark += 9;
+	}
+    if (qmark != std::string::npos)
+	{
+		tmp.query = tmp.uri.substr(qmark + 1);
+	}
 	while (pos != pos_finish)
 	{
 		pos += 2;//on bypass \r\n

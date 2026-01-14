@@ -255,6 +255,20 @@
       box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     }
 
+    .debug-info {
+      margin-top: 20px;
+      padding: 10px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    .debug-info.show {
+      display: block;
+    }
+
     @keyframes fadeInDown {
       from {
         opacity: 0;
@@ -320,7 +334,7 @@
             Ce CGI génère une page HTML avec des animations CSS (gradient, pulsation).
           </div>
           
-          <form id="form-test" action="/cgi-bin/test.py" method="GET" onsubmit="return handleSubmit(event, 'test')">
+          <form id="form-test" onsubmit="return handleSubmit(event, 'test')">
             <div class="form-group">
               <label class="form-label">Méthode HTTP :</label>
               <div class="method-selector">
@@ -344,6 +358,7 @@
 
             <button type="submit">🚀 Exécuter la requête</button>
           </form>
+          <div id="debug-test" class="debug-info"></div>
         </div>
       </div>
     </div>
@@ -366,7 +381,7 @@
             Affiche toutes les données reçues (GET query string ou POST body).
           </div>
           
-          <form id="form-print" action="/cgi-bin/print.py" method="GET" onsubmit="return handleSubmit(event, 'print')">
+          <form id="form-print" onsubmit="return handleSubmit(event, 'print')">
             <div class="form-group">
               <label class="form-label">Méthode HTTP :</label>
               <div class="method-selector">
@@ -390,6 +405,7 @@
 
             <button type="submit">📤 Exécuter la requête</button>
           </form>
+          <div id="debug-print" class="debug-info"></div>
         </div>
       </div>
     </div>
@@ -412,7 +428,7 @@
             ⚠️ ATTENTION : Ce script contient une boucle infinie. Utilisez-le pour tester le timeout CGI de votre serveur.
           </div>
           
-          <form id="form-boucle" action="/cgi-bin/boucle.py" method="GET" onsubmit="return handleSubmit(event, 'boucle')">
+          <form id="form-boucle" onsubmit="return handleSubmit(event, 'boucle')">
             <div class="form-group">
               <label class="form-label">Méthode HTTP :</label>
               <div class="method-selector">
@@ -438,6 +454,7 @@
               💣 Lancer (timeout attendu)
             </button>
           </form>
+          <div id="debug-boucle" class="debug-info"></div>
         </div>
       </div>
     </div>
@@ -460,7 +477,7 @@
             Ce script ne produit aucune sortie. Testez comment votre serveur gère une réponse CGI vide.
           </div>
           
-          <form id="form-rien" action="/cgi-bin/rien.py" method="GET" onsubmit="return handleSubmit(event, 'rien')">
+          <form id="form-rien" onsubmit="return handleSubmit(event, 'rien')">
             <div class="form-group">
               <label class="form-label">Méthode HTTP :</label>
               <div class="method-selector">
@@ -484,6 +501,7 @@
 
             <button type="submit">🔇 Exécuter la requête</button>
           </form>
+          <div id="debug-rien" class="debug-info"></div>
         </div>
       </div>
     </div>
@@ -491,6 +509,14 @@
   </div>
 
   <script>
+    // Stockage de la méthode sélectionnée pour chaque formulaire
+    const selectedMethods = {
+      'test': 'GET',
+      'print': 'GET',
+      'boucle': 'GET',
+      'rien': 'GET'
+    };
+
     function toggleCard(header) {
       const card = header.parentElement;
       const allCards = document.querySelectorAll('.cgi-card');
@@ -505,13 +531,17 @@
     }
 
     function selectMethod(btn, formId, method) {
-      const form = document.getElementById('form-' + formId);
       const buttons = btn.parentElement.querySelectorAll('.method-btn');
       
+      // Mise à jour visuelle
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      form.method = method;
+      // Stockage de la méthode sélectionnée
+      selectedMethods[formId] = method;
+      
+      // Debug
+      console.log(`[${formId}] Méthode sélectionnée: ${method}`);
     }
 
     function toggleBody(formId) {
@@ -526,34 +556,82 @@
     }
 
     function handleSubmit(event, formId) {
+      event.preventDefault(); // Empêche toujours la soumission par défaut
+      
       const form = document.getElementById('form-' + formId);
       const checkbox = document.getElementById('body-' + formId);
       const bodyData = document.getElementById('body-' + formId + '-data');
-      const method = form.method.toUpperCase();
+      const method = selectedMethods[formId]; // Utilise la méthode stockée
+      const debugDiv = document.getElementById('debug-' + formId);
       
-      if (checkbox.checked && bodyData.value.trim()) {
-        if (method === 'GET') {
-          event.preventDefault();
-          const url = form.action + '?' + bodyData.value;
-          window.location.href = url;
-          return false;
+      const action = '/cgi-bin/' + formId + '.py';
+      
+      // Debug info
+      let debugInfo = `Méthode: ${method}\nURL: ${action}\n`;
+      
+      if (method === 'GET') {
+        // GET: construit l'URL avec query string si body présent
+        let url = action;
+        if (checkbox.checked && bodyData.value.trim()) {
+          url += '?' + bodyData.value;
+          debugInfo += `Query String: ${bodyData.value}\n`;
         }
-      } else if (method !== 'GET') {
-        event.preventDefault();
-        const formData = new FormData();
-        fetch(form.action, {
+        debugInfo += `Redirection vers: ${url}`;
+        
+        debugDiv.textContent = debugInfo;
+        debugDiv.classList.add('show');
+        
+        console.log(debugInfo);
+        
+        // Redirection
+        setTimeout(() => {
+          window.location.href = url;
+        }, 500);
+        
+      } else {
+        // POST ou DELETE: utilise fetch
+        let body = null;
+        let headers = {};
+        
+        if (method === 'POST' && checkbox.checked && bodyData.value.trim()) {
+          body = bodyData.value;
+          headers['Content-Type'] = 'application/x-www-form-urlencoded';
+          debugInfo += `Body: ${bodyData.value}\n`;
+          debugInfo += `Content-Type: application/x-www-form-urlencoded\n`;
+        }
+        
+        debugInfo += `Envoi via fetch...`;
+        debugDiv.textContent = debugInfo;
+        debugDiv.classList.add('show');
+        
+        console.log(debugInfo);
+        console.log('Fetch options:', { method, headers, body });
+        
+        fetch(action, {
           method: method,
-          body: method === 'POST' || method === 'DELETE' ? null : undefined
-        }).then(response => response.text())
-          .then(html => {
-            const newWindow = window.open();
+          headers: headers,
+          body: body
+        })
+        .then(response => {
+          console.log(`Réponse reçue: ${response.status} ${response.statusText}`);
+          return response.text();
+        })
+        .then(html => {
+          const newWindow = window.open();
+          if (newWindow) {
             newWindow.document.write(html);
             newWindow.document.close();
-          });
-        return false;
+          } else {
+            alert('Popup bloquée ! Autorisez les popups pour ce site.');
+          }
+        })
+        .catch(error => {
+          console.error('Erreur:', error);
+          alert('Erreur lors de la requête: ' + error.message);
+        });
       }
       
-      return true;
+      return false;
     }
   </script>
 </body>
