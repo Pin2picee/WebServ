@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResponseHandler.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 02:01:30 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/14 14:37:32 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,8 +172,6 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 	if (!file || std::remove(deletePath.c_str()) != 0)
 		return makeResponse(res, 404, makeJsonError("File not found"), getMimeType(req));
 	removeUploadFileSession(session, deletePath);
-	if ((!session.uploaded_files.size() && loc.autoindex))
-		removeAutoindexButton();
 	return makeResponse(res, 200, makeJsonError("File deleted successfully"), getMimeType(req));
 }
 
@@ -207,7 +205,7 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
             hrefPath += "/";
 
 		std::string liClass = getFileClass(name, st);
-        std::string displayName = shortenFileName(name, 30);
+        std::string displayName = shortenFileName(name, 54);
         if (S_ISDIR(st.st_mode))
             displayName += "/";
 
@@ -521,8 +519,6 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
 		if (std::find(session.uploaded_files.begin(), session.uploaded_files.end(), filename) != session.uploaded_files.end())
 			return makeResponseFromFile(res, 409, _server.getErrorPage(409, session), req);
 		session.uploaded_files.push_back(filename);
-		if (session.uploaded_files.size() && loc.autoindex)
-			addAutoindexButton(cleanPath(loc.upload_dir + "/" + session.ID));
 		return makeResponseFromFile(res, 201, _server.getErrorPage(201, session), req);
 	}
 	return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);

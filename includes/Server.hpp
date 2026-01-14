@@ -8,15 +8,17 @@ class Client;
  * @brief
  * A structure that will register the session infos of each client who generate a cookie.
  * 
+ * @param ID				The client session id.
  * @param current_page		The last web page the client connect to.
  * @param uploaded_files	The files the client uploaded.
+ * @param expiryTime		When the cookie expires.
  */
 struct Session
 {
-	std::string ID;
-    std::string current_page;
-    std::vector<std::string> uploaded_files;
-    time_t expiryTime;
+	std::string					ID;
+    std::string					current_page;
+    std::vector<std::string>	uploaded_files;
+    time_t						expiryTime;
 };
 
 /**
@@ -62,6 +64,7 @@ struct Request;
  * @param listen				The canals to listen on.
  * @param locations				The `Location` datas.
  * @param error_pages			The error pages. 
+ * @param error_dir				The error directory. 
  * @param client_max_body_size	The client max body size.
  */
 class Server
@@ -104,8 +107,8 @@ public:
 	void 												handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
 
-Session	&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res);
-void	removeUploadFileSession(Session &session, std::string deletePath);
-void	deleteSession(std::map<std::string, Session> &g_sessions);
-Response parseCGIOutput(const std::string &output);
+Session		&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res);
+void		removeUploadFileSession(Session &session, std::string deletePath);
+void		deleteSession(std::map<std::string, Session> &g_sessions);
+Response	parseCGIOutput(const std::string &output);
 #endif

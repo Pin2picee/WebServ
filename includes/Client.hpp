@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 01:40:19 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/14 16:28:26 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ class Client
 		size_t		OffsetCgi;
 		size_t		OffsetBodyCgi;
 
-		Client();
 	public :// a changer
 		ResponseHandler	handler;
 	//base
@@ -80,10 +79,10 @@ class Client
 		const size_t			&getOffset() const;
 		const size_t			&getOffsetBodyCgi() const;
 
-		const bool			&getFinishRequest() const;
-		const bool			&getResponseGenerate() const;
-		const bool			&getSyntax() const;
-		const bool			&getInCGI() const;
+		const bool				&getFinishRequest() const;
+		const bool				&getResponseGenerate() const;
+		const bool				&getSyntax() const;
+		const bool				&getInCGI() const;
 		const int				&getPipeIn() const;
 		const int				&getPipeOut() const;
 		const std::string		&getBody(void) const;

@@ -12,11 +12,11 @@
 class Monitor
 {
 	private :
-		size_t				nb_fd;
-		size_t				nb_fd_server;
+		size_t					nb_fd;
+		size_t					nb_fd_server;
 		std::map<int, Client>	clients;
 		std::map<int, Socket *>	all_sockets;//ma map avec cle = fd, valeur = obj Socket;
-		struct  pollfd		all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
+		struct  pollfd			all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
 		std::map<int, Client *>	tab_CGI;
 	private :
 		Monitor();

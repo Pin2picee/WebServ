@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Monitor.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 01:39:35 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/14 16:23:59 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,6 @@ const char *Monitor::MonitorError::what() const throw()
 /*</Exception>*/
 
 /*<Construction>*/
-
 Monitor::Monitor() {}
 
 Monitor::~Monitor() {}
@@ -447,9 +446,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 }
 
 /*
-============
 Gere entré et sortie des pipes CGI pour envoyer body et recup l'output du CGI
-============
 */
 int	Monitor::CGI_engine(int i)
 {
@@ -465,9 +462,7 @@ int	Monitor::CGI_engine(int i)
 }
 
 /*
-==========
 Ajoute les Pipes d'un CGI client dans le tab PollFd
-==========
 */
 void	Monitor::AddCgiPollFd(Client *current, int i)
 {
