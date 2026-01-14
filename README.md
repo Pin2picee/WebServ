@@ -114,6 +114,7 @@ multiple clients simultaneously.
 ### abelmoha (Lead)
 - Server connection handling using `poll()`, sockets, and client management  
 - HTTP request parsing based on server blocks from the configuration file  
+- CGI (Common Gateway Interface) handling and pipes
 
 ### locagnio
 - Configuration file parsing
