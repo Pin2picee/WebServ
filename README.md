@@ -136,8 +136,14 @@ From the root of the repository:
 
 ```bash
 make
+```
+```bash
 make clean
+```
+```bash
 make fclean
+```
+```bash
 make re
 ```
 
@@ -151,6 +157,8 @@ Example:
 
 ```bash
 ./webserv
+```
+```bash
 ./webserv configs/default.conf
 ```
 
