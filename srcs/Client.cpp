@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 17:05:57 by abelmoha         ###   ########.fr       */
+/*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
+/*   Updated: 2026/01/14 17:32:42 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -271,7 +271,7 @@ const std::string &Client::getReponse() const
 
 const std::map<std::string, std::string> &Client::getCookies() const
 {
-    return (this->cookies);
+	return (this->cookies);
 }
 
 const std::string	&Client::getCgiOutput() const
@@ -339,15 +339,11 @@ Request	Client::ExtractRequest()
 	size_t qmark = tmp.uri.find('?');
 	tmp.path = tmp.uri.substr(0, qmark);
 	tmp.query = "";
-    
 	if (qmark != std::string::npos && tmp.uri.find("filename=", qmark) != std::string::npos)
-	{
 		qmark += 9;
-	}
-    if (qmark != std::string::npos)
-	{
+	if (qmark != std::string::npos)
 		tmp.query = tmp.uri.substr(qmark + 1);
-	}
+
 	while (pos != pos_finish)
 	{
 		pos += 2;//on bypass \r\n
@@ -373,9 +369,5 @@ Request	Client::ExtractRequest()
 	parseCookies(tmp);
 	pos += 4;
 	tmp.body = request.substr(pos);
-	std::cout << "=== DEBUG PARSING ===" << std::endl;
-	std::cout << "URI brute : [" << tmp.uri << "]" << std::endl;
-	std::cout << "Path      : [" << tmp.path << "]" << std::endl;
-	std::cout << "Query     : [" << tmp.query << "]" << std::endl;
 	return (tmp);
 }

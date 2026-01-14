@@ -1,106 +1,208 @@
+`This project has been created as part of the 42 curriculum by abelmoha, locagnio.`
+
 # Webserv
 
-Le projet **Webserv** fait partie du cursus de l'école 42.  
-Il consiste à créer un serveur web fonctionnel **from scratch** en **C++98**, ce qui implique de gérer manuellement la mémoire et les structures de données sans recourir aux abstractions modernes.
+# <a name="webserv"></a>Webserv
 
-Nous sommes deux étudiants à collaborer sur ce projet. La répartition claire des tâches et la communication sont essentielles pour atteindre les objectifs : gestion des requêtes HTTP, service de fichiers statiques et dynamiques, et développement d'un serveur performant et robuste.
+## <a name="table-of-contents"></a>📑 Table of Contents
+- [Description](#description)
+  - [Socket Programming](#socket-programming)
+  - [Multiplexing I/O](#multiplexing-io)
+  - [HTTP Request Parsing](#http-request-parsing)
+  - [Configuration File Parsing](#configuration-file-parsing)
+  - [CGI Execution](#cgi-execution)
+- [Features](#features)
+- [Task Distribution](#task-distribution)
+- [Instructions](#instructions)
+  - [Requirements](#requirements)
+  - [Compilation](#compilation)
+  - [Execution](#execution)
+- [Authorized System Calls](#authorized-system-calls)
+- [Resources](#resources)
+- [Notes](#notes)
 
-## Répartition des tâches
+---
+
+## <a name="description"></a>📌 Description
+
+**Webserv** is a project from the **42 school curriculum** whose objective is to build a  
+fully functional **HTTP web server from scratch** using **C++98**.
+
+The project focuses on low-level programming concepts such as:
+
+### <a name="socket-programming"></a>🔹 Socket Programming
+| Function | Description |
+|----------|-------------|
+| socket | Creates a new socket |
+| bind | Binds a socket to an IP address and port |
+| listen | Marks a socket as passive to accept connections |
+| accept | Accepts an incoming client connection |
+| connect | Connects a socket to a remote server |
+| setsockopt | Sets options on a socket |
+| getsockname | Retrieves the local address of a socket |
+
+---
+
+### <a name="multiplexing-io"></a>🔹 Multiplexing I/O
+| Function | Description |
+|----------|-------------|
+| poll | Monitors multiple file descriptors |
+| select | Monitors sets of file descriptors |
+| epoll_create | Creates an epoll instance (Linux) |
+| epoll_ctl | Controls an epoll instance |
+| epoll_wait | Waits for epoll events |
+| kqueue | Creates an event queue (BSD/macOS) |
+| kevent | Registers and waits for events |
+
+---
+
+### <a name="http-request-parsing"></a>🔹 HTTP Request Parsing
+| Function | Description |
+|----------|-------------|
+| recv | Receives data from a socket |
+| send | Sends data through a socket |
+| read | Reads data from a file or socket |
+| write | Writes data to a file or socket |
+| strerror | Converts error codes to human-readable strings |
+
+---
+
+### <a name="configuration-file-parsing"></a>🔹 Configuration File Parsing
+| Function | Description |
+|----------|-------------|
+| open | Opens a configuration file |
+| read | Reads the configuration file |
+| close | Closes a file descriptor |
+| stat | Retrieves file information |
+| access | Checks file permissions |
+
+---
+
+### <a name="cgi-execution"></a>🔹 CGI Execution
+| Function | Description |
+|----------|-------------|
+| fork | Creates a child process |
+| execve | Executes a CGI program |
+| waitpid | Waits for a CGI process to terminate |
+| pipe | Creates a communication pipe |
+| dup | Duplicates a file descriptor |
+| dup2 | Redirects standard input/output |
+| chdir | Changes the working directory |
+
+No external libraries or modern C++ abstractions are allowed, requiring careful memory  
+management and strict adherence to system-level APIs.
+
+The final goal is to create a **robust, performant, and standards-compliant web server**  
+capable of serving static content, handling dynamic requests via CGI, and managing  
+multiple clients simultaneously.
+
+---
+
+## <a name="features"></a>✨ Features
+
+- HTTP/1.1 request handling  
+- Multiple server blocks via configuration file  
+- Static file serving  
+- CGI support (e.g. PHP)  
+- Non-blocking I/O with `poll()`  
+- Proper error handling and HTTP status codes  
+
+---
+
+## <a name="task-distribution"></a>👥 Task Distribution
 
 ### abelmoha (Lead)
-- La partie **connexion du serveur** avec `poll()`, les **sockets** et la gestion des clients  
-- Le **parsing des requêtes HTTP** à l'aide des différents **blocs serveur** issus du fichier de configuration
+- Server connection handling using `poll()`, sockets, and client management  
+- HTTP request parsing based on server blocks from the configuration file  
+- CGI (Common Gateway Interface) handling and pipes
 
 ### locagnio
-- Le **parsing du fichier de configuration**  
-- La gestion des **CGI** (Common Gateway Interface)
-
-# 📖 Référence des fonctions système autorisées (Webserv)
-
-## 🔹 Gestion des processus
-| Prototype | Description |
-|-----------|-------------|
-| `pid_t fork(void);` | Crée un nouveau processus en dupliquant le courant |
-| `int execve(const char *pathname, char *const argv[], char *const envp[]);` | Exécute un programme en remplaçant le processus courant |
-| `pid_t waitpid(pid_t pid, int *status, int options);` | Attend la fin d’un processus enfant |
-| `int kill(pid_t pid, int sig);` | Envoie un signal à un processus |
-| `void (*signal(int signum, void (*handler)(int)))(int);` | Définit un gestionnaire pour un signal |
+- Configuration file parsing
+- autoindex
+- Requests handling
+- Cookies
+- CGI (Common Gateway Interface) handling  
 
 ---
 
-## 🔹 Gestion des erreurs
-| Prototype | Description |
-|-----------|-------------|
-| `char *strerror(int errnum);` | Retourne une chaîne décrivant un code d’erreur |
-| `const char *gai_strerror(int errcode);` | Retourne une chaîne d’erreur de `getaddrinfo` |
-| `extern int errno;` | Contient le dernier code d’erreur système |
+## <a name="instructions"></a>⚙️ Instructions
+
+### <a name="requirements"></a>Requirements
+- Linux or macOS  
+- C++ compiler supporting **C++98**  
+- `make`  
+
+### <a name="compilation"></a>Compilation
+From the root of the repository:
+
+```bash
+make
+```
+```bash
+make clean
+```
+```bash
+make fclean
+```
+```bash
+make re
+```
+
+### <a name="Execution"></a>Execution
+
+```bash
+./webserv (path/to/config_file.conf)
+```
+
+Example:
+
+```bash
+./webserv
+```
+```bash
+./webserv configs/default.conf
+```
+
+The server will start listening on the ports defined in the configuration file.
 
 ---
 
-## 🔹 Réseau & sockets
-| Prototype | Description |
-|-----------|-------------|
-| `int socket(int domain, int type, int protocol);` | Crée une socket (TCP/UDP) |
-| `int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);` | Attache une socket à une IP/port |
-| `int listen(int sockfd, int backlog);` | Met une socket en mode écoute |
-| `int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);` | Accepte une connexion entrante |
-| `int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);` | Connecte une socket à un serveur |
-| `ssize_t send(int sockfd, const void *buf, size_t len, int flags);` | Envoie des données sur une socket |
-| `ssize_t recv(int sockfd, void *buf, size_t len, int flags);` | Reçoit des données d’une socket |
-| `int socketpair(int domain, int type, int protocol, int sv[2]);` | Crée deux sockets connectées entre elles |
-| `int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);` | Configure une option de socket |
-| `int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);` | Récupère l’adresse locale de la socket |
-| `struct protoent *getprotobyname(const char *name);` | Donne des infos sur un protocole (TCP/UDP) |
-| `int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);` | Résout un nom en adresse IP/port |
-| `void freeaddrinfo(struct addrinfo *res);` | Libère la mémoire de `getaddrinfo` |
+## <a name="authorized-system-calls"></a>📖 Authorized System Calls
+
+This project strictly follows the list of authorized system calls provided by the 42  
+subject, including (but not limited to):
+
+- Process management: `fork`, `execve`, `waitpid`  
+- Networking: `socket`, `bind`, `listen`, `accept`, `send`, `recv`  
+- Multiplexing: `poll`, `select`  
+- File handling: `open`, `read`, `write`, `close`  
+- CGI-related calls: `pipe`, `dup`, `dup2`  
+
+(See subject PDF for the complete list.)
 
 ---
 
-## 🔹 Conversion d’octets (endianess)
-| Prototype | Description |
-|-----------|-------------|
-| `uint16_t htons(uint16_t hostshort);` | Convertit un entier 16 bits en ordre réseau |
-| `uint32_t htonl(uint32_t hostlong);` | Convertit un entier 32 bits en ordre réseau |
-| `uint16_t ntohs(uint16_t netshort);` | Convertit un entier 16 bits réseau → hôte |
-| `uint32_t ntohl(uint32_t netlong);` | Convertit un entier 32 bits réseau → hôte |
+## <a name="resources"></a>📚 Resources
+
+### Technical References
+- RFC 7230–7235 — HTTP/1.1 Specification  
+- Linux manual pages (`man 2`, `man 3`)  
+- Beej’s Guide to Network Programming  
+- GNU libc documentation  
+
+### AI Usage Disclosure
+AI tools (ChatGPT) were used **as an assistance tool only**, specifically for:
+- Understanding error messages and debugging compilation issues  
+- Clarifying C++98 language rules and system call behavior  
+- Affining knowledges on RFC norm
+- Improving documentation clarity (README wording and structure)  
+
+All architectural decisions, implementation, and code writing were performed by the  
+project authors.
 
 ---
 
-## 🔹 Multiplexage & I/O
-| Prototype | Description |
-|-----------|-------------|
-| `int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);` | Surveille plusieurs descripteurs |
-| `int poll(struct pollfd *fds, nfds_t nfds, int timeout);` | Alternative moderne à `select` |
-| `int epoll_create(int size);` | Crée un objet epoll (Linux) |
-| `int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);` | Ajoute/supprime/modifie un fd dans epoll |
-| `int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);` | Attend des événements sur epoll |
-| `int kqueue(void);` | Crée une file d’événements (BSD/macOS) |
-| `int kevent(int kq, const struct kevent *changelist, int nchanges, struct kevent *eventlist, int nevents, const struct timespec *timeout);` | Gère et attend des événements avec kqueue |
+## <a name="notes"></a>🏁 Notes
 
----
-
-## 🔹 Fichiers & répertoires
-| Prototype | Description |
-|-----------|-------------|
-| `int open(const char *pathname, int flags, mode_t mode);` | Ouvre/crée un fichier |
-| `ssize_t read(int fd, void *buf, size_t count);` | Lit des données d’un fichier/socket |
-| `ssize_t write(int fd, const void *buf, size_t count);` | Écrit des données dans un fichier/socket |
-| `int close(int fd);` | Ferme un descripteur |
-| `int access(const char *pathname, int mode);` | Vérifie les permissions d’un fichier |
-| `int stat(const char *pathname, struct stat *statbuf);` | Infos sur un fichier (taille, type, etc.) |
-| `int chdir(const char *path);` | Change le répertoire courant |
-| `DIR *opendir(const char *name);` | Ouvre un répertoire |
-| `struct dirent *readdir(DIR *dirp);` | Lit une entrée de répertoire |
-| `int closedir(DIR *dirp);` | Ferme un répertoire |
-
----
-
-## 🔹 Duplication & contrôle des descripteurs
-| Prototype | Description |
-|-----------|-------------|
-| `int dup(int oldfd);` | Duplique un descripteur |
-| `int dup2(int oldfd, int newfd);` | Duplique un fd vers un numéro précis |
-| `int fcntl(int fd, int cmd, ...);` | Manipule un descripteur (ex: non bloquant) |
-| `int pipe(int pipefd[2]);` | Crée un canal de communication (lecture/écriture) |
-
----
+This project is educational and aims to deepen understanding of how web servers work at  
+a low level, without relying on frameworks or high-level abstractions.
