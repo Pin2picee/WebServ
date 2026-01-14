@@ -219,7 +219,7 @@ Response parseCGIOutput(const std::string &output)
  */
 void Server::handleCGI(const Request &req, const Locations &loc, Client *current) const
 {
-	std::string script_path = this->root + req.path + req.uri.substr(req.path.size());
+	std::string script_path = this->root + req.path;
 	std::string output;
 	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
@@ -244,9 +244,7 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 
 		env_vars.push_back("REQUEST_METHOD=" + req.method);
 		env_vars.push_back("SCRIPT_FILENAME=" + script_path);
-		env_vars.push_back("QUERY_STRING=" + (req.uri.find('?') != std::string::npos
-											   ? req.uri.substr(req.uri.find('?') + 1)
-											   : ""));
+		env_vars.push_back("QUERY_STRING=" + req.query);
 		env_vars.push_back("SERVER_PROTOCOL=HTTP/1.1");
 		std::ostringstream oss;
 		oss << req.body.size();
@@ -341,16 +339,12 @@ Session &getSession(std::map<std::string, Session> &g_sessions, const Request &r
 
 void	deleteSession(std::map<std::string, Session> &g_sessions)
 {
-	std::cout << "faut delete bro" << std::endl;
 	time_t now = getCurrentTime();
-	std::cout << "time now = " << now << std::endl;
 	for (std::map<std::string, Session>::iterator it = g_sessions.begin();
 		it != g_sessions.end(); )
 	{
-		std::cout << "expiry time = " << it->second.expiryTime << std::endl;	
 		if (it->second.expiryTime <= now)
 		{
-			std::cout << "session deleted = ./config/www/uploads/" + it->second.ID  << std::endl;
 			removeDirectoryRecursive("./config/www/uploads/" + it->second.ID);			
 			std::map<std::string, Session>::iterator toDelete = it;
 			++it;                     // avancer AVANT erase
