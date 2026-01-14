@@ -2,7 +2,9 @@
 
 # Webserv
 
-## 📑 Table of Contents
+# <a name="webserv"></a>Webserv
+
+## <a name="table-of-contents"></a>📑 Table of Contents
 - [Description](#description)
 - [Features](#features)
 - [Task Distribution](#task-distribution)
@@ -15,14 +17,14 @@
 
 ---
 
-## 📌 Description
+## <a name="description"></a>📌 Description
 
 **Webserv** is a project from the **42 school curriculum** whose objective is to build a  
 fully functional **HTTP web server from scratch** using **C++98**.
 
 The project focuses on low-level programming concepts such as:
 
-### 🔹 Socket Programming
+### <a name="socket-programming"></a>🔹 Socket Programming
 | Function | Description |
 |----------|-------------|
 | socket | Creates a new socket |
@@ -35,7 +37,7 @@ The project focuses on low-level programming concepts such as:
 
 ---
 
-### 🔹 Multiplexing I/O
+### <a name="multiplexing-io"></a>🔹 Multiplexing I/O
 | Function | Description |
 |----------|-------------|
 | poll | Monitors multiple file descriptors |
@@ -48,7 +50,7 @@ The project focuses on low-level programming concepts such as:
 
 ---
 
-### 🔹 HTTP Request Parsing
+### <a name="http-request-parsing"></a>🔹 HTTP Request Parsing
 | Function | Description |
 |----------|-------------|
 | recv | Receives data from a socket |
@@ -59,7 +61,7 @@ The project focuses on low-level programming concepts such as:
 
 ---
 
-### 🔹 Configuration File Parsing
+### <a name="configuration-file-parsing"></a>🔹 Configuration File Parsing
 | Function | Description |
 |----------|-------------|
 | open | Opens a configuration file |
@@ -70,7 +72,7 @@ The project focuses on low-level programming concepts such as:
 
 ---
 
-### 🔹 CGI Execution
+### <a name="cgi-execution"></a>🔹 CGI Execution
 | Function | Description |
 |----------|-------------|
 | fork | Creates a child process |
@@ -90,7 +92,7 @@ multiple clients simultaneously.
 
 ---
 
-## ✨ Features
+## <a name="features"></a>✨ Features
 
 - HTTP/1.1 request handling  
 - Multiple server blocks via configuration file  
@@ -101,33 +103,36 @@ multiple clients simultaneously.
 
 ---
 
-## 👥 Task Distribution
+## <a name="task-distribution"></a>👥 Task Distribution
 
 ### abelmoha (Lead)
 - Server connection handling using `poll()`, sockets, and client management  
 - HTTP request parsing based on server blocks from the configuration file  
 
 ### locagnio
-- Configuration file parsing  
+- Configuration file parsing
+- autoindex
+- Requests handling
+- Cookies
 - CGI (Common Gateway Interface) handling  
 
 ---
 
-## ⚙️ Instructions
+## <a name="instructions"></a>⚙️ Instructions
 
-### Requirements
+### <a name="requirements"></a>Requirements
 - Linux or macOS  
 - C++ compiler supporting **C++98**  
 - `make`  
 
-### Compilation
+### <a name="compilation"></a>Compilation
 From the root of the repository:
 
 ```bash
 make
 ```
 
-### Execution
+### <a name="Execution"></a>Execution
 
 ```bash
 ./webserv path/to/config_file.conf
@@ -143,7 +148,7 @@ The server will start listening on the ports defined in the configuration file.
 
 ---
 
-## 📖 Authorized System Calls
+## <a name="authorized-system-calls"></a>📖 Authorized System Calls
 
 This project strictly follows the list of authorized system calls provided by the 42  
 subject, including (but not limited to):
@@ -158,7 +163,7 @@ subject, including (but not limited to):
 
 ---
 
-## 📚 Resources
+## <a name="resources"></a>📚 Resources
 
 ### Technical References
 - RFC 7230–7235 — HTTP/1.1 Specification  
@@ -177,7 +182,7 @@ project authors.
 
 ---
 
-## 🏁 Notes
+## <a name="notes"></a>🏁 Notes
 
 This project is educational and aims to deepen understanding of how web servers work at  
 a low level, without relying on frameworks or high-level abstractions.
