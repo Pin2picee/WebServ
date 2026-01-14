@@ -106,6 +106,6 @@ public:
 
 Session	&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res);
 void	removeUploadFileSession(Session &session, std::string deletePath);
-void	deleteSession(void);
+void	deleteSession(std::map<std::string, Session> &g_sessions);
 Response parseCGIOutput(const std::string &output);
 #endif
