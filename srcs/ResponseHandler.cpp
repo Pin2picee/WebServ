@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 01:46:15 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/14 01:48:07 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,8 +51,6 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 	const std::vector<Locations> &locs = _server.getLocations();
 	const Locations *target = findLocation(req, locs);
 
-	if (!session.uploaded_files.size())
-		removeAutoindexButton();
 	if (session.current_page.empty())
 		session.current_page = _server.getRoot() + req.path;
 	if (!target)
