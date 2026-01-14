@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 16:24:36 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/14 16:28:55 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,8 +28,6 @@ Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), han
 	gettimeofday(&this->start, NULL);
 	
 }
-
-Client::Client() {}
 
 Client::~Client() {}
 

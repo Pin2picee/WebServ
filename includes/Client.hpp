@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 16:24:24 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/14 16:28:26 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ class Client
 		size_t		OffsetCgi;
 		size_t		OffsetBodyCgi;
 
-		Client();
 	public :// a changer
 		ResponseHandler	handler;
 	//base
