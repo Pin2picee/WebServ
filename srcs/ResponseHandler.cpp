@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 01:48:07 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/14 02:01:30 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -579,7 +579,7 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	if (req.body.size() > _server.getClientMaxBodySize())
 		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
 	std::string Path = _server.getRoot() + req.path;
-	if (!access(Path.c_str(), F_OK))
+	if (!access(Path.c_str(), F_OK) && loc.cgi)
 		return _server.handleCGI(req, loc, current);
     return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 }
