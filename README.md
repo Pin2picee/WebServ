@@ -1,110 +1,183 @@
+`This project has been created as part of the 42 curriculum by abelmoha, locagnio.`
+
 # Webserv
 
-The **Webserv** project is part of the **42 school curriculum**.  
-Its goal is to build a fully functional **web server from scratch** in **C++98**, which requires manual memory management and data structure handling without relying on modern abstractions.
-
-We are two students collaborating on this project. Clear task distribution and strong communication are essential to meet the objectives: handling HTTP requests, serving static and dynamic files, and developing a performant and robust server.
+## 📑 Table of Contents
+- [Description](#description)
+- [Features](#features)
+- [Task Distribution](#task-distribution)
+- [Instructions](#instructions)
+  - [Requirements](#requirements)
+  - [Compilation](#compilation)
+  - [Execution](#execution)
+- [Authorized System Calls](#authorized-system-calls)
+- [Resources](#resources)
 
 ---
 
-## Task Distribution
+## 📌 Description
+
+**Webserv** is a project from the **42 school curriculum** whose objective is to build a  
+fully functional **HTTP web server from scratch** using **C++98**.
+
+The project focuses on low-level programming concepts such as:
+
+### 🔹 Socket Programming
+| Function | Description |
+|----------|-------------|
+| socket | Creates a new socket |
+| bind | Binds a socket to an IP address and port |
+| listen | Marks a socket as passive to accept connections |
+| accept | Accepts an incoming client connection |
+| connect | Connects a socket to a remote server |
+| setsockopt | Sets options on a socket |
+| getsockname | Retrieves the local address of a socket |
+
+---
+
+### 🔹 Multiplexing I/O
+| Function | Description |
+|----------|-------------|
+| poll | Monitors multiple file descriptors |
+| select | Monitors sets of file descriptors |
+| epoll_create | Creates an epoll instance (Linux) |
+| epoll_ctl | Controls an epoll instance |
+| epoll_wait | Waits for epoll events |
+| kqueue | Creates an event queue (BSD/macOS) |
+| kevent | Registers and waits for events |
+
+---
+
+### 🔹 HTTP Request Parsing
+| Function | Description |
+|----------|-------------|
+| recv | Receives data from a socket |
+| send | Sends data through a socket |
+| read | Reads data from a file or socket |
+| write | Writes data to a file or socket |
+| strerror | Converts error codes to human-readable strings |
+
+---
+
+### 🔹 Configuration File Parsing
+| Function | Description |
+|----------|-------------|
+| open | Opens a configuration file |
+| read | Reads the configuration file |
+| close | Closes a file descriptor |
+| stat | Retrieves file information |
+| access | Checks file permissions |
+
+---
+
+### 🔹 CGI Execution
+| Function | Description |
+|----------|-------------|
+| fork | Creates a child process |
+| execve | Executes a CGI program |
+| waitpid | Waits for a CGI process to terminate |
+| pipe | Creates a communication pipe |
+| dup | Duplicates a file descriptor |
+| dup2 | Redirects standard input/output |
+| chdir | Changes the working directory |
+
+No external libraries or modern C++ abstractions are allowed, requiring careful memory  
+management and strict adherence to system-level APIs.
+
+The final goal is to create a **robust, performant, and standards-compliant web server**  
+capable of serving static content, handling dynamic requests via CGI, and managing  
+multiple clients simultaneously.
+
+---
+
+## ✨ Features
+
+- HTTP/1.1 request handling  
+- Multiple server blocks via configuration file  
+- Static file serving  
+- CGI support (e.g. PHP)  
+- Non-blocking I/O with `poll()`  
+- Proper error handling and HTTP status codes  
+
+---
+
+## 👥 Task Distribution
 
 ### abelmoha (Lead)
-- **Server connection handling** using `poll()`, **sockets**, and client management  
-- **HTTP request parsing**, based on the different **server blocks** defined in the configuration file
+- Server connection handling using `poll()`, sockets, and client management  
+- HTTP request parsing based on server blocks from the configuration file  
 
 ### locagnio
-- **Configuration file parsing**  
-- **CGI (Common Gateway Interface) handling**
+- Configuration file parsing  
+- CGI (Common Gateway Interface) handling  
 
 ---
 
-# 📖 Authorized System Calls Reference (Webserv)
+## ⚙️ Instructions
 
-## 🔹 Process Management
-| Prototype | Description |
-|----------|-------------|
-| `pid_t fork(void);` | Creates a new process by duplicating the current one |
-| `int execve(const char *pathname, char *const argv[], char *const envp[]);` | Executes a program, replacing the current process |
-| `pid_t waitpid(pid_t pid, int *status, int options);` | Waits for a child process to terminate |
-| `int kill(pid_t pid, int sig);` | Sends a signal to a process |
-| `void (*signal(int signum, void (*handler)(int)))(int);` | Sets a signal handler |
+### Requirements
+- Linux or macOS  
+- C++ compiler supporting **C++98**  
+- `make`  
 
----
+### Compilation
+From the root of the repository:
 
-## 🔹 Error Handling
-| Prototype | Description |
-|----------|-------------|
-| `char *strerror(int errnum);` | Returns a string describing an error code |
-| `const char *gai_strerror(int errcode);` | Returns an error string for `getaddrinfo` |
-| `extern int errno;` | Contains the last system error code |
+```bash
+make
+```
 
----
+### Execution
 
-## 🔹 Networking & Sockets
-| Prototype | Description |
-|----------|-------------|
-| `int socket(int domain, int type, int protocol);` | Creates a socket (TCP/UDP) |
-| `int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);` | Binds a socket to an IP address and port |
-| `int listen(int sockfd, int backlog);` | Puts a socket into listening mode |
-| `int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);` | Accepts an incoming connection |
-| `int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);` | Connects a socket to a server |
-| `ssize_t send(int sockfd, const void *buf, size_t len, int flags);` | Sends data through a socket |
-| `ssize_t recv(int sockfd, void *buf, size_t len, int flags);` | Receives data from a socket |
-| `int socketpair(int domain, int type, int protocol, int sv[2]);` | Creates a pair of connected sockets |
-| `int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);` | Sets socket options |
-| `int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);` | Gets the local socket address |
-| `struct protoent *getprotobyname(const char *name);` | Retrieves protocol information (TCP/UDP) |
-| `int getaddrinfo(const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res);` | Resolves a hostname to an IP/port |
-| `void freeaddrinfo(struct addrinfo *res);` | Frees memory allocated by `getaddrinfo` |
+```bash
+./webserv path/to/config_file.conf
+```
+
+Example:
+
+```bash
+./webserv configs/default.conf
+```
+
+The server will start listening on the ports defined in the configuration file.
 
 ---
 
-## 🔹 Byte Order Conversion (Endianness)
-| Prototype | Description |
-|----------|-------------|
-| `uint16_t htons(uint16_t hostshort);` | Converts a 16-bit integer to network byte order |
-| `uint32_t htonl(uint32_t hostlong);` | Converts a 32-bit integer to network byte order |
-| `uint16_t ntohs(uint16_t netshort);` | Converts a 16-bit integer from network to host |
-| `uint32_t ntohl(uint32_t netlong);` | Converts a 32-bit integer from network to host |
+## 📖 Authorized System Calls
+
+This project strictly follows the list of authorized system calls provided by the 42  
+subject, including (but not limited to):
+
+- Process management: `fork`, `execve`, `waitpid`  
+- Networking: `socket`, `bind`, `listen`, `accept`, `send`, `recv`  
+- Multiplexing: `poll`, `select`  
+- File handling: `open`, `read`, `write`, `close`  
+- CGI-related calls: `pipe`, `dup`, `dup2`  
+
+(See subject PDF for the complete list.)
 
 ---
 
-## 🔹 Multiplexing & I/O
-| Prototype | Description |
-|----------|-------------|
-| `int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);` | Monitors multiple file descriptors |
-| `int poll(struct pollfd *fds, nfds_t nfds, int timeout);` | Modern alternative to `select` |
-| `int epoll_create(int size);` | Creates an epoll instance (Linux) |
-| `int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);` | Adds/modifies/removes a file descriptor in epoll |
-| `int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);` | Waits for epoll events |
-| `int kqueue(void);` | Creates an event queue (BSD/macOS) |
-| `int kevent(int kq, const struct kevent *changelist, int nchanges, const struct kevent *eventlist, int nevents, const struct timespec *timeout);` | Manages and waits for events with kqueue |
+## 📚 Resources
+
+### Technical References
+- RFC 7230–7235 — HTTP/1.1 Specification  
+- Linux manual pages (`man 2`, `man 3`)  
+- Beej’s Guide to Network Programming  
+- GNU libc documentation  
+
+### AI Usage Disclosure
+AI tools (ChatGPT) were used **as an assistance tool only**, specifically for:
+- Understanding error messages and debugging compilation issues  
+- Clarifying C++98 language rules and system call behavior  
+- Improving documentation clarity (README wording and structure)  
+
+All architectural decisions, implementation, and code writing were performed by the  
+project authors.
 
 ---
 
-## 🔹 Files & Directories
-| Prototype | Description |
-|----------|-------------|
-| `int open(const char *pathname, int flags, mode_t mode);` | Opens or creates a file |
-| `ssize_t read(int fd, void *buf, size_t count);` | Reads data from a file/socket |
-| `ssize_t write(int fd, const void *buf, size_t count);` | Writes data to a file/socket |
-| `int close(int fd);` | Closes a file descriptor |
-| `int access(const char *pathname, int mode);` | Checks file permissions |
-| `int stat(const char *pathname, struct stat *statbuf);` | Retrieves file information |
-| `int chdir(const char *path);` | Changes the current working directory |
-| `DIR *opendir(const char *name);` | Opens a directory |
-| `struct dirent *readdir(DIR *dirp);` | Reads a directory entry |
-| `int closedir(DIR *dirp);` | Closes a directory |
+## 🏁 Notes
 
----
-
-## 🔹 File Descriptor Duplication & Control
-| Prototype | Description |
-|----------|-------------|
-| `int dup(int oldfd);` | Duplicates a file descriptor |
-| `int dup2(int oldfd, int newfd);` | Duplicates a file descriptor to a specific number |
-| `int fcntl(int fd, int cmd, ...);` | Manipulates a file descriptor (e.g. non-blocking mode) |
-| `int pipe(int pipefd[2]);` | Creates a unidirectional communication channel |
-
----
+This project is educational and aims to deepen understanding of how web servers work at  
+a low level, without relying on frameworks or high-level abstractions.
