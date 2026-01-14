@@ -233,6 +233,7 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		close(pipe_out[0]);
 		close(pipe_in[1]);
 
+		signal(SIGPIPE, SIG_IGN);
 		signal(SIGINT, SIG_IGN);   // ← Ignore les signaux 
 		dup2(pipe_out[1], STDOUT_FILENO);
 		dup2(pipe_in[0], STDIN_FILENO);
