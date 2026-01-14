@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 23:00:30 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/14 23:20:05 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -483,8 +483,7 @@ int	Monitor::CGI_engine(int i)
     {
         // Client détruit mais tab_CGI pas nettoyé → nettoyer maintenant
         tab_CGI.erase(all_fd[i].fd);
-		remove_fd(i);
-        return -1;
+        return 0;
     }
 	if (it != tab_CGI.end())
 	{
@@ -579,7 +578,7 @@ void	Monitor::Monitoring()
 		{
 			for (size_t i = 0; i < nb_fd;)//parcours les socket
 			{
-				std::cout << "i : " << i << " nb_fd : " << nb_fd << " nb_fd_server: " << nb_fd_server << " le fd -> " << all_fd[i].fd << " revents: " << all_fd[i].revents << std::endl;
+				//std::cout << "i : " << i << " nb_fd : " << nb_fd << " nb_fd_server: " << nb_fd_server << " le fd -> " << all_fd[i].fd << " revents: " << all_fd[i].revents << std::endl;
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
 				if (all_fd[i].fd < 0)
