@@ -41,11 +41,11 @@ struct Request
  */
 struct Response
 {
-	std::string	version;
-	int			status_code;
-	std::string	content_type;
-	std::string	body;
-	std::vector<std::string> headers;
+	std::string					version;
+	int							status_code;
+	std::string					content_type;
+	std::string					body;
+	std::vector<std::string>	headers;
 
 	Response() : version("HTTP/1.1"), status_code(200), content_type("text/html"){};
 };
@@ -56,7 +56,6 @@ void		displayResponseInfo(const Response &res);
 
 time_t		getCurrentTime();
 std::string	generateSessionId(void);
-void		removeAutoindexButton();
 void		parseCookies(Request &req);
 void		init_default_errors(Server &conf);
 std::string urlDecode(const std::string &str);
@@ -68,7 +67,6 @@ std::string	strip_semicolon(const std::string &s);
 std::string makeJsonError(const std::string &msg);
 std::string getFileName(const std::string &fileBody);
 void		resetUploadsDir(const std::string &uploadsPath);
-void		addAutoindexButton(const std::string &targetDir);
 bool		removeDirectoryRecursive(const std::string &path);
 std::string shortenFileName(const std::string &name, size_t maxLength);
 std::string getFileClass(const std::string &name, const struct stat &st);
@@ -78,9 +76,9 @@ void 		findHtmlFiles(const std::string &action, const std::string &path);
 
 enum StripSide { LEFT, RIGHT, BOTH };
 
-void stripe(std::string &s, StripSide side = BOTH);
-void stripe(std::string &s, char c, StripSide side = BOTH);
-void stripe(std::string &s, const std::string &set, StripSide side = BOTH);
+void		stripe(std::string &s, StripSide side = BOTH);
+void		stripe(std::string &s, char c, StripSide side = BOTH);
+void		stripe(std::string &s, const std::string &set, StripSide side = BOTH);
 
 /**
  * @brief
@@ -105,4 +103,5 @@ extern std::vector<Socket *> all_socket;
 extern volatile sig_atomic_t	on;
 
 void	handle_sigint(int signum);
+
 #endif

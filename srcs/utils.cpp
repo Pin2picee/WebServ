@@ -23,57 +23,54 @@ std::string strip_semicolon(const std::string &s)
  */
 void init_default_errors(Server& conf)
 {
-    std::map<int, std::string>& errors = conf.getErrorPagesRef();
-    std::string errorDir = conf.getRoot() + "/" + conf.getErrorDir();
-    DIR* dir = opendir(errorDir.c_str());
-    if (!dir)
-        return;
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        std::string filename = entry->d_name;
-        if (filename == "." || filename == "..")
-            continue;
-        if (filename.size() < 8 || filename.substr(filename.size() - 5) != ".html")
-            continue;
-        std::string codeStr = filename.substr(0, filename.size() - 5);
-        int code = std::atoi(codeStr.c_str());
-        if (code < 100 || code > 599)
-            continue;
-        std::string fullPath = errorDir + "/" + filename;
-        struct stat st;
-        if (stat(fullPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
-            errors[code] = fullPath;
-    }
-    closedir(dir);
+	std::map<int, std::string>& errors = conf.getErrorPagesRef();
+	std::string errorDir = conf.getRoot() + "/" + conf.getErrorDir();
+	DIR* dir = opendir(errorDir.c_str());
+	if (!dir)
+		return;
+	struct dirent* entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string filename = entry->d_name;
+		if (filename == "." || filename == ".." || filename.size() < 8
+			|| filename.substr(filename.size() - 5) != ".html")
+			continue;
+		std::string codeStr = filename.substr(0, filename.size() - 5);
+		int code = std::atoi(codeStr.c_str());
+		if (code < 100 || code > 599)
+			continue;
+		std::string fullPath = errorDir + "/" + filename;
+		struct stat st;
+		if (stat(fullPath.c_str(), &st) == 0 && S_ISREG(st.st_mode))
+			errors[code] = fullPath;
+	}
+	closedir(dir);
 }
 
 bool removeDirectoryRecursive(const std::string &path)
 {
-    DIR *dir = opendir(path.c_str());
-    if (!dir)
-        return false;
+	DIR *dir = opendir(path.c_str());
+	if (!dir)
+		return false;
 
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        std::string name = entry->d_name;
-        if (name == "." || name == "..")
-            continue;
-        std::string fullPath = path + "/" + name;
-        struct stat entryStat;
-        if (stat(fullPath.c_str(), &entryStat) == -1)
-            continue;
-        if (S_ISDIR(entryStat.st_mode))
-        {
-            removeDirectoryRecursive(fullPath);
-            rmdir(fullPath.c_str());
-        }
-        else
-            unlink(fullPath.c_str());
-    }
-    closedir(dir);
-    return (rmdir(path.c_str()) == 0);
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string name = entry->d_name;
+		std::string fullPath = path + "/" + name;
+		struct stat entryStat;
+		if (name == "." || name == ".." || stat(fullPath.c_str(), &entryStat) == -1)
+			continue;
+		if (S_ISDIR(entryStat.st_mode))
+		{
+			removeDirectoryRecursive(fullPath);
+			rmdir(fullPath.c_str());
+		}
+		else
+			unlink(fullPath.c_str());
+	}
+	closedir(dir);
+	return (rmdir(path.c_str()) == 0);
 }
 
 
@@ -97,11 +94,9 @@ void	handle_sigint(int signum)
 void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
 {
 	dest.clear();
-	while (++i < tokens.size() &&
-		   tokens[i][tokens[i].size() - 1] != ';')
+	while (++i < tokens.size() && tokens[i][tokens[i].size() - 1] != ';')
 		dest.push_back(tokens[i]);
-	if (i < tokens.size() &&
-		tokens[i][tokens[i].size() - 1] == ';')
+	if (i < tokens.size() && tokens[i][tokens[i].size() - 1] == ';')
 		dest.push_back(strip_semicolon(tokens[i]));
 }
 
@@ -113,7 +108,6 @@ std::string readFile(const std::string& filepath)
 	std::ifstream ifs(filepath.c_str());
 	if (!ifs)
 		throw std::runtime_error("Cannot open file: " + filepath);
-
 	std::ostringstream buf;
 	buf << ifs.rdbuf();
 	return buf.str();
@@ -162,22 +156,19 @@ size_t convertSize(const std::string &input)
 			str = str.substr(0, str.size() - 1);
 	}
 	for (size_t i = 0; i < str.size(); ++i)
-	{
 		if (!std::isdigit(static_cast<unsigned char>(str[i])))
 			throw std::invalid_argument("Invalid number part in size");
-	}
 	char *end;
 	size_t base = std::strtoul(str.c_str(), &end, 10);
 	if (*end != '\0')
 		throw std::invalid_argument("Invalid number conversion");
-
 	return static_cast<size_t>(base) * multiplier;
 }
 
 void displayRequestInfo(const Request &req)
 {
 	std::cout << "------- displayRequestInfo :" << std::endl;
-    std::cout << RED "Version: " RESET << req.version << std::endl;
+	std::cout << RED "Version: " RESET << req.version << std::endl;
 	std::cout << RED "Method: " RESET << req.method << std::endl;
 	std::cout << RED "URI: " RESET << req.uri << std::endl;
 	std::cout << RED "Path: " RESET << req.path << std::endl;
@@ -308,8 +299,6 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 		cookie += "; HttpOnly";
 	cookie += "; SameSite=Lax";
 	(void)secure;
-	/* if (secure)
-		cookie += "; Secure"; */
 	res.headers.push_back(cookie);
 	return maxAgeSeconds;
 }
@@ -330,175 +319,94 @@ bool pathExists(const std::string &path)
 	return stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
 }
 
-void addAutoindexButton(const std::string &targetDir)
-{
-	std::string indexPath = "config/www/";
-	if (!pathExists(indexPath + targetDir))
-		return;
-	const char* indexPaths[] = { "index.html", "upload.html", "delete_file.html" };
-	for (int i = 0; i < 3; ++i)
-	{
-		indexPath = "config/www/";
-		indexPath += indexPaths[i];
-		std::ifstream file(indexPath.c_str());
-		if (!file)
-		{
-			std::cerr << "Can't open " << indexPath << std::endl;
-			continue;
-		}
-		std::stringstream buffer;
-		buffer << file.rdbuf();
-		std::string html = buffer.str();
-		file.close();
-		std::string buttonHtml = "  <a href=\"/uploads?dir=" + targetDir + "\" class=\"button\">Watch autoindex</a>\n";
-		if (html.find(buttonHtml) != std::string::npos)
-            return ;
-		size_t pos = html.find("</body>");
-		if (pos != std::string::npos)
-			html.insert(pos, buttonHtml);
-		std::ofstream outFile(indexPath.c_str());
-		if (outFile)
-			outFile << html;
-	}
-}
-
-void removeAutoindexButton()
-{
-	const char* indexPaths[] = { "index.html", "upload.html", "delete_file.html" };
-	for (int i = 0; i < 3; i++)
-	{
-		std::string indexPath = "config/www/";
-		indexPath += indexPaths[i];
-
-		std::ifstream file(indexPath.c_str());
-		if (!file)
-		{
-			std::cerr << "Can't open " << indexPath << std::endl;
-			continue;
-		}
-		std::stringstream buffer;
-		buffer << file.rdbuf();
-		std::string html = buffer.str();
-		file.close();
-
-		std::string startTag = "<a href=\"/autoindex?";
-		size_t pos = html.find(startTag);
-		while (pos != std::string::npos)
-		{
-			size_t endPos = html.find("</a>", pos);
-			if (endPos != std::string::npos)
-			{
-				endPos += 5; // longueur de "</a>\n"
-				html.erase(pos, endPos - pos);
-			}
-			pos = html.find(startTag, pos);
-		}
-		std::ofstream outFile(indexPath.c_str());
-		if (outFile)
-			outFile << html;
-	}
-}
-
 std::string cleanPath(const std::string &path)
 {
-    if (path.empty())
+	if (path.empty())
 		return "";
-    std::string clean;
-    clean.reserve(path.size());
-    bool lastWasSlash = false;
-    for (size_t i = 0; i < path.size(); ++i)
+	std::string clean;
+	clean.reserve(path.size());
+	bool lastWasSlash = false;
+	for (size_t i = 0; i < path.size(); ++i)
 	{
-        char c = path[i];
-        if (c == '/')
+		char c = path[i];
+		if (c == '/')
 		{
-            if (!lastWasSlash)
+			if (!lastWasSlash)
 			{
-                clean += c;
-                lastWasSlash = true;
-            }
-        }
+				clean += c;
+				lastWasSlash = true;
+			}
+		}
 		else
 		{
-            clean += c;
-            lastWasSlash = false;
-        }
-    }
-    if (clean.size() > 1 && clean[clean.size() - 1] == '/')
-        clean.erase(clean.size() - 1);
-    return clean;
+			clean += c;
+			lastWasSlash = false;
+		}
+	}
+	if (clean.size() > 1 && clean[clean.size() - 1] == '/')
+		clean.erase(clean.size() - 1);
+	return clean;
 }
 
 std::string shortenFileName(const std::string &name, size_t maxLength)
 {
-    if (name.length() <= maxLength)
-        return name;
-
-    const std::string ellipsis = "(...)";
-    size_t keep = (maxLength - ellipsis.length()) / 2;
-
-    std::string shortened = name.substr(0, keep) + ellipsis + name.substr(name.length() - keep);
-    return shortened;
+	if (name.length() <= maxLength)
+		return name;
+	const std::string ellipsis = "(...)";
+	size_t keep = (maxLength - ellipsis.length()) / 2;
+	return name.substr(0, keep) + ellipsis + name.substr(name.length() - keep);
 }
 
 std::string getFileClass(const std::string &name, const struct stat &st)
 {
-    if (S_ISDIR(st.st_mode))
-        return "folder";
+	if (S_ISDIR(st.st_mode))
+		return "folder";
 
-    size_t dotPos = name.find_last_of('.');
-    if (dotPos != std::string::npos)
+	size_t dotPos = name.find_last_of('.');
+	if (dotPos != std::string::npos)
 	{
-        std::string ext = name.substr(dotPos + 1);
-        for (size_t i = 0; i < ext.size(); ++i)
-            ext[i] = std::tolower(ext[i]);
-        if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif" || ext == "bmp")
-            return "image";
-        else if (ext == "mp4" || ext == "avi" || ext == "mkv" || ext == "mov")
-            return "video";
-        else if (ext == "pdf")
-            return "pdf";
-        else if (ext == "txt" || ext == "md" || ext == "cpp" || ext == "h")
-            return "text";
-        else
-            return "file";
-    }
-    return "file";
+		std::string ext = name.substr(dotPos + 1);
+		for (size_t i = 0; i < ext.size(); ++i)
+			ext[i] = std::tolower(ext[i]);
+		if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif" || ext == "bmp")
+			return "image";
+		else if (ext == "mp4" || ext == "avi" || ext == "mkv" || ext == "mov")
+			return "video";
+		else if (ext == "pdf")
+			return "pdf";
+		else if (ext == "txt" || ext == "md" || ext == "cpp" || ext == "h")
+			return "text";
+	}
+	return "file";
 }
 // Mets en ReadOnly les fichiers .html du serveur et les remets en normal selon l'action
 void findHtmlFiles(const std::string &action, const std::string &path)
 {
-    DIR *dir = opendir(path.c_str());
-    if (!dir)
-    {
-        std::cerr << "Cannot open directory: " << path << std::endl;
-        return;
-    }
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL)
-    {
-        std::string name(entry->d_name);
-        if (name == "." || name == "..")
-            continue;
-        std::string fullPath = path + "/" + name;
-        struct stat st;
-        if (stat(fullPath.c_str(), &st) == -1)
-        {
-            std::cerr << "Cannot stat: " << fullPath << std::endl;
-            continue;
-        }
-        if (S_ISDIR(st.st_mode))
-            findHtmlFiles(action, fullPath);
-        else if (S_ISREG(st.st_mode))
-        {
-            if (name.size() >= 5 &&
-                name.substr(name.size() - 5) == ".html")
-            {
-                if (action == "open" && chmod(fullPath.c_str(), 0777) == -1)
-                    perror("chmod failed");
-				if (action == "close" && chmod(fullPath.c_str(), 0444) == -1)
-                    perror("chmod failed");
-            }
-        }
-    }
-    closedir(dir);
+	DIR *dir = opendir(path.c_str());
+	if (!dir)
+	{
+		std::cerr << "Cannot open directory: " << path << std::endl;
+		return;
+	}
+	struct dirent *entry;
+	while ((entry = readdir(dir)) != NULL)
+	{
+		std::string name(entry->d_name);
+		if (name == "." || name == "..")
+			continue;
+		std::string fullPath = path + "/" + name;
+		struct stat st;
+		if (stat(fullPath.c_str(), &st) == -1)
+		{
+			std::cerr << "Cannot stat: " << fullPath << std::endl;
+			continue;
+		}
+		if (S_ISDIR(st.st_mode))
+			findHtmlFiles(action, fullPath);
+		else if (S_ISREG(st.st_mode) && name.size() >= 5 && name.substr(name.size() - 5) == ".html"
+				&& ((action == "open" && chmod(fullPath.c_str(), 0777) == -1)
+					|| (action == "close" && chmod(fullPath.c_str(), 0444) == -1)))
+			perror("chmod failed");
+	}
+	closedir(dir);
 }
