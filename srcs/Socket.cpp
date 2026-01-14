@@ -61,7 +61,7 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 	else if (listen(this->Fd, SOMAXCONN) < 0)// 2emeparam= backlog file d'attente dont la connexion n'est pas encore accepter
 		throw SocketError();
 	int ancien_flags = fcntl(this->Fd, F_GETFL);
-	int res = fcntl(this->Fd, ancien_flags | O_NONBLOCK);
+	int res = fcntl(this->Fd, F_SETFL, ancien_flags | O_NONBLOCK);
 	if (ancien_flags == -1 || res == -1)
 		throw SocketError();
 }
