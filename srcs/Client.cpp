@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:56 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/13 23:11:45 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/14 00:51:35 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,5 +368,9 @@ Request	Client::ExtractRequest()
 	parseCookies(tmp);
 	pos += 4;
 	tmp.body = request.substr(pos);
+	std::cout << "=== DEBUG PARSING ===" << std::endl;
+	std::cout << "URI brute : [" << tmp.uri << "]" << std::endl;
+	std::cout << "Path      : [" << tmp.path << "]" << std::endl;
+	std::cout << "Query     : [" << tmp.query << "]" << std::endl;
 	return (tmp);
 }
