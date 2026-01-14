@@ -144,7 +144,7 @@ make re
 ### <a name="Execution"></a>Execution
 
 ```bash
-./webserv \(path/to/config_file.conf\)
+./webserv (path/to/config_file.conf)
 ```
 
 Example:
