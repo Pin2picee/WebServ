@@ -66,8 +66,8 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 void ResponseHandler::handleGet(Response &res, const Locations &loc, const Request &req, Session &session, Client *current)
 {
 	std::string	full_path = (loc.root[0] == '/')
-							? cleanPath(loc.root + "/" + req.uri.substr(loc.path.size()))
-							: cleanPath(_server.getRoot() + "/" + loc.root + "/" + req.uri.substr(loc.path.size()));
+							? cleanPath(loc.root + "/" + req.path.substr(loc.path.size()))
+							: cleanPath(_server.getRoot() + "/" + loc.root + "/" + req.path.substr(loc.path.size()));
 
 	full_path = urlDecode(full_path);
 	if (std::find(loc.methods.begin(), loc.methods.end(), "GET") == loc.methods.end())
@@ -107,7 +107,7 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 	{
 		std::ifstream end_ifs(full_path.c_str(), std::ios::binary);
 		if (!end_ifs)
-			return makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req);
+			return (makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req));
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
 				return _server.handleCGI(req, loc, current);
