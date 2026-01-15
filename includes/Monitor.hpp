@@ -36,7 +36,7 @@ class Monitor
 		void	AddCgiPollFd(Client *current, int i);
 		void	AfterSend(Client *current, int i, int nb_send);
 		void 	updateClientCookies(Client &client, const Response &resp);
-
+		int 	searchClient(Client *my_client, int i);
 	public :
 		Monitor(std::vector<Socket *> tab);
 		~Monitor();
