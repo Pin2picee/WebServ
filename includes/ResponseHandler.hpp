@@ -33,6 +33,9 @@ private:
 	std::string		generateDeleteFileForm(const Session &session, const std::string &uploadRoot = "./config/www/uploads");
 	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
 public:
+
+	// Constructors / Destructor
+
 	~ResponseHandler();
 	ResponseHandler(const Server &server);
 	ResponseHandler(const ResponseHandler &copy);

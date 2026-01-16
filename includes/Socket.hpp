@@ -17,30 +17,36 @@ class Server;
  */
 class Socket
 {
-	private :
-		int					Fd;
-		struct sockaddr_in	address1;
-		size_t				_port;
-		std::string			_ip;
-		Server				*BlockServer;
+private :
+	int					Fd;
+	struct sockaddr_in	address1;
+	size_t				_port;
+	std::string			_ip;
+	Server				*BlockServer;
 
-		Socket();
-		void		set_socket_addr();
-	public:
-		Socket(std::string ip, int port, Server *ref);
-		~Socket();
-		Socket(const Socket &copy);
-		Socket &operator=(const Socket &assignement);
+	Socket();
+	void		set_socket_addr();
+public:
+
+	// Constructors / Destructor
+
+	Socket(std::string ip, int port, Server *ref);
+	~Socket();
+	Socket(const Socket &copy);
+	Socket &operator=(const Socket &assignement);
 	
 	// Getters
 
-		int			getFd(void) const;
-		Server		*getBlockServ(void);
-		size_t		getPort(void) const;
+	int			getFd(void) const;
+	Server		*getBlockServ(void);
+	size_t		getPort(void) const;
 	
-	// Utils
+	// Util
 
-		uint32_t	ParseIp(std::string ip);
+	uint32_t	ParseIp(std::string ip);
+
+	// Throw
+
 	class	SocketError : public std::exception
 	{
 		const char *what(void) const throw ();

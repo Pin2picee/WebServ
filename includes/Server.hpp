@@ -76,10 +76,13 @@ private:
 	std::string											error_dir;
 	std::vector<Locations>								locations;
 public:
+
+	// Constructors / Destructor
+
 	Server();
-	~Server();
 	Server &operator=(const Server &assignement);
 	Server(const Server &copy);
+	~Server();
 
 	// Getters
 

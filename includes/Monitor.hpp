@@ -29,18 +29,18 @@ private :
 	size_t					nb_fd_server;
 	std::map<int, Client>	clients;
 	std::map<int, Socket *>	all_sockets;
-	struct  pollfd			all_fd[200000];
+	struct pollfd			all_fd[200000];
 	std::map<int, Client *>	tab_CGI;
 
 	// Internal helpers
 
 	Monitor();
-	void 	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);
+	void	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);
 	int		new_clients(int i);
 	int		new_request(int i);
 	int		test_read(ssize_t count);
 	int		deconnexion(int i);
-	void 	remove_fd(int index);
+	void	remove_fd(int index);
 	void	Timeout();
 	void	clean_CGI();
 
@@ -56,13 +56,16 @@ private :
 	// Client lifecycle
 
 	void	AfterSend(Client *current, int i, int nb_send);
-	void 	updateClientCookies(Client &client, const Response &resp);
-	int 	searchClient(Client *my_client, int i);
+	void	updateClientCookies(Client &client, const Response &resp);
+	int		searchClient(Client *my_client, int i);
 public :
+
+	// Constructors / Destructor
+
 	Monitor(std::vector<Socket *> tab);
-	~Monitor();
 	Monitor(const Monitor &copy);
 	Monitor &operator=(const Monitor &copy);
+	~Monitor();
 
 	// Public interface
 

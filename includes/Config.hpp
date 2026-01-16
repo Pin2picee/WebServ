@@ -29,10 +29,13 @@ private:
 	void						CreateSocket(void);
 
 public:
+
+	// Constructors / Destructor
+
 	Config();
-	~Config();
 	Config(const Config& copy);
 	Config						&operator=(const Config &assignement);
+	~Config();
 	
 	// Parsing
 
