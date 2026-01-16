@@ -86,5 +86,4 @@
 // Binary / Misc
 #define MIME_APPLICATION_OCTET_STREAM "application/octet-stream"
 
-
 #endif

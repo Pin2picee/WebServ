@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:24:58 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:59:17 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,13 +49,13 @@ int main(int argc, char **argv)
 		Monitor	Moniteur(all_socket);
 		Moniteur.Monitoring();
 		for (std::vector<Socket*>::iterator it = all_socket.begin(); it != all_socket.end(); ++it)
-    	{
+		{
 			if (*it)
 			{
 				close((*it)->getFd());
 				delete *it;
 			}
-    	}
+		}
 	}
 	catch (std::exception &e)
 	{

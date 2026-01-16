@@ -596,8 +596,8 @@ void findHtmlFiles(const std::string &action, const std::string &path)
 static bool inSet(char c, const std::string &set)
 {
 	for (size_t i = 0; i < set.size(); ++i)
-        if (c == set[i])
-            return true;
+		if (c == set[i])
+			return true;
 	return false;
 }
 

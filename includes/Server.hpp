@@ -16,9 +16,9 @@ class Client;
 struct Session
 {
 	std::string					ID;
-    std::string					current_page;
-    std::vector<std::string>	uploaded_files;
-    time_t						expiryTime;
+	std::string					current_page;
+	std::vector<std::string>	uploaded_files;
+	time_t						expiryTime;
 };
 
 /**
@@ -49,8 +49,7 @@ struct Locations
 
 	Locations()
 		: cgi(false), sensitive(false), autoindex(false),
-		  root(""), path(""),
-		  upload_dir(""), cgi_extension("") {}
+		  root(""), path(""), upload_dir(""), cgi_extension("") {}
 };
 
 struct Response;
@@ -81,6 +80,7 @@ public:
 	~Server();
 	Server &operator=(const Server &assignement);
 	Server(const Server &copy);
+
 	// Getters
 
 	const std::string&									getRoot() const;
@@ -96,16 +96,18 @@ public:
 
 	// Setters
 
-	void 												setRoot(const std::string &r);
-	void 												setClientMaxBodySize(size_t value);
+	void												setRoot(const std::string &r);
+	void												setClientMaxBodySize(size_t value);
 
 	// Utils
 
-	void 												addLocation(const Locations& loc);
-	void 												addListen(const std::string& ip, int port);
-	void 												addErrorDir(const std::string& path);
-	void 												handleCGI(const Request &req, const Locations &loc, Client *current) const;
+	void												addLocation(const Locations& loc);
+	void												addListen(const std::string& ip, int port);
+	void												addErrorDir(const std::string& path);
+	void												handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
+
+// Session helpers
 
 Session		&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port);
 void		removeUploadFileSession(Session &session, std::string deletePath);

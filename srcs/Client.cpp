@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 03:56:34 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:58:49 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ void	Client::resetAfterCGI()
  *
  * @param body Request body content.
  */
-void			Client::setBody(std::string body)
+void	Client::setBody(std::string body)
 {
 	_body = body;
 }
@@ -146,7 +146,7 @@ void			Client::setBody(std::string body)
  *
  * @param pid CGI process ID.
  */
-void			Client::setCgiPid(pid_t pid)
+void	Client::setCgiPid(pid_t pid)
 {
 	_pid = pid;
 }
@@ -157,7 +157,7 @@ void			Client::setCgiPid(pid_t pid)
  *
  * @param etat Boolean state.
  */
-void			Client::setResponseGenerate(bool etat)
+void	Client::setResponseGenerate(bool etat)
 {
 	this->ResponseGenerate = etat;
 }
@@ -256,7 +256,7 @@ void	Client::setOutCGI()
  *
  * @param fd Pipe file descriptor.
  */
-void			Client::setPipeIn(int fd)
+void	Client::setPipeIn(int fd)
 {
 	this->fd_pipe_in = fd;
 }
@@ -267,7 +267,7 @@ void			Client::setPipeIn(int fd)
  *
  * @param fd Pipe file descriptor.
  */
-void			Client::setPipeOut(int fd)
+void	Client::setPipeOut(int fd)
 {
 	this->fd_pipe_out = fd;
 }
@@ -276,7 +276,7 @@ void			Client::setPipeOut(int fd)
  * @brief
  * Stores the CGI start time.
  */
-void			Client::setCGiStartTime(void)
+void	Client::setCGiStartTime(void)
 {
 	gettimeofday(&this->cgi_start_time, NULL);
 }
@@ -287,7 +287,7 @@ void			Client::setCGiStartTime(void)
  *
  * @param booleen Boolean state.
  */
-void			Client::setPipeAddPoll(bool	booleen)
+void	Client::setPipeAddPoll(bool	booleen)
 {
 	this->PipeAddPoll = booleen;
 }
@@ -298,7 +298,7 @@ void			Client::setPipeAddPoll(bool	booleen)
  *
  * @param nb Number of bytes written.
  */
-void			Client::AddOffsetBodyCgi(size_t nb)
+void	Client::AddOffsetBodyCgi(size_t nb)
 {
 	this->OffsetBodyCgi += nb;
 }
@@ -309,7 +309,7 @@ void			Client::AddOffsetBodyCgi(size_t nb)
  *
  * @return Reference to the offset value.
  */
-const size_t			&Client::getOffsetBodyCgi() const
+const size_t	&Client::getOffsetBodyCgi() const
 {
 	return (this->OffsetBodyCgi);
 }
@@ -320,7 +320,7 @@ const size_t			&Client::getOffsetBodyCgi() const
  *
  * @return Reference to the state.
  */
-const bool				&Client::getPipeAddPoll(void) const
+const bool	&Client::getPipeAddPoll(void) const
 {
 	return (this->PipeAddPoll);
 }
@@ -331,7 +331,7 @@ const bool				&Client::getPipeAddPoll(void) const
  *
  * @return Reference to the body string.
  */
-const std::string		&Client::getBody(void) const
+const std::string	&Client::getBody(void) const
 {
 	return (this->_body);
 }
@@ -342,7 +342,7 @@ const std::string		&Client::getBody(void) const
  *
  * @return Reference to the PID.
  */
-const pid_t			&Client::getCgiPid(void) const
+const pid_t	&Client::getCgiPid(void) const
 {
 	return (this->_pid);
 }
@@ -353,7 +353,7 @@ const pid_t			&Client::getCgiPid(void) const
  *
  * @return Reference to the state.
  */
-const bool			&Client::getResponseGenerate() const
+const bool	&Client::getResponseGenerate() const
 {
 	return (this->ResponseGenerate);
 }
@@ -364,7 +364,7 @@ const bool			&Client::getResponseGenerate() const
  *
  * @return Reference to the state.
  */
-const bool			&Client::getInCGI() const
+const bool	&Client::getInCGI() const
 {
 	return (this->InCgi);
 }
@@ -397,7 +397,7 @@ const timeval	&Client::getCgiStartTime(void) const
  *
  * @return Reference to the FD.
  */
-const int				&Client::getPipeIn() const
+const int	&Client::getPipeIn() const
 {
 	return (this->fd_pipe_in);
 }
@@ -408,7 +408,7 @@ const int				&Client::getPipeIn() const
  *
  * @return Reference to the FD.
  */
-const int				&Client::getPipeOut() const
+const int	&Client::getPipeOut() const
 {
 	return (this->fd_pipe_out);
 }
@@ -474,7 +474,7 @@ const std::map<std::string, std::string> &Client::getCookies() const
  *
  * @return Server port.
  */
-size_t			Client::getServerPort() const
+size_t	Client::getServerPort() const
 {
 	return (my_socket->getPort());
 }
@@ -499,7 +499,7 @@ const std::string	&Client::getCgiOutput() const
  *
  * @return New CGI output offset.
  */
-size_t			Client::AddCgiOutput(std::string morceau)
+size_t	Client::AddCgiOutput(std::string morceau)
 {
 	this->CgiOutput += morceau;
 	OffsetCgi += morceau.size();
@@ -510,7 +510,7 @@ size_t			Client::AddCgiOutput(std::string morceau)
  * @brief
  * Clears the CGI output buffer.
  */
-void			Client::ResetCgiOutput()
+void	Client::ResetCgiOutput()
 {
 	this->OffsetCgi = 0;
 	this->CgiOutput = "";
@@ -522,7 +522,7 @@ void			Client::ResetCgiOutput()
  *
  * @param nb Number of bytes sent.
  */
-void			Client::AddOffset(size_t nb)
+void	Client::AddOffset(size_t nb)
 {
 	this->offset += nb;
 }

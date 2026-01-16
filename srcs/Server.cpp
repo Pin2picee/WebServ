@@ -285,7 +285,7 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 			NULL
 		};
 		for (int fd = 3; fd < 1024; fd++)
-        	close(fd);
+			close(fd);
 		execve(cgi_path.c_str(), argv, envp.data());
 		exit(1);
 	}
@@ -349,24 +349,24 @@ Server &Server::operator=(const Server &assignement)
  */
 Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port)
 {
-    std::string cookie_name = "User_" + ft_to_string(port);
-    std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
-    std::map<std::string, Session>::iterator sess_it = g_sessions.end();
-    std::string session_key;
-    if (it != req.cookies.end())
-    {
-        session_key = ft_to_string(port) +  "_" + it->second;
-        sess_it = g_sessions.find(session_key);
-    }
-    if (it == req.cookies.end() || sess_it == g_sessions.end())
-    {
-        std::string id = generateSessionId();
-        session_key = ft_to_string(port) + "_" + id;
-        g_sessions[session_key].ID = id;
-       	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
-        return g_sessions[session_key];
-    }
-    return g_sessions[session_key];
+	std::string cookie_name = "User_" + ft_to_string(port);
+	std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
+	std::map<std::string, Session>::iterator sess_it = g_sessions.end();
+	std::string session_key;
+	if (it != req.cookies.end())
+	{
+		session_key = ft_to_string(port) +  "_" + it->second;
+		sess_it = g_sessions.find(session_key);
+	}
+	if (it == req.cookies.end() || sess_it == g_sessions.end())
+	{
+		std::string id = generateSessionId();
+		session_key = ft_to_string(port) + "_" + id;
+		g_sessions[session_key].ID = id;
+	   	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
+		return g_sessions[session_key];
+	}
+	return g_sessions[session_key];
 }
 
 /**

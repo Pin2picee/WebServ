@@ -5,7 +5,16 @@
 
 class Server;
 
-// #class qui va creer un socket 
+/**
+ * @brief
+ * Represents a TCP listening socket.
+ * 
+ * @param Fd				The socket file descriptor.
+ * @param address1		The socket address structure.
+ * @param _port			The port the socket is bound to.
+ * @param _ip			The IP address the socket listens on.
+ * @param BlockServer	The associated Server configuration.
+ */
 class Socket
 {
 	private :
@@ -14,7 +23,7 @@ class Socket
 		size_t				_port;
 		std::string			_ip;
 		Server				*BlockServer;
-	private :
+
 		Socket();
 		void		set_socket_addr();
 	public:
@@ -22,13 +31,17 @@ class Socket
 		~Socket();
 		Socket(const Socket &copy);
 		Socket &operator=(const Socket &assignement);
-	public:
+	
+	// Getters
+
 		int			getFd(void) const;
 		Server		*getBlockServ(void);
 		size_t		getPort(void) const;
-	public:
+	
+	// Utils
+
 		uint32_t	ParseIp(std::string ip);
-	class   SocketError : public std::exception
+	class	SocketError : public std::exception
 	{
 		const char *what(void) const throw ();
 	};

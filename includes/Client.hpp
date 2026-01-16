@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:19:08 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:16:51 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,88 +22,132 @@ enum HeaderType
 	Uri
 };
 
+/**
+ * @brief
+ * Represents a connected client.
+ * 
+ * This class stores all client-related data such as:
+ * - The socket used for communication
+ * - The current HTTP request and response
+ * - CGI execution state
+ * - Connection timing and cookies
+ * 
+ * @param my_socket        Pointer to the Socket used by the client.
+ * @param request          Raw HTTP request received from the client.
+ * @param _body            Body content of the request (POST data, form data).
+ * @param CgiOutput        Accumulated output from a CGI execution.
+ * @param struct_request   Parsed Request structure for this client.
+ * @param reponse          HTTP response content to be sent to the client.
+ * @param ip               Client IP address.
+ * @param port             Client port as string.
+ * @param cookies          Cookies associated with this client session.
+ * @param start            Timestamp when the client connected.
+ * @param end              Timestamp when the client disconnected.
+ * @param cgi_start_time   Timestamp when a CGI execution started.
+ * @param connected        True if the client is still connected.
+ * @param request_finish   True if the HTTP request has been fully received.
+ * @param ResponseGenerate True if a response has been generated for this client.
+ * @param correct_syntax   True if the HTTP request syntax is valid.
+ * @param InCgi            True if the client is currently being processed by CGI.
+ * @param PipeAddPoll      True if the CGI pipes have been added to the poll loop.
+ * @param offset           Tracks the response body send offset for partial sends.
+ * @param OffsetCgi        Tracks how much CGI output has been read/sent.
+ * @param OffsetBodyCgi    Tracks how much request body has been read by CGI.
+ * @param fd_pipe_out      File descriptor for the write end of the CGI pipe.
+ * @param fd_pipe_in       File descriptor for the read end of the CGI pipe.
+ * @param _pid             PID of the CGI process handling this client.
+ */
 class Client
 {
-	private :
-		Socket  	*my_socket;
-		std::string request;
-		std::string _body;
-		std::string	CgiOutput;
-		Request		struct_request;
-		std::string reponse;
-		std::string ip;
-		std::string port;
-		std::map<std::string, std::string>	cookies;
-		timeval 	start;
-		timeval 	end;
-		timeval 	cgi_start_time;
-		bool		connected;
-		bool		request_finish;
-		bool		ResponseGenerate;
-		bool		correct_syntax;
-		bool		InCgi;
-		size_t  	offset;
-		bool		PipeAddPoll;
-		int			fd_pipe_out;
-		int			fd_pipe_in;
-		pid_t		_pid;
-		size_t		OffsetCgi;
-		size_t		OffsetBodyCgi;
+private :
+	Socket  	*my_socket;
+	std::string request;
+	std::string _body;
+	std::string	CgiOutput;
+	Request		struct_request;
+	std::string reponse;
+	std::string ip;
+	std::string port;
+	std::map<std::string, std::string>	cookies;
+	timeval 	start;
+	timeval 	end;
+	timeval 	cgi_start_time;
+	bool		connected;
+	bool		request_finish;
+	bool		ResponseGenerate;
+	bool		correct_syntax;
+	bool		InCgi;
+	size_t  	offset;
+	bool		PipeAddPoll;
+	int			fd_pipe_out;
+	int			fd_pipe_in;
+	pid_t		_pid;
+	size_t		OffsetCgi;
+	size_t		OffsetBodyCgi;
 
-	public :
-		ResponseHandler	handler;
-	//base
-		Client(Socket *the_socket);
-		~Client();
-		Client(const Client &copy);
-		Client &operator=(const Client &assignement);
-		void	setbasic(std::string ip_address, std::string port_address);
+public :
+	ResponseHandler	handler;
+
+	// Constructors / Destructor
+
+	Client(Socket *the_socket);
+	~Client();
+	Client(const Client &copy);
+	Client &operator=(const Client &assignement);
+
+	// Base
+
+	void	setbasic(std::string ip_address, std::string port_address);
 		
-	//set
-		void			setRequest(std::string buf);
-		void			setCookies(std::string name, std::string value);
-		void			setReponse(std::string buf);
-		void			setPipeIn(int fd);
-		void			setPipeOut(int fd);
-		void			setInCGI(void);
-		void			setOutCGI(void);
-		void			setBody(std::string body);
-		void			setCgiPid(pid_t pid);
-		void			setPipeAddPoll(bool	booleen);
-		void			setResponseGenerate(bool etat);
-		void			setCGiStartTime(void);
-	//get
-		const std::map<std::string, std::string> &getCookies() const;
-		const std::string		&getRequest() const;
-		const std::string		&getReponse() const;
-		const size_t			&getOffset() const;
-		const size_t			&getOffsetBodyCgi() const;
+	// Setters
 
-		const bool				&getFinishRequest() const;
-		const bool				&getResponseGenerate() const;
-		const bool				&getSyntax() const;
-		const bool				&getInCGI() const;
-		const int				&getPipeIn() const;
-		const int				&getPipeOut() const;
-		const std::string		&getBody(void) const;
-		const pid_t				&getCgiPid(void) const;
-		const std::string		&getCgiOutput(void) const;
-		const bool				&getPipeAddPoll(void) const;
-		const timeval			&getCgiStartTime(void) const;
-		size_t			getServerPort() const;
+	void			setRequest(std::string buf);
+	void			setCookies(std::string name, std::string value);
+	void			setReponse(std::string buf);
+	void			setPipeIn(int fd);
+	void			setPipeOut(int fd);
+	void			setInCGI(void);
+	void			setOutCGI(void);
+	void			setBody(std::string body);
+	void			setCgiPid(pid_t pid);
+	void			setPipeAddPoll(bool	booleen);
+	void			setResponseGenerate(bool etat);
+	void			setCGiStartTime(void);
+
+	// Getters
+
+	const std::map<std::string, std::string> &getCookies() const;
+	const std::string		&getRequest() const;
+	const std::string		&getReponse() const;
+	const size_t			&getOffset() const;
+	const size_t			&getOffsetBodyCgi() const;
+
+	const bool				&getFinishRequest() const;
+	const bool				&getResponseGenerate() const;
+	const bool				&getSyntax() const;
+	const bool				&getInCGI() const;
+	const int				&getPipeIn() const;
+	const int				&getPipeOut() const;
+	const std::string		&getBody(void) const;
+	const pid_t				&getCgiPid(void) const;
+	const std::string		&getCgiOutput(void) const;
+	const bool				&getPipeAddPoll(void) const;
+	const timeval			&getCgiStartTime(void) const;
+	size_t			getServerPort() const;
 		
-	//method
-		void			ResetCgiOutput();
-		void			resetInf();
-		void			resetAfterCGI();
-		Request			ExtractRequest();
-		void			AddOffset(size_t nb);
-		void			AddOffsetBodyCgi(size_t nb);
+	// Methods
+
+	void			ResetCgiOutput();
+	void			resetInf();
+	void			resetAfterCGI();
+	Request			ExtractRequest();
+	void			AddOffset(size_t nb);
+	void			AddOffsetBodyCgi(size_t nb);
 
 
-		size_t			AddCgiOutput(std::string morceau);
-		void			view_log();
-		void			disconnected();
+	size_t			AddCgiOutput(std::string morceau);
+	void			view_log();
+	void			disconnected();
 };
 
 #endif

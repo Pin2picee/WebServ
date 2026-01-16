@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:42:27 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:59:01 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,40 +216,40 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
  */
 void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session)
 {
-    const std::string fullPath = fullpath;
-    DIR *dirPtr = opendir(fullPath.c_str());
-    if (!dirPtr)
-        return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
+	const std::string fullPath = fullpath;
+	DIR *dirPtr = opendir(fullPath.c_str());
+	if (!dirPtr)
+		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
 
-    std::ostringstream fileList;
-    struct dirent *entry;
-    const std::string autoindexRoot = "/autoindex";
+	std::ostringstream fileList;
+	struct dirent *entry;
+	const std::string autoindexRoot = "/autoindex";
 
-    while ((entry = readdir(dirPtr)) != NULL)
-    {
-        std::string name = entry->d_name;
-        if (name == "." || name == "..")
-            continue;
-        std::string entryFullPath = fullPath + "/" + name;
-        struct stat st;
-        if (stat(entryFullPath.c_str(), &st) != 0)
-            continue;
-        std::string hrefPath = locPath;
-        if (hrefPath[hrefPath.size() - 1] != '/')
-            hrefPath += "/";
-        hrefPath += name;
-        if (S_ISDIR(st.st_mode))
-            hrefPath += "/";
+	while ((entry = readdir(dirPtr)) != NULL)
+	{
+		std::string name = entry->d_name;
+		if (name == "." || name == "..")
+			continue;
+		std::string entryFullPath = fullPath + "/" + name;
+		struct stat st;
+		if (stat(entryFullPath.c_str(), &st) != 0)
+			continue;
+		std::string hrefPath = locPath;
+		if (hrefPath[hrefPath.size() - 1] != '/')
+			hrefPath += "/";
+		hrefPath += name;
+		if (S_ISDIR(st.st_mode))
+			hrefPath += "/";
 
 		std::string liClass = getFileClass(name, st);
-        std::string displayName = shortenFileName(name, 54);
-        if (S_ISDIR(st.st_mode))
-            displayName += "/";
+		std::string displayName = shortenFileName(name, 54);
+		if (S_ISDIR(st.st_mode))
+			displayName += "/";
 
-        fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" 
-                 << displayName << "</a></li>\n";
-    }
-    closedir(dirPtr);
+		fileList << "<li class=\"" << liClass << "\"><a href=\"" << hrefPath << "\">" 
+				 << displayName << "</a></li>\n";
+	}
+	closedir(dirPtr);
 	if (locPath != autoindexRoot && locPath != autoindexRoot + "/")
 	{
 		std::string parentPath = locPath;
@@ -262,21 +262,21 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
 			parentPath = autoindexRoot + "/";
 		fileList << "<li class=\"go-back\"><a href=\"" << parentPath << "\">⬅️ Go Back</a></li>\n";
 	}
-    std::ifstream templateFile("./config/www/autoindex.html");
-    if (!templateFile)
-        return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
-    std::stringstream buffer;
-    buffer << templateFile.rdbuf();
-    std::string html = buffer.str();
-    std::string placeholder = "<!-- FILE_LIST_PLACEHOLDER -->";
-    size_t pos = html.find(placeholder.c_str());
-    if (pos != std::string::npos)
-        html.replace(pos, placeholder.length(), fileList.str());
-    std::string buttonHtml = "<a href=\"/\" class=\"button\">Return to Home</a>\n";
-    pos = html.find("</body>");
-    if (pos != std::string::npos)
-        html.insert(pos, buttonHtml);
-    makeResponse(res, 200, html, getMimeType(req));
+	std::ifstream templateFile("./config/www/autoindex.html");
+	if (!templateFile)
+		return makeResponse(res, 500, readFile(_server.getErrorPage(500, session)), "text/html");
+	std::stringstream buffer;
+	buffer << templateFile.rdbuf();
+	std::string html = buffer.str();
+	std::string placeholder = "<!-- FILE_LIST_PLACEHOLDER -->";
+	size_t pos = html.find(placeholder.c_str());
+	if (pos != std::string::npos)
+		html.replace(pos, placeholder.length(), fileList.str());
+	std::string buttonHtml = "<a href=\"/\" class=\"button\">Return to Home</a>\n";
+	pos = html.find("</body>");
+	if (pos != std::string::npos)
+		html.insert(pos, buttonHtml);
+	makeResponse(res, 200, html, getMimeType(req));
 }
 
 /**
@@ -535,7 +535,7 @@ std::string ResponseHandler::getMimeType(const std::string &path)
  */
 void ResponseHandler::makeResponseFromFile(Response &res, int status, const std::string &path, const Request &req)
 {
-    makeResponse(res, status, readFile(path), getMimeType(req));
+	makeResponse(res, status, readFile(path), getMimeType(req));
 }
 
 /**
@@ -651,19 +651,19 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 	if (!contentType.empty() && contentType.find("multipart/form-data") != std::string::npos)
 	{
 		std::size_t pos = contentType.find("boundary=");
-        if (pos == std::string::npos || pos + 9 >= contentType.size())
-            return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
-        std::string boundary = contentType.substr(pos + 9);
-        std::size_t end = boundary.find(';');
-        if (end != std::string::npos)
-            boundary = boundary.substr(0, end);
+		if (pos == std::string::npos || pos + 9 >= contentType.size())
+			return makeResponse(res, 400, readFile(_server.getErrorPage(400, session)), getMimeType(req));
+		std::string boundary = contentType.substr(pos + 9);
+		std::size_t end = boundary.find(';');
+		if (end != std::string::npos)
+			boundary = boundary.substr(0, end);
 		boundary = "--" + boundary;
-        return handleFile(boundary, res, loc, req, session);
+		return handleFile(boundary, res, loc, req, session);
 	}
 	if (req.body.size() > _server.getClientMaxBodySize())
 		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
 	std::string Path = _server.getRoot() + req.path;
 	if (!access(Path.c_str(), F_OK) && loc.cgi)
 		return _server.handleCGI(req, loc, current);
-    return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
+	return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 }
