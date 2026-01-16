@@ -6,17 +6,36 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:10:14 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:42:27 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ResponseHandler.hpp"
 #include "Client.hpp"
 
+/**
+ * @brief
+ * Constructor for ResponseHandler.
+ *
+ * @param server The `Server` object to handle requests for.
+ */
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
+/**
+ * @brief
+ * Destructor for ResponseHandler.
+ */
 ResponseHandler::~ResponseHandler() {}
 
+/**
+ * @brief
+ * Find the best matching `Location` for a given `Request`.
+ *
+ * @param req The `Request` to match.
+ * @param locs The vector of `Locations` to search in.
+ *
+ * @return Pointer to the best matching `Location`, or `NULL` if none matches.
+ */
 const Locations *findLocation(const Request &req, const std::vector<Locations> &locs)
 {
 	const Locations* bestMatch = NULL;
@@ -36,11 +55,13 @@ const Locations *findLocation(const Request &req, const std::vector<Locations> &
 
 /**
  * @brief
- * Handle any `Request`.
- * 
+ * Handle any `Request` and produce a `Response`.
+ *
  * @param req The `Request` struct that will be processed.
- * 
- * @return a `Response` structure that will answer in adequation to the `Request`.
+ * @param g_sessions Map of all `Session`s.
+ * @param current Pointer to the current `Client`.
+ *
+ * @return A `Response` struct suitable for the `Request`.
  */
 Response ResponseHandler::handleRequest(const Request &req, std::map<std::string, Session> &g_sessions, Client *current)
 {
@@ -67,10 +88,13 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 
 /**
  * @brief
- * Handle the get `Request`.
- * 
- * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
- * @param req The `Request` struct of `handleRequest` that will be processed.
+ * Handle a `GET` request.
+ *
+ * @param res The `Response` to populate.
+ * @param loc The `Location` for this request.
+ * @param req The `Request` struct to process.
+ * @param session The current `Session`.
+ * @param current Pointer to the current `Client`.
  */
 void ResponseHandler::handleGet(Response &res, const Locations &loc, const Request &req, Session &session, Client *current)
 {
@@ -135,10 +159,13 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 
 /**
  * @brief
- * Handle the post `Request`.
- * 
- * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
- * @param req The `Request` struct of `handleRequest` that will be processed.
+ * Handle a `POST` request.
+ *
+ * @param res The `Response` to populate.
+ * @param loc The `Location` for this request.
+ * @param req The `Request` struct to process.
+ * @param session The current `Session`.
+ * @param current Pointer to the current `Client`.
  */
 void ResponseHandler::handlePost(Response &res, const Locations &loc, const Request &req, Session &session, Client *current)
 {
@@ -149,12 +176,15 @@ void ResponseHandler::handlePost(Response &res, const Locations &loc, const Requ
 	return getContentType(res, loc, req, session, current);
 }
 
+
 /**
  * @brief
- * Handle the delete `Request`.
- * 
- * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
- * @param req The `Request` struct of `handleRequest` that will be processed.
+ * Handle a `DELETE` request.
+ *
+ * @param res The `Response` to populate.
+ * @param loc The `Location` for this request.
+ * @param req The `Request` struct to process.
+ * @param session The current `Session`.
  */
 void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Request &req, Session &session)
 {
@@ -174,7 +204,16 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 	return makeResponse(res, 200, makeJsonError("File deleted successfully"), getMimeType(req));
 }
 
-
+/**
+ * @brief
+ * Generate an autoindex HTML page for a directory.
+ *
+ * @param fullpath The full path of the directory.
+ * @param locPath The path relative to the server root.
+ * @param req The `Request` struct.
+ * @param res The `Response` to populate.
+ * @param session The current `Session`.
+ */
 void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session)
 {
     const std::string fullPath = fullpath;
@@ -242,14 +281,12 @@ void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::
 
 /**
  * @brief
- * Get the reason phrase of a corresponding status code.
- * 
- * @param status_code The status code that will get a corresponding reason phrase.
- * 
- * @return
- * The corresponding reason phrase.
+ * Get the reason phrase for an HTTP status code.
+ *
+ * @param status_code The status code.
+ *
+ * @return The corresponding reason phrase.
  */
-
 static std::string getReasonPhrase(int status_code)
 {
 	switch (status_code)
@@ -269,7 +306,15 @@ static std::string getReasonPhrase(int status_code)
 	}
 }
 
-
+/**
+ * @brief
+ * Generate the HTML form to delete files for a `Session`.
+ *
+ * @param session The `Session` whose files will be listed.
+ * @param uploadRoot The upload root directory path.
+ *
+ * @return HTML string for the delete file form.
+ */
 std::string ResponseHandler::generateDeleteFileForm(const Session &session, const std::string &uploadRoot)
 {
 	std::string html = readFile(_server.getRoot() + "/" + "delete_file.html");
@@ -310,12 +355,11 @@ std::string ResponseHandler::generateDeleteFileForm(const Session &session, cons
 
 /**
  * @brief
- * Convert a Response struct into a string in standard HTTP format.
- * 
- * @param res The Response struct that will be converted.
- * 
- * @return
- * The string HTTP message.
+ * Convert a `Response` struct into a string in standard HTTP format.
+ *
+ * @param res The `Response` struct.
+ *
+ * @return The HTTP string message.
  */
 std::string	ResponseHandler::responseToString(const Response &res)
 {
@@ -331,12 +375,26 @@ std::string	ResponseHandler::responseToString(const Response &res)
 	return oss.str();
 }
 
+/**
+ * @brief
+ * Copy constructor for ResponseHandler.
+ *
+ * @param copy The ResponseHandler to copy.
+ */
 ResponseHandler::ResponseHandler(const ResponseHandler &copy) : _server(copy._server)
 {
 	if (this != &copy)
 		*this = copy;
 }
 
+/**
+ * @brief
+ * Assignment operator for ResponseHandler.
+ *
+ * @param assignement The ResponseHandler to assign from.
+ *
+ * @return Reference to this ResponseHandler.
+ */
 ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
 {
 	(void)assignement;
@@ -344,10 +402,12 @@ ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
 }
 
 /**
- * @param path The request path
- *  
- * @return
- * Return the MIME (Multipurpose Internet Mail Extensions) content type that have `Response` when responding to a `Request`.
+ * @brief
+ * Get the MIME type for a `Request`.
+ *
+ * @param req The `Request` struct.
+ *
+ * @return MIME type string.
  */
 std::string ResponseHandler::getMimeType(const Request &req)
 {
@@ -403,6 +463,14 @@ std::string ResponseHandler::getMimeType(const Request &req)
 	return getMimeType(req.path);
 }
 
+/**
+ * @brief
+ * Get the MIME type based on a file path.
+ *
+ * @param path File path string.
+ *
+ * @return MIME type string.
+ */
 std::string ResponseHandler::getMimeType(const std::string &path)
 {
 	if (path.find(".html") != std::string::npos)
@@ -456,11 +524,30 @@ std::string ResponseHandler::getMimeType(const std::string &path)
 	return MIME_TEXT_HTML;
 }
 
+/**
+ * @brief
+ * Send a `Response` based on a file.
+ *
+ * @param res The `Response` to populate.
+ * @param status The HTTP status code.
+ * @param path Path of the file.
+ * @param req The `Request` struct.
+ */
 void ResponseHandler::makeResponseFromFile(Response &res, int status, const std::string &path, const Request &req)
 {
     makeResponse(res, status, readFile(path), getMimeType(req));
 }
 
+/**
+ * @brief
+ * Create a directory for uploads.
+ *
+ * @param root Server root path.
+ * @param upload_dir Upload directory path relative to root.
+ * @param userId User ID for the directory.
+ *
+ * @return Path to the created directory, or empty string on error.
+ */
 std::string createUploadDir(const std::string &root, const std::string &upload_dir, const std::string &userId)
 {
 	if (userId.empty())
@@ -478,12 +565,13 @@ std::string createUploadDir(const std::string &root, const std::string &upload_d
 
 /**
  * @brief
- * Manage the POST request of a file.
- * 
- * @param boundary The start and end point of the file body.
- * @param res The `Response` structure that will be returned.
- * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
- * @param req The `Request` struct of `handleRequest` that will be processed.
+ * Handle a file upload in a `POST` request.
+ *
+ * @param boundary The boundary string in the multipart body.
+ * @param res The `Response` to populate.
+ * @param loc The `Location` of the request.
+ * @param req The `Request` struct.
+ * @param session The current `Session`.
  */
 void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session)
 {
@@ -524,11 +612,13 @@ void	ResponseHandler::handleFile(std::string &boundary, Response &res, const Loc
 
 /**
  * @brief
- * Manage a POST request by finding if the content is a file or not and produce a response accordingly.
- * 
- * @param res The `Response` structure that will be returned.
- * @param loc The `Request` location that will be found in `req` variable of `handleRequest` method.
- * @param req The `Request` struct of `handleRequest` that will be processed.
+ * Determine the content type of a `POST` request and handle accordingly.
+ *
+ * @param res The `Response` to populate.
+ * @param loc The `Location` of the request.
+ * @param req The `Request` struct.
+ * @param session The current `Session`.
+ * @param current Pointer to the current `Client`.
  */
 void	ResponseHandler::getContentType(Response &res, const Locations &loc, const Request &req, Session& session, Client *current)
 {
