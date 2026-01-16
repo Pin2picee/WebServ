@@ -2,8 +2,6 @@
 
 # Webserv
 
-# <a name="webserv"></a>Webserv
-
 ## <a name="table-of-contents"></a>📑 Table of Contents
 - [Description](#description)
   - [Socket Programming](#socket-programming)
