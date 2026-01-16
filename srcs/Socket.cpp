@@ -12,11 +12,21 @@
 
 #include "Socket.hpp"
 
+/**
+ * @brief
+ * Custom exception class for socket-related errors.
+ */
 const char *Socket::SocketError::what() const throw()
 {
 	return (strerror(errno));
 }
 
+/**
+ * @brief
+ * Copy constructor for Socket.
+ *
+ * @param copy The Socket object to copy from.
+ */
 Socket::Socket(const Socket &copy)
 {
 	if (this != &copy)
@@ -28,6 +38,14 @@ Socket::Socket(const Socket &copy)
 	}
 }
 
+/**
+ * @brief
+ * Assignment operator for Socket.
+ *
+ * @param assignement The Socket object to assign from.
+ *
+ * @return Reference to the current Socket object.
+ */
 Socket &Socket::operator=(const Socket &assignement)
 {
 	if (this != &assignement)
@@ -41,8 +59,14 @@ Socket &Socket::operator=(const Socket &assignement)
 }
 
 /**
- * @brief = creation du socket + liaison(=bind) localhost + port
- * @param = port sur lequel on va listen
+ * @brief
+ * Create a socket, bind it to the given IP and port, and set it to listen mode.
+ *
+ * @param ip IP address to bind the socket to.
+ * @param port Port number to listen on (must be 1-65535).
+ * @param refBlock Pointer to the Server object associated with this socket.
+ *
+ * @throws SocketError if socket creation, bind, listen, or fcntl fails.
  */
 Socket::Socket(std::string ip, int port, Server *refBlock)
 {
@@ -63,13 +87,29 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 		throw SocketError();
 }
 
+/**
+ * @brief
+ * Default constructor for Socket.
+ */
 Socket::Socket() {}
 
+/**
+ * @brief
+ * Destructor for Socket. Closes the file descriptor.
+ */
 Socket::~Socket()
 {
 	close(this->Fd);
 }
 
+/**
+ * @brief
+ * Convert an IP string (e.g., "127.0.0.1") to a 32-bit integer.
+ *
+ * @param ip The IP address string.
+ *
+ * @return The 32-bit representation of the IP, or 0 if invalid.
+ */
 uint32_t Socket::ParseIp(std::string ip)
 {
     std::stringstream ss(ip);
@@ -99,6 +139,10 @@ uint32_t Socket::ParseIp(std::string ip)
     return res;
 }
 
+/**
+ * @brief
+ * Set the socket address structure and configure socket options (SO_REUSEADDR).
+ */
 void	Socket::set_socket_addr()
 {
 	int option = 1;
@@ -108,16 +152,34 @@ void	Socket::set_socket_addr()
 	this->address1.sin_addr.s_addr = htonl(this->ParseIp(_ip));
 }
 
+/**
+ * @brief
+ * Get the file descriptor of the socket.
+ *
+ * @return The socket's file descriptor.
+ */
 int Socket::getFd(void) const
 {
 	return (this->Fd);
 }
 
+/**
+ * @brief
+ * Get the Server object associated with this socket.
+ *
+ * @return Pointer to the Server object.
+ */
 Server *Socket::getBlockServ(void)
 {
 	return (this->BlockServer);
 }
 
+/**
+ * @brief
+ * Get the port number the socket is bound to.
+ *
+ * @return The port number.
+ */
 size_t		Socket::getPort(void) const
 {
 	return (this->_port);
