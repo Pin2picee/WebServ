@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 18:09:34 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 18:21:07 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,12 +111,10 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 		return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
 	else if (pathDirectoryExists(full_path))
 	{
-		std::cout << "loc.root = " << loc.root << std::endl;
 		if (loc.sensitive)
 			return makeResponseFromFile(res, 403, _server.getErrorPage(403, session), req);
 		else if (loc.root == "cgi-bin")
 		{
-			std::cout << "oui" << std::endl;
 			std::string filePath = _server.getRoot() + "/cgi_tester.html";
 			return makeResponseFromFile(res, 200, filePath, req);
 		}

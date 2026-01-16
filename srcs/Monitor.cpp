@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 18:01:33 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 18:12:43 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -599,18 +599,10 @@ int	Monitor::CGI_engine(int i)
 	std::map<int, Client *>::iterator it = tab_CGI.find(all_fd[i].fd);
 	if (it == tab_CGI.end())
 		return 0;
-	std::cerr << "CGI_engine: fd " << all_fd[i].fd << " found in tab_CGI" << std::endl;
 	Client *my_client = it->second;
-	bool client_exists = false;
 	for (std::map<int, Client>::iterator it_c = clients.begin(); it_c != clients.end(); ++it_c)
-	{
 		if (&it_c->second == my_client)
-		{
-			client_exists = true;
 			break;
-		}
-	}
-	std::cerr << "CGI_engine: client_exists = " << client_exists << std::endl;
 	if (searchClient(my_client, i) < 0)
 				return (-1);
 	if (it != tab_CGI.end())

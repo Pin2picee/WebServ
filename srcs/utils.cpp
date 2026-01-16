@@ -294,7 +294,7 @@ std::string getFileName(const std::string &fileBody)
  */
 std::string makeJsonError(const std::string &msg)
 {
-	return std::string("{\"status\":\"error\",\"message\":\"") + msg + "\"}";
+	return std::string("{\"status\":\"error\",\"message\":\"") + msg + "\"}\n";
 }
 
 /**
