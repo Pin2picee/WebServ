@@ -204,5 +204,4 @@ project authors.
 
 ## <a name="notes"></a>🏁 Notes
 
-This project is educational and aims to deepen understanding of how web servers work at  
-a low level, without relying on frameworks or high-level abstractions.
+This project is educational and aims to deepen understanding of how web servers work at a low level, without relying on frameworks or high-level abstractions.
