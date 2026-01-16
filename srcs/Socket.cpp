@@ -12,14 +12,21 @@
 
 #include "Socket.hpp"
 
-/*<EXCEPTION>*/
+/**
+ * @brief
+ * Custom exception class for `Socket`-related errors.
+ */
 const char *Socket::SocketError::what() const throw()
 {
 	return (strerror(errno));
 }
-/*</EXCEPTION>*/
 
-/*<CONSTRUCTION>*/
+/**
+ * @brief
+ * Copy constructor for `Socket`.
+ *
+ * @param copy The `Socket` object to copy from.
+ */
 Socket::Socket(const Socket &copy)
 {
 	if (this != &copy)
@@ -31,6 +38,14 @@ Socket::Socket(const Socket &copy)
 	}
 }
 
+/**
+ * @brief
+ * Assignment operator for `Socket`.
+ *
+ * @param assignement The `Socket` object to assign from.
+ *
+ * @return Reference to the current `Socket` object.
+ */
 Socket &Socket::operator=(const Socket &assignement)
 {
 	if (this != &assignement)
@@ -44,8 +59,14 @@ Socket &Socket::operator=(const Socket &assignement)
 }
 
 /**
- * @brief = creation du socket + liaison(=bind) localhost + port
- * @param = port sur lequel on va listen
+ * @brief
+ * Create a `Socket`, bind it to the given IP and port, and set it to listen mode.
+ *
+ * @param ip IP address to bind the `Socket` to.
+ * @param port Port number to listen on.
+ * @param refBlock Pointer to the `Server` object associated with this `Socket`.
+ *
+ * @throws `SocketError` if `Socket` creation, bind, listen, or fcntl fails.
  */
 Socket::Socket(std::string ip, int port, Server *refBlock)
 {
@@ -55,76 +76,111 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 	this->Fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (Fd < 0 || port <= 0 || port > 65535)
 		throw SocketError();
-	set_socket_addr();// initialisation de la structure sock_addr_in puis convertit en (const sock_adrr *)
+	setSocketAddr();
 	if (bind(this->Fd, (const sockaddr *)&this->address1, sizeof(address1)) != 0)
 		throw SocketError();
-	else if (listen(this->Fd, SOMAXCONN) < 0)// 2emeparam= backlog file d'attente dont la connexion n'est pas encore accepter
+	else if (listen(this->Fd, SOMAXCONN) < 0)
 		throw SocketError();
 	int ancien_flags = fcntl(this->Fd, F_GETFL);
 	int res = fcntl(this->Fd, F_SETFL, ancien_flags | O_NONBLOCK);
 	if (ancien_flags == -1 || res == -1)
 		throw SocketError();
 }
-/*</CONSTRUCTION>*/
 
-/*<DESTRUCTION>*/
+/**
+ * @brief
+ * Default constructor for `Socket`.
+ */
 Socket::Socket() {}
 
+/**
+ * @brief
+ * Destructor for `Socket`. Closes the file descriptor.
+ */
 Socket::~Socket()
 {
 	close(this->Fd);
 }
-/*</DESTRUCTION>*/
 
-uint32_t Socket::ParseIp(std::string ip)
+/**
+ * @brief
+ * Convert an IP string (e.g., "127.0.0.1") to a 32-bit integer.
+ *
+ * @param ip The IP address string.
+ *
+ * @return The 32-bit representation of the IP, or 0 if invalid.
+ */
+uint32_t Socket::parseIp(std::string ip)
 {
-    std::stringstream ss(ip);
-    int a, b, c, d;
-    char dot1, dot2, dot3;
+	std::stringstream ss(ip);
+	int a, b, c, d;
+	char dot1, dot2, dot3;
 
-    if (!(ss >> a >> dot1 >> b >> dot2 >> c >> dot3 >> d))
-        return 0;
+	if (!(ss >> a >> dot1 >> b >> dot2 >> c >> dot3 >> d))
+		return 0;
 
-    if (dot1 != '.' || dot2 != '.' || dot3 != '.')
-        return 0;
+	if (dot1 != '.' || dot2 != '.' || dot3 != '.')
+		return 0;
 
-    if (a < 0 || a > 255 || b < 0 || b > 255
-        || c < 0 || c > 255 || d < 0 || d > 255)
-        return 0;
+	if (a < 0 || a > 255 || b < 0 || b > 255
+		|| c < 0 || c > 255 || d < 0 || d > 255)
+		return 0;
 
-    char extra;
-    if (ss >> extra)
-        return 0;
+	char extra;
+	if (ss >> extra)
+		return 0;
 
-    uint32_t res =
-        (static_cast<uint32_t>(a) << 24) |
-        (static_cast<uint32_t>(b) << 16) |
-        (static_cast<uint32_t>(c) << 8 ) |
-        (static_cast<uint32_t>(d));
+	uint32_t res =
+		(static_cast<uint32_t>(a) << 24) |
+		(static_cast<uint32_t>(b) << 16) |
+		(static_cast<uint32_t>(c) << 8 ) |
+		(static_cast<uint32_t>(d));
 
-    return res;
+	return res;
 }
 
-void	Socket::set_socket_addr()
+/**
+ * @brief
+ * Set the `Socket` address structure and configure `Socket` options (SO_REUSEADDR).
+ */
+void	Socket::setSocketAddr()
 {
 	int option = 1;
 	setsockopt(this->Fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 	this->address1.sin_family = AF_INET;
 	this->address1.sin_port = htons(this->_port);
-	this->address1.sin_addr.s_addr = htonl(this->ParseIp(_ip)); // 127.0.0.1 // little_endian to big_endian for network // inet_pton->function mais pas le droit
+	this->address1.sin_addr.s_addr = htonl(this->parseIp(_ip));
 }
 
+/**
+ * @brief
+ * Get the file descriptor of the `Socket`.
+ *
+ * @return The `Socket`'s file descriptor.
+ */
 int Socket::getFd(void) const
 {
 	return (this->Fd);
 }
 
-Server *Socket::getBlockServ(void)
+/**
+ * @brief
+ * Get the `Server` object associated with this `Socket`.
+ *
+ * @return Pointer to the `Server` object.
+ */
+Server *Socket::getBlockServer(void)
 {
 	return (this->BlockServer);
 }
 
-size_t		Socket::getPort(void) const
+/**
+ * @brief
+ * Get the port number the `Socket` is bound to.
+ *
+ * @return The port number.
+ */
+size_t	Socket::getPort(void) const
 {
 	return (this->_port);
 }

@@ -6,32 +6,44 @@
 
 /**
  * @brief
- * The class that Contains all the configuration file informations.
+ * Handles parsing and storage of the configuration file.
  * 
- * @param Servers				The list of servers in the configuration file.
+ * This class is responsible for:
+ * - Parsing the configuration file
+ * - Creating `Server` instances
+ * - Creating and storing corresponding `Socket` instances
+ * 
+ * @param Servers	The list of servers defined in the configuration file.
+ * @param Sockets	The list of sockets created from the configuration.
  */
-
 class Config : public Server
 {
 private:
 	std::vector<Server>			Servers;
 	std::vector<Socket * >		Sockets;
 
+	// Parsing utilities
+
 	std::vector<std::string>	tokenize(std::istream &ifs);
 	Server						parse(const std::vector<std::string> &tokens, size_t &t_size, size_t &i);
 	void						CreateSocket(void);
 
 public:
+
+	// Constructors / Destructor
+
 	Config();
-	~Config();
 	Config(const Config& copy);
 	Config						&operator=(const Config &assignement);
+	~Config();
 	
-	//parsing
+	// Parsing
+
 	void						parseAllServerFiles(const std::string &configFile);
 
-	//getter
-	const std::vector<Socket *>&		getSocket() const;
+	// Getter
+
+	const std::vector<Socket *>	&getSocket() const;
 };
 
 #endif

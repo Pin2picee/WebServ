@@ -5,21 +5,26 @@
 
 struct Locations;
 class Client;
+
 /**
  * @brief
- * The class that respond to `Requests`.
+ * Handles HTTP requests and generates appropriate responses.
  * 
- * @param _server	The `Server` that sends a `Request`.
+ * @param _server	The `Server` instance associated with the handler.
  */
 class ResponseHandler
 {
 private:
 	const Server	&_server;
-//methods
+
+	// Request handlers
+
 	void			handleGet(Response &res, const Locations &loc, const Request &req, Session &session, Client *current);
 	void			handlePost(Response &res, const Locations &loc, const Request &req, Session &session, Client *current);
 	void			handleDelete(Response &res, const Locations &loc, const Request &req, Session &session);
-//utils
+
+	// Utilities
+
 	std::string		getMimeType(const Request &req);
 	std::string		getMimeType(const std::string &path);
 	void			getContentType(Response &res, const Locations &loc, const Request &req, Session &session, Client *current);
@@ -28,12 +33,16 @@ private:
 	std::string		generateDeleteFileForm(const Session &session, const std::string &uploadRoot = "./config/www/uploads");
 	void			handleFile(std::string &boundary, Response &res, const Locations &loc, const Request &req, Session &session);
 public:
+
+	// Constructors / Destructor
+
 	~ResponseHandler();
 	ResponseHandler(const Server &server);
 	ResponseHandler(const ResponseHandler &copy);
 	ResponseHandler &operator=(const ResponseHandler &assignement);
 
-	//handle requests
+	// Main interface
+
 	Response		handleRequest(const Request &req, std::map<std::string, Session> &g_sessions, Client *current);
 	std::string		responseToString(const Response &res);
 };

@@ -6,15 +6,16 @@
 class Socket;
 
 /**
- * @brief
- * Contains all the request infos.
- * 
- * @param version The HTTP version.
- * @param method The HTTP methods allowed (GET, POST, DELETE).
- * @param uri The client path to the resource (as sent in the HTTP request).
- * @param path The full local path on the server (uri + location root).
- * @param body The request content (payload), uploaded file or form data.
- * @param headers The HTTP headers, extra infos for handling the request.
+ * @brief Contains all the request infos.
+ *
+ * @param version	The HTTP version.
+ * @param method	The HTTP methods allowed (GET, POST, DELETE).
+ * @param uri		The client path to the resource (as sent in the HTTP request).
+ * @param path		The full local path on the server (uri + location root).
+ * @param query		The query string if present.
+ * @param body		The request content (payload), uploaded file or form data.
+ * @param headers	The HTTP headers, extra infos for handling the request.
+ * @param cookies	The cookies sent by the client.
  */
 struct Request
 {
@@ -31,13 +32,13 @@ struct Request
 };
 
 /**
- * @brief
- * Contains all infos to reply to a request.
- * 
- * @param version The HTTP version, deflaut to 1.1 version.
- * @param status_code The HTTP status code (200, 404, 500, ...).
- * @param content_type The MIME content type (cf utils.hpp).
- * @param body The response content (HTML, text, JSON, binary file, …).
+ * @brief Contains all info to reply to a request.
+ *
+ * @param version		The HTTP version, defaults to 1.1.
+ * @param status_code	The HTTP status code (200, 404, 500, ...).
+ * @param content_type	The MIME content type (e.g., text/html).
+ * @param body			The response content (HTML, text, JSON, binary file, …).
+ * @param headers		The additional HTTP headers.
  */
 struct Response
 {
@@ -50,45 +51,54 @@ struct Response
 	Response() : version("HTTP/1.1"), status_code(200), content_type("text/html"){};
 };
 
-//dispay infos
+/* ---------------- Display Infos ---------------- */
+
 void		displayRequestInfo(const Request &req);
 void		displayResponseInfo(const Response &res);
+
+/* ---------------- Time / Session Utils ---------------- */
 
 time_t		getCurrentTime();
 std::string	generateSessionId(void);
 void		parseCookies(Request &req);
 void		init_default_errors(Server &conf);
+
+/* ---------------- File / Path Utils ---------------- */
+
 std::string urlDecode(const std::string &str);
 std::string cleanPath(const std::string &path);
-bool		pathExists(const std::string &path);
+bool		pathDirectoryExists(const std::string &path);
 std::string readFile(const std::string& filepath);
-size_t		convertSize(const std::string &input);
-std::string	strip_semicolon(const std::string &s);
-std::string makeJsonError(const std::string &msg);
-std::string getFileName(const std::string &fileBody);
 void		resetUploadsDir(const std::string &uploadsPath);
 bool		removeDirectoryRecursive(const std::string &path);
+
+/* ---------------- String / Parsing Utils ---------------- */
+
+std::string ftToString(size_t nb);
+size_t		convertSize(const std::string &input);
+std::string	stripSemicolon(const std::string &s);
 std::string shortenFileName(const std::string &name, size_t maxLength);
-std::string getFileClass(const std::string &name, const struct stat &st);
-void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
-int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
-void 		findHtmlFiles(const std::string &action, const std::string &path);
-std::string ft_to_string(size_t nb);
 enum StripSide { LEFT, RIGHT, BOTH };
 void		stripe(std::string &s, const std::string &set, StripSide side = BOTH);
+void		fillTokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 
+/* ---------------- Response / HTTP Utils ---------------- */
+
+std::string makeJsonError(const std::string &msg);
+std::string getFileName(const std::string &fileBody);
+std::string getFileClass(const std::string &name, const struct stat &st);
+void 		findHtmlFiles(const std::string &action, const std::string &path);
+int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
 
 /**
  * @brief
- * Fill the different variables of a request structure.
- * 
- * @param res The `Response` structure that needs to be filled.
- * @param req The `Request` structure that will be used to check on the cookies.
- * @param status The HTTP status code (200, 404, 500, ...).
- * @param body The response content (HTML, text, JSON, binary file, …).
- * @param content_type The MIME content type (sed by default as text plain).
+ * Fill a Response structure with status, body, and content type.
+ *
+ * @param res			The Response structure that will be filled.
+ * @param status		The HTTP status code (e.g., 200, 404, 500, ...).
+ * @param body			The content of the response (HTML, text, JSON, etc.).
+ * @param content_type	The MIME type of the response content, defaults to text/html.
  */
-
 inline void	makeResponse(Response &res, int status, const std::string &body, const std::string &content_type = MIME_TEXT_HTML)
 {
 	res.status_code = status;
@@ -97,8 +107,12 @@ inline void	makeResponse(Response &res, int status, const std::string &body, con
 	res.version = "HTTP/1.1";
 }
 
+/* ---------------- Globals ---------------- */
+
 extern std::vector<Socket *> all_socket;
 extern volatile sig_atomic_t	on;
+
+/* ---------------- Signals ---------------- */
 
 void	handle_sigint(int signum);
 

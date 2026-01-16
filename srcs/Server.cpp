@@ -2,18 +2,22 @@
 #include "Config.hpp"
 #include "ResponseHandler.hpp"
 #include "Client.hpp"
-/* Constructor */
+
+/**
+ * @brief Default constructor for `Server`.
+ */
 Server::Server() : client_max_body_size(0) {}
 
-/* Destructor */
+/**
+ * @brief Destructor for `Server`.
+ */
 Server::~Server() {}
 
-//Getters
 /**
  * @brief
- * Get the root path.
- * 
- * @return the root path.
+ * Get the root path of the `Server`.
+ *
+ * @return The root path string.
  */
 const std::string&	Server::getRoot() const
 {
@@ -22,11 +26,12 @@ const std::string&	Server::getRoot() const
 
 /**
  * @brief
- * Get the error_page you want.
- * 
- * @param code the error code to find.
- * 
- * @return the corresponding error_page.
+ * Get the error page for a specific error code.
+ *
+ * @param code The HTTP error code.
+ * @param session The current session (will be updated with current_page).
+ *
+ * @return The error page content string. Returns a default HTML if not found.
  */
 const std::string& Server::getErrorPage(int code, Session &session) const
 {
@@ -43,11 +48,12 @@ const std::string& Server::getErrorPage(int code, Session &session) const
 	}
 }
 
+
 /**
  * @brief
- * Get the canals to listen on.
- * 
- * @return the canals to listen on.
+ * Get the list of IP and port pairs (canals) the `Server` listens on.
+ *
+ * @return Vector of (IP, port) pairs.
  */
 const std::vector<std::pair<std::string, int> >&	Server::getListen() const
 {
@@ -56,9 +62,9 @@ const std::vector<std::pair<std::string, int> >&	Server::getListen() const
 
 /**
  * @brief
- * Get the max client body size.
- * 
- * @return the max client body size.
+ * Get the maximum allowed client body size.
+ *
+ * @return Maximum body size in bytes.
  */
 size_t	Server::getClientMaxBodySize() const
 {
@@ -67,9 +73,9 @@ size_t	Server::getClientMaxBodySize() const
 
 /**
  * @brief
- * Get the locations.
- * 
- * @return the locations.
+ * Get the list of configured `Locations` for this `Server`.
+ *
+ * @return Vector of `Locations`.
  */
 const std::vector<Locations>&	Server::getLocations() const
 {
@@ -78,9 +84,9 @@ const std::vector<Locations>&	Server::getLocations() const
 
 /**
  * @brief
- * Get the error dir.
- * 
- * @return the error dir.
+ * Get the error directory path relative to the `Server` root.
+ *
+ * @return Error directory path.
  */
 const std::string&	Server::getErrorDir() const
 {
@@ -90,21 +96,20 @@ const std::string&	Server::getErrorDir() const
 
 /**
  * @brief
- * Get the error pages, the variable can be modifiable.
- * 
- * @return the error pages.
+ * Get the map of error pages (modifiable reference).
+ *
+ * @return Map of error codes to error page paths.
  */
 std::map<int, std::string>&	Server::getErrorPagesRef()
 {
 	return error_pages;
 }
 
-//setters
 /**
  * @brief
- * Set the root path.
- * 
- * @param r the path that will be assigned to `root`.
+ * Set the root path of the `Server`.
+ *
+ * @param r The root path string.
  */
 void	Server::setRoot(const std::string &r)
 {
@@ -113,24 +118,23 @@ void	Server::setRoot(const std::string &r)
 
 /**
  * @brief
- * Set the client max body size file.
- * 
- * @param value the client max body size file value.
- * 
- * @note If the value is negative, it will be converted in a positive size_t value.
+ * Set the maximum client body size.
+ *
+ * @param value Maximum body size in bytes.
+ *
+ * @note If value is negative, it will be converted to a positive size_t.
  */
 void	Server::setClientMaxBodySize(size_t value)
 {
 	client_max_body_size = value;
 }
 
-//useful methods
 /**
  * @brief
- * Add a canal to listen on to `listen`.
- * 
- * @param ip The canal ip address.
- * @param port The canal port.
+ * Add a listening canal (IP + port) to the `Server`.
+ *
+ * @param ip The IP address.
+ * @param port The port number.
  */
 void	Server::addListen(const std::string& ip, int port)
 {
@@ -139,9 +143,9 @@ void	Server::addListen(const std::string& ip, int port)
 
 /**
  * @brief
- * Add an error page.
- * 
- * @param dir the error directory path after server root path.
+ * Set the error directory for this `Server`.
+ *
+ * @param dir Directory path relative to the `Server` root.
  */
 void	Server::addErrorDir(const std::string& dir)
 {
@@ -150,9 +154,9 @@ void	Server::addErrorDir(const std::string& dir)
 
 /**
  * @brief
- * Add a location.
- * 
- * @param loc The locations that will be added to `locations`.
+ * Add a location configuration to the `Server`.
+ *
+ * @param loc The `Locations` struct to add.
  */
 void	Server::addLocation(const Locations& loc)
 {
@@ -161,22 +165,21 @@ void	Server::addLocation(const Locations& loc)
 
 /**
  * @brief
- * Transform the output of handleCGI in Response struct.
- * 
- * @param output The output of handleCGI.
- * 
- * @return a Response struct.
+ * Parse the output of a CGI script into a Response object.
+ *
+ * @param output The raw CGI output string.
+ *
+ * @return A Response struct containing headers and body.
  */
-Response parseCGIOutput(const std::string &output)
+Response parseCgiOutput(const std::string &output)
 {
 	Response res;
-	res.status_code = 200; // default value
-	res.content_type = "text/html"; // default value
+	res.status_code = 200;
+	res.content_type = "text/html";
 
-	// Separate headers from body
 	size_t header_end = output.find("\r\n\r\n");
 	if (header_end == std::string::npos)
-		header_end = output.find("\n\n"); // case where the script only use \n
+		header_end = output.find("\n\n");
 
 	std::string header_part = output.substr(0, header_end);
 	std::string body_part;
@@ -210,18 +213,19 @@ Response parseCGIOutput(const std::string &output)
 
 /**
  * @brief
- * Handle the server's CGI according to the request given.
- * 
- * @param req The corresponding request.
- * @param loc The location struct of the corresponding server.
- * 
- * @return A Response struct.
+ * Execute a CGI script for a given request and location, and prepare the Client object.
+ *
+ * @param req The incoming Request.
+ * @param loc The corresponding `Locations` configuration.
+ * @param current Pointer to the Client object handling this request.
+ *
+ * @throws std::runtime_error on pipe creation, fork, or unsupported CGI extension.
  */
-void Server::handleCGI(const Request &req, const Locations &loc, Client *current) const
+void Server::handleCgi(const Request &req, const Locations &loc, Client *current) const
 {
 	std::string script_path = this->root + req.path;
 	std::string output;
-	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
+	int pipe_out[2], pipe_in[2];
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 	pid_t pid = fork();
@@ -229,12 +233,11 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		throw std::runtime_error("Fork failed");
 	if (!pid)
 	{
-		// --- Child process ---
 		close(pipe_out[0]);
 		close(pipe_in[1]);
 
 		signal(SIGPIPE, SIG_IGN);
-		signal(SIGINT, SIG_IGN);   // ← Ignore les signaux 
+		signal(SIGINT, SIG_IGN); 
 		dup2(pipe_out[1], STDOUT_FILENO);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_out[1]);
@@ -274,14 +277,13 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 			cgi_path = "/usr/bin/php-cgi";
 		else
 			throw std::runtime_error("Unsupported CGI extension");
-		// CGI arguments
 		char *argv[] = {
 			const_cast<char*>(cgi_path.c_str()),
 			const_cast<char*>(script_path.c_str()),
 			NULL
 		};
 		for (int fd = 3; fd < 1024; fd++)
-        	close(fd);
+			close(fd);
 		execve(cgi_path.c_str(), argv, envp.data());
 		exit(1);
 	}
@@ -290,21 +292,34 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		close(pipe_out[1]);
 		close(pipe_in[0]);
 
-		current->setPipeIn(pipe_out[0]);//Lis la sortie du CGI
-		current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
+		current->setPipeIn(pipe_out[0]);
+		current->setPipeOut(pipe_in[1]);
 		current->setBody(req.body);
 		current->setCgiPid(pid);
-		current->setCGiStartTime();//demarrage timing CGI
-		current->setInCGI();//on le mets a true
+		current->setCgiStartTime();
+		current->setInCgi();
 	}
 }
 
+/**
+ * @brief Copy constructor for `Server`.
+ *
+ * @param copy The `Server` object to copy.
+ */
 Server::Server(const Server &copy)
 {
 	if (this != &copy)
 		*this = copy;
 }
 
+/**
+ * @brief
+ * Assignment operator for `Server`.
+ *
+ * @param assignement The `Server` object to assign from.
+ *
+ * @return Reference to this `Server` object.
+ */
 Server &Server::operator=(const Server &assignement)
 {
 	if (this != &assignement)
@@ -318,33 +333,45 @@ Server &Server::operator=(const Server &assignement)
 	return (*this);
 }
 
+/**
+ * @brief
+ * Retrieve or create a `Session` object for a given request and port.
+ *
+ * @param g_sessions Map of all sessions.
+ * @param req The incoming Request.
+ * @param res The Response to set cookies if needed.
+ * @param port The `Server` port.
+ *
+ * @return Reference to the `Session` object for this request.
+ */
 Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port)
 {
-    // Nom de cookie unique par port : User_8080, User_8081, etc.
-    std::string cookie_name = "User_" + ft_to_string(port);
-    std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
-    std::map<std::string, Session>::iterator sess_it = g_sessions.end();
-    // Clé unique dans g_sessions : port_sessionId
-    std::string session_key;
-	//cokie trouver
-    if (it != req.cookies.end())
-    {
-        session_key = ft_to_string(port) +  "_" + it->second;
-        sess_it = g_sessions.find(session_key);
-    }
-    //pas trouver donc on genere id et le cookie
-    if (it == req.cookies.end() || sess_it == g_sessions.end())
-    {
-        std::string id = generateSessionId();
-        session_key = ft_to_string(port) + "_" + id;
-        g_sessions[session_key].ID = id;
-       	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
-        return g_sessions[session_key];
-    }
-	//je mets pas de set-cookie car deja present
-    return g_sessions[session_key];
+	std::string cookie_name = "User_" + ftToString(port);
+	std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
+	std::map<std::string, Session>::iterator sess_it = g_sessions.end();
+	std::string session_key;
+	if (it != req.cookies.end())
+	{
+		session_key = ftToString(port) +  "_" + it->second;
+		sess_it = g_sessions.find(session_key);
+	}
+	if (it == req.cookies.end() || sess_it == g_sessions.end())
+	{
+		std::string id = generateSessionId();
+		session_key = ftToString(port) + "_" + id;
+		g_sessions[session_key].ID = id;
+	   	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
+		return g_sessions[session_key];
+	}
+	return g_sessions[session_key];
 }
 
+/**
+ * @brief
+ * Delete expired sessions and remove associated upload directories.
+ *
+ * @param g_sessions Map of all sessions.
+ */
 void	deleteSession(std::map<std::string, Session> &g_sessions)
 {
 	time_t now = getCurrentTime();
@@ -355,14 +382,21 @@ void	deleteSession(std::map<std::string, Session> &g_sessions)
 		{
 			removeDirectoryRecursive("./config/www/uploads/" + it->second.ID);			
 			std::map<std::string, Session>::iterator toDelete = it;
-			++it;                     // avancer AVANT erase
-			g_sessions.erase(toDelete); // erase invalide toDelete, pas it
+			++it;
+			g_sessions.erase(toDelete);
 		}
 		else
 			++it;
 	}
 }
 
+/**
+ * @brief
+ * Remove a specific uploaded file from a `Session`.
+ *
+ * @param session The `Session` object.
+ * @param deletePath Path of the file to remove from uploaded_files.
+ */
 void removeUploadFileSession(Session &session, std::string deletePath)
 {
 	std::vector<std::string>::iterator it =
@@ -371,4 +405,3 @@ void removeUploadFileSession(Session &session, std::string deletePath)
 	if (it != session.uploaded_files.end())
 		session.uploaded_files.erase(it);
 }
-

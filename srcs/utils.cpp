@@ -8,7 +8,7 @@
  * 
  * @return The string without semicolon.
  */
-std::string strip_semicolon(const std::string &s)
+std::string stripSemicolon(const std::string &s)
 {
 	if (!s.empty() && s[s.size() - 1] == ';')
 		return s.substr(0, s.size() - 1);
@@ -17,9 +17,11 @@ std::string strip_semicolon(const std::string &s)
 
 /**
  * @brief
- * Initialise the errors in conf (can be changed by extracting the datas of HTML error files)
- * 
- * @param conf The `Server` configuration.
+ * Initialize default error pages for a `Server` configuration.
+ *
+ * Extracts available HTML error pages from the `Server`'s error directory.
+ *
+ * @param conf The `Server` configuration to initialize errors for.
  */
 void init_default_errors(Server& conf)
 {
@@ -47,6 +49,14 @@ void init_default_errors(Server& conf)
 	closedir(dir);
 }
 
+/**
+ * @brief
+ * Recursively remove a directory and its contents.
+ *
+ * @param path Path to the directory to remove.
+ *
+ * @return true if the directory was successfully removed, false otherwise.
+ */
 bool removeDirectoryRecursive(const std::string &path)
 {
 	DIR *dir = opendir(path.c_str());
@@ -73,10 +83,15 @@ bool removeDirectoryRecursive(const std::string &path)
 	return (rmdir(path.c_str()) == 0);
 }
 
-
+/**
+ * @brief
+ * Reset the uploads directory by removing it and recreating it.
+ *
+ * @param uploadsPath Path to the uploads directory.
+ */
 void resetUploadsDir(const std::string &uploadsPath)
 {
-	if (pathExists(uploadsPath) && !removeDirectoryRecursive(uploadsPath))
+	if (pathDirectoryExists(uploadsPath) && !removeDirectoryRecursive(uploadsPath))
 			std::cerr << "Failed to remove " << uploadsPath << std::endl;
 	if (mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
@@ -85,21 +100,45 @@ void resetUploadsDir(const std::string &uploadsPath)
 std::vector<Socket *> all_socket;
 volatile sig_atomic_t	on = 1;
 
+/**
+ * @brief
+ * Handle SIGINT signal by setting the global 'on' flag to false.
+ *
+ * @param signum The signal number (ignored).
+ */
 void	handle_sigint(int signum)
 {
 	(void)signum;
 	on = 0;
 }
 
-void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
+/**
+ * @brief
+ * Fill a destination vector with tokens until a semicolon is found.
+ *
+ * @param dest Destination vector to fill.
+ * @param tokens Source vector of tokens.
+ * @param i Current index in tokens (will be incremented).
+ */
+void fillTokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
 {
 	dest.clear();
 	while (++i < tokens.size() && tokens[i][tokens[i].size() - 1] != ';')
 		dest.push_back(tokens[i]);
 	if (i < tokens.size() && tokens[i][tokens[i].size() - 1] == ';')
-		dest.push_back(strip_semicolon(tokens[i]));
+		dest.push_back(stripSemicolon(tokens[i]));
 }
 
+/**
+ * @brief
+ * Read the entire content of a file into a string.
+ *
+ * @param filepath Path to the file to read.
+ *
+ * @return The file content as a string.
+ *
+ * @throws std::runtime_error if the file does not exist or cannot be opened.
+ */
 std::string readFile(const std::string& filepath)
 {
 	struct stat s;
@@ -113,11 +152,21 @@ std::string readFile(const std::string& filepath)
 	return buf.str();
 }
 
+/**
+ * @brief
+ * Convert a size string like "10K", "5MB", or "2GB" to a size_t value in bytes.
+ *
+ * @param input The size string to convert.
+ *
+ * @return The size in bytes.
+ *
+ * @throws std::invalid_argument if the string is empty or invalid.
+ */
 size_t convertSize(const std::string &input)
 {
 	if (input.empty())
 		throw std::invalid_argument("Empty size string");
-	std::string str = strip_semicolon(input);
+	std::string str = stripSemicolon(input);
 
 	while (!str.empty() && std::isspace(static_cast<unsigned char>(str[str.size() - 1])))
 		str.erase(str.size() - 1);
@@ -165,6 +214,12 @@ size_t convertSize(const std::string &input)
 	return static_cast<size_t>(base) * multiplier;
 }
 
+/**
+ * @brief
+ * Display the details of a `Request` object for debugging purposes.
+ *
+ * @param req The `Request` object to display.
+ */
 void displayRequestInfo(const Request &req)
 {
 	std::cout << "------- displayRequestInfo :" << std::endl;
@@ -186,6 +241,12 @@ void displayRequestInfo(const Request &req)
 	std::cout << req.body << std::endl;
 }
 
+/**
+ * @brief
+ * Display the details of a `Response` object for debugging purposes.
+ *
+ * @param res The `Response` object to display.
+ */
 void displayResponseInfo(const Response &res)
 {
 	std::cout << "------- displayResponseInfo :" << std::endl;
@@ -202,6 +263,14 @@ void displayResponseInfo(const Response &res)
 	std::cout << res.body << std::endl;
 }
 
+/**
+ * @brief
+ * Extract the filename from the body of a multipart/form-data file upload.
+ *
+ * @param fileBody The body string of the uploaded file.
+ *
+ * @return The filename if found, otherwise an empty string.
+ */
 std::string getFileName(const std::string &fileBody)
 {
 	std::size_t fileStart = fileBody.find("filename=\"");
@@ -215,11 +284,27 @@ std::string getFileName(const std::string &fileBody)
 	return "";
 }
 
+/**
+ * @brief
+ * Generate a JSON string representing an error message.
+ *
+ * @param msg The error message.
+ *
+ * @return A JSON-formatted error string.
+ */
 std::string makeJsonError(const std::string &msg)
 {
-	return std::string("{\"status\":\"error\",\"message\":\"") + msg + "\"}";
+	return std::string("{\"status\":\"error\",\"message\":\"") + msg + "\"}\n";
 }
 
+/**
+ * @brief
+ * Decode a URL-encoded string (converts %XX sequences and '+' to spaces).
+ *
+ * @param str The URL-encoded string.
+ *
+ * @return The decoded string.
+ */
 std::string urlDecode(const std::string &str)
 {
 	std::string result;
@@ -245,6 +330,12 @@ std::string urlDecode(const std::string &str)
 	return result;
 }
 
+/**
+ * @brief
+ * Parse the "Cookie" header from a `Request` and populate the cookies map.
+ *
+ * @param req The `Request` object to populate cookies for.
+ */
 void parseCookies(Request &req)
 {
 	std::map<std::string, std::string>::iterator it = req.headers.find("Cookie");
@@ -269,21 +360,49 @@ void parseCookies(Request &req)
 	}
 }
 
-std::string ft_to_string(size_t nb)
+/**
+ * @brief
+ * Convert a size_t number to a string.
+ *
+ * @param nb The number to convert.
+ *
+ * @return The string representation of the number.
+ */
+std::string ftToString(size_t nb)
 {
 	std::stringstream ss;
 	ss << nb;
 	return ss.str();
 }
 
+/**
+ * @brief
+ * Generate a unique session ID string.
+ *
+ * @return The generated session ID.
+ */
 std::string	generateSessionId(void)
 {
 	static int ID = 0;
-	std::string SessionId = "sess" + ft_to_string(ID++);
+	std::string SessionId = "sess" + ftToString(ID++);
 	return SessionId;
 }
 
-//fonction qui permet de mettre le cookie dans la reponse
+/**
+ * @brief
+ * Set a cookie in the `Response` object, creating it if it does not exist.
+ *
+ * @param id The session ID to store in the cookie.
+ * @param res The `Response` object to add the cookie to.
+ * @param name The name of the cookie.
+ * @param cookies Map of existing cookies.
+ * @param maxAgeSeconds Max age in seconds for the cookie.
+ * @param path The path attribute for the cookie.
+ * @param httpOnly Whether the cookie is HTTP-only.
+ * @param secure Whether the cookie is secure.
+ *
+ * @return The maxAgeSeconds value.
+ */
 int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies,
 				int maxAgeSeconds = 3600, const std::string &path = "/", bool httpOnly = true, bool secure = true)
 {
@@ -296,7 +415,7 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 	std::string cookie = name + "=" + value;
 	cookie += "; Path=" + path;
 	if (maxAgeSeconds > 0)
-		cookie += "; Max-Age=" + ft_to_string(maxAgeSeconds);
+		cookie += "; Max-Age=" + ftToString(maxAgeSeconds);
 	if (httpOnly)
 		cookie += "; HttpOnly";
 	cookie += "; SameSite=Lax";
@@ -305,22 +424,49 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 	return maxAgeSeconds;
 }
 
+/**
+ * @brief
+ * Overload of setCookie using default parameters.
+ */
 int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies)
 {
 	return setCookie(id, res, name, cookies, 3600, "/", true, true);
 }
 
+/**
+ * @brief
+ * Get the current system time.
+ *
+ * @return The current time as time_t.
+ */
 time_t getCurrentTime()
 {
 	return std::time(NULL);
 }
 
-bool pathExists(const std::string &path)
+
+/**
+ * @brief
+ * Check whether a directory exists at the given path.
+ *
+ * @param path Path to check.
+ *
+ * @return true if the directory exists, false otherwise.
+ */
+bool pathDirectoryExists(const std::string &path)
 {
 	struct stat info;
 	return stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
 }
 
+/**
+ * @brief
+ * Normalize a filesystem path by removing duplicate slashes and trailing slash.
+ *
+ * @param path The path string to clean.
+ *
+ * @return The cleaned path string.
+ */
 std::string cleanPath(const std::string &path)
 {
 	if (path.empty())
@@ -350,6 +496,15 @@ std::string cleanPath(const std::string &path)
 	return clean;
 }
 
+/**
+ * @brief
+ * Shorten a filename to a maximum length, adding an ellipsis in the middle if needed.
+ *
+ * @param name The original filename.
+ * @param maxLength Maximum length allowed.
+ *
+ * @return The shortened filename.
+ */
 std::string shortenFileName(const std::string &name, size_t maxLength)
 {
 	if (name.length() <= maxLength)
@@ -359,6 +514,15 @@ std::string shortenFileName(const std::string &name, size_t maxLength)
 	return name.substr(0, keep) + ellipsis + name.substr(name.length() - keep);
 }
 
+/**
+ * @brief
+ * Determine the class of a file based on its extension and stat info.
+ *
+ * @param name The filename.
+ * @param st The stat structure of the file.
+ *
+ * @return A string representing the file class (folder, image, video, pdf, tex, file).
+ */
 std::string getFileClass(const std::string &name, const struct stat &st)
 {
 	if (S_ISDIR(st.st_mode))
@@ -381,7 +545,14 @@ std::string getFileClass(const std::string &name, const struct stat &st)
 	}
 	return "file";
 }
-// Mets en ReadOnly les fichiers .html du serveur et les remets en normal selon l'action
+
+/**
+ * @brief
+ * Find HTML files recursively in a directory and apply an action (chmod open/close).
+ *
+ * @param action The action to apply (open or close).
+ * @param path The path to search recursively.
+ */
 void findHtmlFiles(const std::string &action, const std::string &path)
 {
 	DIR *dir = opendir(path.c_str());
@@ -413,14 +584,31 @@ void findHtmlFiles(const std::string &action, const std::string &path)
 	closedir(dir);
 }
 
+/**
+ * @brief
+ * Check if a character belongs to a given set.
+ *
+ * @param c The character to check.
+ * @param set The string containing allowed characters.
+ *
+ * @return true if `c` is in `set`, false otherwise.
+ */
 static bool inSet(char c, const std::string &set)
 {
 	for (size_t i = 0; i < set.size(); ++i)
-        if (c == set[i])
-            return true;
+		if (c == set[i])
+			return true;
 	return false;
 }
 
+/**
+ * @brief
+ * Strip characters from the left, right, or both sides of a string.
+ *
+ * @param s The string to modify.
+ * @param set The characters to remove.
+ * @param side The side(s) to strip (LEFT, RIGHT, BOTH).
+ */
 void stripe(std::string &s, const std::string &set, StripSide side)
 {
 	size_t start = 0;

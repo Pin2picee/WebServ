@@ -1,19 +1,39 @@
 #include "Config.hpp"
 #include "utils.hpp"
 
-/* constructor */
+/**
+ * @brief
+ * Default constructor for `Config`.
+ */
 Config::Config() {}
 
-/* destructor */
+/**
+ * @brief
+ * Destructor for `Config`.
+ */
 Config::~Config() {}
 
+/**
+ * @brief
+ * Copy constructor for `Config`.
+ *
+ * @param copy The `Config` instance to copy.
+ */
 Config::Config(const Config &copy) : Server(copy)
 {
 	if (this != &copy)
 		*this = copy;
 }
 
-Config						&Config::operator=(const Config &assignement)
+/**
+ * @brief
+ * Assignment operator for `Config`.
+ *
+ * @param assignement The `Config` instance to assign.
+ *
+ * @return Reference to the assigned `Config`.
+ */
+Config	&Config::operator=(const Config &assignement)
 {
 	if (this != &assignement)
 	{
@@ -24,14 +44,19 @@ Config						&Config::operator=(const Config &assignement)
 }
 
 /**
- * @brief : La fonction creer tous les sockets mentionne dans le fichier de config
-**/
+ * @brief
+ * Creates all sockets declared in the configuration file.
+ *
+ * Iterates through each server and its `listen` directives
+ * to initialize the corresponding sockets.
+ */
 void	Config::CreateSocket(void)
 {
 	for (std::vector<Server>::iterator it = Servers.begin(); it != Servers.end(); it++)
 	{
-		std::vector<std::pair< std::string, int> > CurrentListen = it->getListen();//on recup le vector de ip/port a bind pour le serverblock actuelle 
-		for (std::vector<std::pair< std::string, int> >::iterator it_current = CurrentListen.begin(); it_current != CurrentListen.end(); it_current++)//parcour le vector listen
+		std::vector<std::pair< std::string, int> > CurrentListen = it->getListen();
+		for (std::vector<std::pair< std::string, int> >::iterator it_current = CurrentListen.begin();
+			it_current != CurrentListen.end(); it_current++)
 		{
 			Socket	*new_socket = new Socket(it_current->first, it_current->second, &(*it));
 			this->Sockets.push_back(new_socket);
@@ -39,6 +64,12 @@ void	Config::CreateSocket(void)
 	}
 }
 
+/**
+ * @brief
+ * Returns the vector of created sockets.
+ *
+ * @return A constant reference to the vector of `Socket*`.
+ */
 const std::vector<Socket *>&	Config::getSocket() const
 {
 	return (Sockets);
@@ -46,13 +77,13 @@ const std::vector<Socket *>&	Config::getSocket() const
 
 /**
  * @brief
- * Parse the configuration file `Location` part.
+ * Parses a `location` block from the configuration file.
+ *
+ * @param i Current index in the token vector.
+ * @param tokens Vector containing all configuration tokens.
+ * @param t_size Total number of tokens.
  * 
- * @param i The current increment on the `tokens`.
- * @param tokens The configuration file changed in tokens.
- * @param root The `Location` root path.
- * 
- * @return A `Location` structure that will be autmatically added to the corresponding `Server` structure.
+ * @return A `Locations` structure corresponding to the parsed block.
  */
 Locations	parse_loc(size_t &i, std::vector<std::string> tokens, size_t &t_size)
 {
@@ -70,23 +101,23 @@ Locations	parse_loc(size_t &i, std::vector<std::string> tokens, size_t &t_size)
 			continue;
 		}
 		if (tokens[i] == "methods")
-			fill_tokens(loc.methods, tokens, i);
+			fillTokens(loc.methods, tokens, i);
 		else if (tokens[i] == "index")
-			fill_tokens(loc.index_files, tokens, i);
+			fillTokens(loc.index_files, tokens, i);
 		else if (tokens[i] == "autoindex")
-			loc.autoindex = (strip_semicolon(tokens[++i]) == "on");
+			loc.autoindex = (stripSemicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "upload_dir")
-			loc.upload_dir = strip_semicolon(tokens[++i]);
+			loc.upload_dir = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "cgi")
-			loc.cgi = (strip_semicolon(tokens[++i]) == "on");
+			loc.cgi = (stripSemicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "cgi_extension")
-			loc.cgi_extension = strip_semicolon(tokens[++i]);
+			loc.cgi_extension = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "cgi_path")
-			loc.cgi_path = strip_semicolon(tokens[++i]);
+			loc.cgi_path = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "root")
-			loc.root = strip_semicolon(tokens[++i]);
+			loc.root = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "sensitive")
-			loc.sensitive = (strip_semicolon(tokens[++i]) == "on");
+			loc.sensitive = (stripSemicolon(tokens[++i]) == "on");
 		++i;
 	}
 	return (loc);
@@ -94,9 +125,9 @@ Locations	parse_loc(size_t &i, std::vector<std::string> tokens, size_t &t_size)
 
 /**
  * @brief
- * Parse a configuration file.
- * 
- * @param configFile The path to the configuration file.
+ * Parses all server blocks from a configuration file.
+ *
+ * @param configFile Path to the configuration file.
  */
 void Config::parseAllServerFiles(const std::string &configFile)
 {
@@ -126,12 +157,13 @@ void Config::parseAllServerFiles(const std::string &configFile)
 
 /**
  * @brief
- * Parse a server.
+ * Parses a single server block.
+ *
+ * @param tokens Vector of configuration tokens.
+ * @param t_size Total number of tokens.
+ * @param i Current index in the token vector.
  * 
- * @param tokens A vector of tokens containing the configuration file informations.
- * @param i The `tokens` current increment.
- * 
- * @return A `Server` struct that will be automatically added in the vector of `Structs` of `Config` class.
+ * @return A fully initialized `Server` instance.
  */
 Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, size_t &i)
 {
@@ -150,7 +182,7 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, siz
 				continue;
 			if (tokens[i] == "listen")
 			{
-				std::string ip_port = strip_semicolon(tokens[i + 1]);
+				std::string ip_port = stripSemicolon(tokens[i + 1]);
 				size_t colon = ip_port.find(':');
 				if (colon == std::string::npos)
 					throw std::runtime_error("Invalid listen format : " + ip_port);
@@ -161,9 +193,9 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, siz
 				conf.addListen(ip, port);
 			}
 			else if (tokens[i] == "root")
-				conf.setRoot(strip_semicolon(tokens[i + 1]));
+				conf.setRoot(stripSemicolon(tokens[i + 1]));
 			else if (tokens[i] == "error_pages")
-				conf.addErrorDir(strip_semicolon(tokens[i + 1]));
+				conf.addErrorDir(stripSemicolon(tokens[i + 1]));
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
 			else if (tokens[i] == "location")
@@ -196,9 +228,11 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, siz
 
 /**
  * @brief
- * Convert a file stream into tokens.
- * 
- * @param ifs The ifstream type of value that will be tokenized.
+ * Tokenizes a configuration file stream.
+ *
+ * Splits the input stream into whitespace-separated tokens.
+ *
+ * @param ifs Input stream of the configuration file.
  * 
  * @return A vector of string tokens.
  */
