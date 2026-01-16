@@ -283,6 +283,7 @@ std::string	generateSessionId(void)
 	return SessionId;
 }
 
+//fonction qui permet de mettre le cookie dans la reponse
 int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies,
 				int maxAgeSeconds = 3600, const std::string &path = "/", bool httpOnly = true, bool secure = true)
 {
