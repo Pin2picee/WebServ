@@ -269,7 +269,7 @@ void parseCookies(Request &req)
 	}
 }
 
-std::string ft_to_string(int nb)
+std::string ft_to_string(size_t nb)
 {
 	std::stringstream ss;
 	ss << nb;
@@ -290,10 +290,7 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 	std::string value;
 	std::map<std::string, std::string>::const_iterator it = cookies.find(name);
 	if (it != cookies.end())
-	{
-		value = it->second;
 		return maxAgeSeconds;
-	}
 	else
 		value = id;
 	std::string cookie = name + "=" + value;

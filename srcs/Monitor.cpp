@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Monitor.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/15 19:35:12 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/16 02:03:59 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,13 +22,11 @@ const char *Monitor::MonitorError::what() const throw()
 int Monitor::searchClient(Client *my_client, int i)
 {
         bool client_still_connected = false;
-    int client_fd = -1;
     for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
     {
         if (&it->second == my_client)
         {
             client_still_connected = true;
-            client_fd = it->first;
             break;
         }
     }

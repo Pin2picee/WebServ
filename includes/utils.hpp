@@ -73,7 +73,7 @@ std::string getFileClass(const std::string &name, const struct stat &st);
 void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 int			setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies);
 void 		findHtmlFiles(const std::string &action, const std::string &path);
-
+std::string ft_to_string(size_t nb);
 enum StripSide { LEFT, RIGHT, BOTH };
 void		stripe(std::string &s, const std::string &set, StripSide side = BOTH);
 
