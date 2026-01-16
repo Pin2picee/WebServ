@@ -6,17 +6,32 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:15:32 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:47:34 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Monitor.hpp"
 
+/**
+ * @brief
+ * Custom exception for `Monitor` that returns the system `errno` message.
+ *
+ * @return Returns the system error message.
+ */
 const char *Monitor::MonitorError::what() const throw()
 {
 	return (strerror(errno));
 }
 
+/**
+ * @brief
+ * Checks if a `Client` is still connected.
+ *
+ * @param my_client Pointer to the `Client`.
+ * @param i Index in `all_fd` corresponding to the client.
+ * 
+ * @return Returns -1 if the client is disconnected and CGI cleaned up, 0 otherwise.
+ */
 int Monitor::searchClient(Client *my_client, int i)
 {
         bool client_still_connected = false;
@@ -51,10 +66,24 @@ int Monitor::searchClient(Client *my_client, int i)
 	return (0);
 }
 
+/**
+ * @brief
+ * Default constructor for `Monitor`.
+ */
 Monitor::Monitor() {}
 
+/**
+ * @brief
+ * Destructor for `Monitor`.
+ */
 Monitor::~Monitor() {}
 
+/**
+ * @brief
+ * Copy constructor for `Monitor`.
+ *
+ * @param copy The `Monitor` to copy.
+ */
 Monitor::Monitor(const Monitor &copy)
 {
 	if (this != &copy)
@@ -68,6 +97,14 @@ Monitor::Monitor(const Monitor &copy)
 	}
 }
 
+/**
+ * @brief
+ * Assignment operator for `Monitor`.
+ *
+ * @param copy Source `Monitor`.
+ * 
+ * @return Returns a reference to the assigned `Monitor`.
+ */
 Monitor &Monitor::operator=(const Monitor &copy)
 {
 	if (this != &copy)
@@ -82,6 +119,13 @@ Monitor &Monitor::operator=(const Monitor &copy)
 	return (*this);
 }
 
+/**
+ * @brief
+ * Adds a `fd` to the `all_fd` array with specific `events`.
+ *
+ * @param fd File descriptor to add.
+ * @param events Associated events (`POLLIN` or `POLLOUT`).
+ */
 void   Monitor::add_fd(int &fd, int events)
 {
 	all_fd[this->nb_fd].fd = fd;
@@ -91,6 +135,12 @@ void   Monitor::add_fd(int &fd, int events)
 	this->nb_fd++;
 }
 
+/**
+ * @brief
+ * Constructor that initializes the `Monitor` with a table of `Socket`.
+ *
+ * @param tab Vector of `Socket*` to monitor.
+ */
 Monitor::Monitor(std::vector<Socket *> tab)
 {
 	this->nb_fd = 0;
@@ -112,6 +162,15 @@ Monitor::Monitor(std::vector<Socket *> tab)
 	nb_fd_server = nb_fd;
 }
 
+/**
+ * @brief
+ * Adds a new `Client` to the `clients` map and sets its IP and port.
+ *
+ * @param fd Client file descriptor.
+ * @param ip Client IP address.
+ * @param port Client port.
+ * @param fd_server Server file descriptor associated with this client.
+ */
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
 	Client  nouveau(all_sockets.at(fd_server));
@@ -142,11 +201,15 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 	clients.insert(std::pair<int, Client>(fd, nouveau));
 }
 
-/*
-==========
-Supprime le Client de la map Client
-==========
-*/
+
+/**
+ * @brief
+ * Removes a `Client` from the `clients` map and cleans up associated CGI pipes and processes.
+ *
+ * @param i Index in `all_fd` corresponding to the client.
+ *
+ * @return Always returns 0.
+ */
 int Monitor::deconnexion(int i)
 {
     const int client_fd = all_fd[i].fd;
@@ -188,6 +251,14 @@ int Monitor::deconnexion(int i)
     return 0;
 }
 
+/**
+ * @brief
+ * Tests the result of `recv` to handle errors and connection termination.
+ *
+ * @param count Number of bytes read.
+ * 
+ * @return 1 if read OK, 2 if non-blocking with no data, 0 otherwise.
+ */
 int	 Monitor::test_read(ssize_t count)
 {
 	if (count > 0)
@@ -197,11 +268,14 @@ int	 Monitor::test_read(ssize_t count)
 	return (0);
 }
 
-/*
-=================
-Extrait les données d'une requete client pour le stocker dans l'objet client .
-=================
-*/
+/**
+ * @brief
+ * Reads data from a `Client` and stores it in its object.
+ *
+ * @param i Index of the client in `all_fd`.
+ * 
+ * @return 1 if success, otherwise disconnects the client.
+ */
 int		Monitor::new_request(int i)
 {
 	ssize_t count;
@@ -226,6 +300,12 @@ int		Monitor::new_request(int i)
 	return (1);
 }
 
+/**
+ * @brief
+ * Removes a `fd` from the `all_fd` array.
+ *
+ * @param index Index of the `fd` in `all_fd`.
+ */
 void Monitor::remove_fd(int index)
 {
     if (all_fd[index].fd > 0)
@@ -237,6 +317,14 @@ void Monitor::remove_fd(int index)
 	}
 }
 
+/**
+ * @brief
+ * Accepts a new client on a server `fd` and adds it to `clients`.
+ *
+ * @param i Index of the server `fd` in `all_fd`.
+ * 
+ * @return 0 if success, 1 otherwise.
+ */
 int	Monitor::new_clients(int i)
 {
 	struct sockaddr_in address;
@@ -254,12 +342,10 @@ int	Monitor::new_clients(int i)
 	return (0);
 }
 
-/*
-==================
-Verifie le temps d'attente de chaque CGI en cours qui sont stocker dans la map Tab_CGI
-==================
-*/
-
+/**
+ * @brief
+ * Checks timeouts for ongoing CGI processes and handles clients and responses accordingly.
+ */
 void	Monitor::Timeout()
 {
 	timeval	timeofday;
@@ -298,6 +384,15 @@ void	Monitor::Timeout()
 	Key_Erase.clear();
 }
 
+/**
+ * @brief
+ * Reactivates `POLLOUT` for a client or removes CGI pipes after timeout.
+ *
+ * @param my_client Pointer to the client.
+ * @param PipeIn CGI read pipe `fd`.
+ * @param PipeOut CGI write pipe `fd`.
+ * @param timeout True if called during a timeout.
+ */
 void	Monitor::reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool timeout)
 {
 	int	fd_current = -1;
@@ -330,11 +425,13 @@ void	Monitor::reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool 
 	}
 }
 
-/*
-==================
-Suppresion des Pipes des CGI CLIENT du tableau POLLFD
-==================
-*/
+/**
+ * @brief
+ * Removes CGI `fd`s from the `all_fd` array.
+ *
+ * @param my_client Pointer to the client.
+ * @param y Determines which pipes to remove: 1 = out, 2 = in, 3 = both.
+ */
 void	Monitor::remove_fd_CGI(Client *my_client, int y)
 {
 	int PipeIn = my_client->getPipeIn();
@@ -362,6 +459,15 @@ void	Monitor::remove_fd_CGI(Client *my_client, int y)
     }
 }
 
+/**
+ * @brief
+ * Handles writing the client body to a CGI pipe.
+ *
+ * @param i Index in `all_fd`.
+ * @param my_client Pointer to the client.
+ *
+ * @return -1 if pipe is done or error, 0 otherwise.
+ */
 int	Monitor::pollout_CGI(int i, Client *my_client)
 {
 	if ((all_fd[i].revents & POLLOUT || all_fd[i].revents & POLLHUP) && all_fd[i].fd == my_client->getPipeOut() && my_client->getPipeOut() > 0)
@@ -407,6 +513,15 @@ int	Monitor::pollout_CGI(int i, Client *my_client)
 	return (0);
 }
 
+/**
+ * @brief
+ * Handles reading CGI output from a pipe.
+ *
+ * @param i Index in `all_fd`.
+ * @param my_client Pointer to the client.
+ *
+ * @return -1 if pipe is done or error, 0 otherwise.
+ */
 int	Monitor::pollin_CGI(int &i, Client *my_client)
 {
 
@@ -472,9 +587,14 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 	return (0);
 }
 
-/*
-Gere entré et sortie des pipes CGI pour envoyer body et recup l'output du CGI
-*/
+/**
+ * @brief
+ * Main mechanism to handle CGI pipes (input/output).
+ *
+ * @param i Index in `all_fd`.
+ *
+ * @return -1 if client disconnected or error, 0 otherwise.
+ */
 int	Monitor::CGI_engine(int i)
 {
 	std::map<int, Client *>::iterator it = tab_CGI.find(all_fd[i].fd);
@@ -504,9 +624,13 @@ int	Monitor::CGI_engine(int i)
 	return (0);
 }
 
-/*
-Ajoute les Pipes d'un CGI client dans le tab PollFd
-*/
+/**
+ * @brief
+ * Adds a client's CGI pipes to the `all_fd` array for polling.
+ *
+ * @param current Pointer to the client.
+ * @param i Index in `all_fd`.
+ */
 void	Monitor::AddCgiPollFd(Client *current, int i)
 {
 	if (current->getInCGI() == true && !current->getPipeAddPoll())
@@ -535,6 +659,14 @@ void	Monitor::AddCgiPollFd(Client *current, int i)
 	}
 }
 
+/**
+ * @brief
+ * Handles the aftermath of a `send` call on a client.
+ *
+ * @param current Pointer to the client.
+ * @param i Index of the client in `all_fd`.
+ * @param nb_send Number of bytes sent.
+ */
 void	Monitor::AfterSend(Client *current, int i, int nb_send)
 {
 	std::cout << "AfterSend called with nb_send: " << nb_send << std::endl;
@@ -568,7 +700,8 @@ void	Monitor::AfterSend(Client *current, int i, int nb_send)
 	}
 }
 /**
- * @brief = Une boucle poll qui verifie chaque socket server et qui accept les connexions
+ * @brief
+ * Main server loop that polls sockets, accepts connections, and manages CGI processes.
  */
 void	Monitor::Monitoring()
 {
@@ -708,6 +841,13 @@ void	Monitor::Monitoring()
 	clean_CGI();
 }
 
+/**
+ * @brief
+ * Updates a client's cookies based on a response.
+ *
+ * @param client Client to update.
+ * @param resp Response to analyze for cookies.
+ */
 static void parseSetCookie(const std::string &header, std::string &name, std::string &value)
 {
     size_t start = header.find("Set-Cookie: ");
@@ -725,6 +865,10 @@ static void parseSetCookie(const std::string &header, std::string &name, std::st
     }
 }
 
+/**
+ * @brief
+ * Cleans all remaining CGI processes and closes their pipes.
+ */
 void Monitor::updateClientCookies(Client &client, const Response &resp)
 {
     if (!client.getCookies().empty())
