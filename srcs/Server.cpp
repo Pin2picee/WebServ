@@ -324,15 +324,12 @@ Session &getSession(std::map<std::string, Session> &g_sessions, const Request &r
     std::string cookie_name = "User_" + ft_to_string(port);
     std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
     std::map<std::string, Session>::iterator sess_it = g_sessions.end();
-    // Clé unique dans g_sessions : port_sessionId
     std::string session_key;
-	//cokie trouver
     if (it != req.cookies.end())
     {
         session_key = ft_to_string(port) +  "_" + it->second;
         sess_it = g_sessions.find(session_key);
     }
-    //pas trouver donc on genere id et le cookie
     if (it == req.cookies.end() || sess_it == g_sessions.end())
     {
         std::string id = generateSessionId();
@@ -341,7 +338,6 @@ Session &getSession(std::map<std::string, Session> &g_sessions, const Request &r
        	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
         return g_sessions[session_key];
     }
-	//je mets pas de set-cookie car deja present
     return g_sessions[session_key];
 }
 
@@ -355,8 +351,8 @@ void	deleteSession(std::map<std::string, Session> &g_sessions)
 		{
 			removeDirectoryRecursive("./config/www/uploads/" + it->second.ID);			
 			std::map<std::string, Session>::iterator toDelete = it;
-			++it;                     // avancer AVANT erase
-			g_sessions.erase(toDelete); // erase invalide toDelete, pas it
+			++it;
+			g_sessions.erase(toDelete);
 		}
 		else
 			++it;
