@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 00:24:31 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/16 03:19:08 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ class Client
 		std::string ip;
 		std::string port;
 		std::map<std::string, std::string>	cookies;
-		timeval 	start;//Connexion client
-		timeval 	end;//deco client
+		timeval 	start;
+		timeval 	end;
 		timeval 	cgi_start_time;
 		bool		connected;
 		bool		request_finish;
@@ -44,20 +44,20 @@ class Client
 		bool		InCgi;
 		size_t  	offset;
 		bool		PipeAddPoll;
-		int			fd_pipe_out;//lecture a la sortie du fils donc 0 car sortie du pipe
-		int			fd_pipe_in;//ecriture a l'entre du fils pour le body donc 1 car entre du pipe
+		int			fd_pipe_out;
+		int			fd_pipe_in;
 		pid_t		_pid;
 		size_t		OffsetCgi;
 		size_t		OffsetBodyCgi;
 
-	public :// a changer
+	public :
 		ResponseHandler	handler;
 	//base
 		Client(Socket *the_socket);
 		~Client();
 		Client(const Client &copy);
 		Client &operator=(const Client &assignement);
-		void	setbasic(std::string ip_address, std::string port_address);// assign les valeurs basic d'un nouveau client
+		void	setbasic(std::string ip_address, std::string port_address);
 		
 	//set
 		void			setRequest(std::string buf);
@@ -102,8 +102,8 @@ class Client
 
 
 		size_t			AddCgiOutput(std::string morceau);
-		void			view_log();//utiliser seulement par deconected car end pas encore init;affiche les temps de connexions avec l'ip et port + socket serveur
-		void			disconnected();//met a false + view_log()
+		void			view_log();
+		void			disconnected();
 };
 
 #endif

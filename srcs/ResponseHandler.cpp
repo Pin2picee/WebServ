@@ -3,19 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   ResponseHandler.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 00:16:51 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/16 03:10:14 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ResponseHandler.hpp"
 #include "Client.hpp"
-/* constructor */
+
 ResponseHandler::ResponseHandler(const Server &server) : _server(server) {}
 
-/* destructor */
 ResponseHandler::~ResponseHandler() {}
 
 const Locations *findLocation(const Request &req, const std::vector<Locations> &locs)
@@ -176,7 +175,6 @@ void ResponseHandler::handleDelete(Response &res, const Locations &loc, const Re
 }
 
 
-//utils
 void ResponseHandler::generateAutoindex(const std::string &fullpath, const std::string &locPath, const Request &req, Response &res, Session &session)
 {
     const std::string fullPath = fullpath;
@@ -342,7 +340,7 @@ ResponseHandler::ResponseHandler(const ResponseHandler &copy) : _server(copy._se
 ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
 {
 	(void)assignement;
-	return (*this);// rien a mettre egal a l'assignement car la seule variable est const donc deja init
+	return (*this);
 }
 
 /**

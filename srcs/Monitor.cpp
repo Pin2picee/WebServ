@@ -6,19 +6,17 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 02:03:59 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:15:32 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Monitor.hpp"
 
-/*<Exception>*/
 const char *Monitor::MonitorError::what() const throw()
 {
 	return (strerror(errno));
 }
 
-// Dans Monitor.cpp
 int Monitor::searchClient(Client *my_client, int i)
 {
         bool client_still_connected = false;
@@ -35,14 +33,12 @@ int Monitor::searchClient(Client *my_client, int i)
     {
         std::cerr << "[POLLIN_CGI] Client disconnected, cleaning up CGI without sending response" << std::endl;
         
-        // Nettoyer le CGI sans générer de réponse
         pid_t cgi_pid = my_client->getCgiPid();
         if (cgi_pid > 0)
         {
            	kill(cgi_pid, SIGKILL);
             waitpid(cgi_pid, NULL, WNOHANG);
         }
-        // Nettoyer tab_CGI
         std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);
         if (it_temp != tab_CGI.end())
         {
@@ -50,17 +46,11 @@ int Monitor::searchClient(Client *my_client, int i)
                 tab_CGI.erase(it_temp->second->getPipeOut());
             tab_CGI.erase(all_fd[i].fd);
         }
-        
-        // Note: Les pipes seront fermés par deconnexion() qui a déjà été appelé
-        // ou seront nettoyés comme fd orphelins
-        
         return (-1);
     }
 	return (0);
 }
-/*</Exception>*/
 
-/*<Construction>*/
 Monitor::Monitor() {}
 
 Monitor::~Monitor() {}
@@ -122,9 +112,6 @@ Monitor::Monitor(std::vector<Socket *> tab)
 	nb_fd_server = nb_fd;
 }
 
-/*</Construction>*/
-
-/*AJOUT DU CLIENT DANS LA MAP FD:CLIENT*/
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
 	Client  nouveau(all_sockets.at(fd_server));
@@ -136,23 +123,23 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 	unsigned char bytes[4];
 
 	oss << port_adress;
-	port_str = oss.str();//permet de le transformer en string
+	port_str = oss.str();
 	bytes[0] = ip_adress >> 24 & 0xFF; 
 	bytes[1] = ip_adress >> 16 & 0xFF;
 	bytes[2] = ip_adress >> 8 & 0xFF;
 	bytes[3] = ip_adress & 0xFF;
 
-	oss.str("");//remet a zero le flux
-	oss.clear();//reset flags aussi
+	oss.str("");
+	oss.clear();
 	for (int i = 0; i < 4; i++)
 	{
-		oss << (int)bytes[i];//concatenation
+		oss << (int)bytes[i];
 		if (i < 3)
 			oss << ".";
 	}
-	ip_str = oss.str();// ip en string grace a ostringstream .
+	ip_str = oss.str();
 	nouveau.setbasic(ip_str, port_str);
-		clients.insert(std::pair<int, Client>(fd, nouveau));
+	clients.insert(std::pair<int, Client>(fd, nouveau));
 }
 
 /*
@@ -201,20 +188,13 @@ int Monitor::deconnexion(int i)
     return 0;
 }
 
-//Verifie si deconnecte ou doit attendre
 int	 Monitor::test_read(ssize_t count)
 {
 	if (count > 0)
 		return (1);
-	else if (count < 0)//rien a lire pour l'instant ou deco
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)// r a lire
-			return (2);
-		else// alors deconnexion
-			return (0);
-	}
-	else//(count == 0)//deco
-		return (0);
+	else if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return (2);
+	return (0);
 }
 
 /*
@@ -233,7 +213,7 @@ int		Monitor::new_request(int i)
 	{
 		count = recv(all_fd[i].fd, buf, sizeof(buf), 0);
 		result = test_read(count);
-		if (!result)//client deco
+		if (!result)
 			return (deconnexion(i));
 		else if (result == 2)
 			break;
@@ -257,12 +237,6 @@ void Monitor::remove_fd(int index)
 	}
 }
 
-/*
-==========
-Accepte les connexion sur les sockets Server et Ajoute le client dans ma map Client en cours .
-==========
-*/
-
 int	Monitor::new_clients(int i)
 {
 	struct sockaddr_in address;
@@ -273,7 +247,7 @@ int	Monitor::new_clients(int i)
 		return (std::cout << "RIEN A ACCEPTER"<< std::endl, 1) ;
 	else if (all_fd[nb_fd].fd < 0)
 		return (std::cout << "ERROR ressources accept" << std::endl, 1);
-	add_client(all_fd[nb_fd].fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);// on l'ajoute dans ma map de clients avec le fd du server
+	add_client(all_fd[nb_fd].fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);
 	int ancien_flags = fcntl (all_fd[nb_fd].fd, F_GETFL);
 	fcntl(all_fd[nb_fd].fd, F_SETFL, ancien_flags | O_NONBLOCK);
 	nb_fd++;
@@ -327,12 +301,11 @@ void	Monitor::Timeout()
 void	Monitor::reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool timeout)
 {
 	int	fd_current = -1;
-			//Reactivation du POLLOUT du client pour envoyer le resultat
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 	{
-		if (&(it->second) == my_client)  // Comparer les adresses
+		if (&(it->second) == my_client)
 		{
-			fd_current = it->first;  // ← La clé = fd du socket !
+			fd_current = it->first;
 			break;
 		}
 	}
@@ -347,7 +320,7 @@ void	Monitor::reactive_pollout(Client *my_client, int PipeIn, int PipeOut, bool 
 		}
 		if (timeout && (all_fd[j].fd == PipeOut || all_fd[j].fd == PipeIn))
 		{
-			remove_fd(j);//->remove le fd des pipes du tab poll
+			remove_fd(j);
 			count++;
 		}
 		else
@@ -377,7 +350,7 @@ void	Monitor::remove_fd_CGI(Client *my_client, int y)
             removed = true;
 			continue ;
         }
-        if (all_fd[i].fd == PipeIn && (y == 2 || y == 3))  // ← else if !
+        if (all_fd[i].fd == PipeIn && (y == 2 || y == 3))
         {
             remove_fd(i);
             my_client->setPipeIn(-1);
@@ -391,7 +364,6 @@ void	Monitor::remove_fd_CGI(Client *my_client, int y)
 
 int	Monitor::pollout_CGI(int i, Client *my_client)
 {
-	// Gérer POLLHUP : le CGI a fermé son stdin sans lire, ou a crashé
 	if ((all_fd[i].revents & POLLOUT || all_fd[i].revents & POLLHUP) && all_fd[i].fd == my_client->getPipeOut() && my_client->getPipeOut() > 0)
 	{
 		const std::string& body = my_client->getBody();
@@ -447,7 +419,6 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 		if (nb_read > 0)
 		{
 			my_client->AddCgiOutput(std::string(buffer, nb_read));
-			//nb_read = 0;
 			return (-1);
 		}
 		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
@@ -559,7 +530,6 @@ void	Monitor::AddCgiPollFd(Client *current, int i)
 		if (current->getPipeIn() > 0)
 		{
 			current->setPipeAddPoll(true);
-			// Retirer POLLOUT du socket client pendant que le CGI tourne
 			all_fd[i].events = POLLIN;
 		}
 	}
@@ -608,26 +578,24 @@ void	Monitor::Monitoring()
 
 	std::cout << "Lancement du server" << std::endl;
 	findHtmlFiles("close", "./config");
-	// create uploads file if not here
 	if (!pathExists(uploadsPath) && mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 	while (on)
 	{
 		poll_return = poll(this->all_fd, nb_fd, 15);
 		Timeout();
-		if (poll_return == 0)//AUCUN SOCKET du TAB n'est pret timeout
+		if (poll_return == 0)
 			continue ;
-		else if (poll_return < 0)//ERROR
+		else if (poll_return < 0)
 		{
-			if (errno == EINTR)//signal recu donc erreur poll
+			if (errno == EINTR)
 				break;
 			throw MonitorError();
 		}
-		else if (poll_return > 0)//un ou plusieurs socket pret
+		else if (poll_return > 0)
 		{
-			for (size_t i = 0; i < nb_fd;)//parcours les socket
+			for (size_t i = 0; i < nb_fd;)
 			{
-				//std::cout << "i : " << i << " nb_fd : " << nb_fd << " nb_fd_server: " << nb_fd_server << " le fd -> " << all_fd[i].fd << " revents: " << all_fd[i].revents << std::endl;
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
 				if (all_fd[i].fd < 0)
@@ -635,25 +603,17 @@ void	Monitor::Monitoring()
 					i++;
 					continue;
 				}
-				if (CGI_engine(i) < 0)
+				if (CGI_engine(i) < 0 || all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
 				{
 					i++;
 					continue;
 				}
-				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
-				{
-					i++;
-					continue;
-				}
-				// Nettoyer les fd orphelins (pipes CGI sans client associé)
-				// Un fd qui n'est ni un serveur, ni un client, ni un pipe CGI actif
 				if (i >= nb_fd_server && it_client == clients.end() && tab_CGI.find(all_fd[i].fd) == tab_CGI.end())
 				{
 					std::cerr << "Cleaning orphan fd: " << all_fd[i].fd << std::endl;
 					remove_fd(i);
 					continue;
 				}
-				//ERROR socket
 				if (all_fd[i].revents & POLLERR)
 				{
 					if (i >= nb_fd_server)
@@ -667,24 +627,19 @@ void	Monitor::Monitoring()
 						i++;
 					}
 				}
-				//deconnexion du client
 				if (all_fd[i].revents & POLLHUP)
 				{
 					if (i >= nb_fd_server)
 					{
 						if (all_fd[i].revents & POLLIN)
-							client_disconnected = new_request(i);//lit les derniers donne
+							client_disconnected = new_request(i);
 						if (client_disconnected)
-							deconnexion(i);//on deconnecte + affiche le log//met a jour i
-						continue;
+							deconnexion(i);
 					}
 					else
-					{
 						i++;
-						continue;
-					}
+					continue;
 				}				
-				//lecture
 				if (all_fd[i].revents & POLLIN)
 				{
 					if (i < nb_fd_server)
@@ -692,8 +647,8 @@ void	Monitor::Monitoring()
 						new_clients(i++);
 						continue;
 					}
-					else if (i >= nb_fd_server && !new_request(i))//client/deconnexion
-						continue;// on reviens sur le meme i car il a etait changer par le dernier dans  deconnexion
+					else if (i >= nb_fd_server && !new_request(i))
+						continue;
 				}
 				if (i >= this->nb_fd_server && all_fd[i].fd > 0 && it_client != clients.end() && it_client->second.getFinishRequest())
 					all_fd[i].events |= POLLOUT;
@@ -739,7 +694,6 @@ void	Monitor::Monitoring()
 						it_client = clients.find(all_fd[i].fd);
 						if (it_client == clients.end())
 						{
-							// Le client a disparu entre-temps
 							deconnexion(i);
 							continue;
 						}
@@ -801,9 +755,9 @@ void	Monitor::clean_CGI()
 				it->second.setPipeOut(-1);
 			}
 			pid_t pid = it->second.getCgiPid();
-			kill(pid, SIGKILL);  // Essayer un arrêt propre
-			usleep(100000);      // Attendre 100ms
-			kill(pid, SIGKILL);  // Forcer si nécessaire
+			kill(pid, SIGKILL);
+			usleep(100000);
+			kill(pid, SIGKILL);
 			waitpid(pid, NULL, WNOHANG);
 		}
 	}

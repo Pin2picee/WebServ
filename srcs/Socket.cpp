@@ -12,14 +12,11 @@
 
 #include "Socket.hpp"
 
-/*<EXCEPTION>*/
 const char *Socket::SocketError::what() const throw()
 {
 	return (strerror(errno));
 }
-/*</EXCEPTION>*/
 
-/*<CONSTRUCTION>*/
 Socket::Socket(const Socket &copy)
 {
 	if (this != &copy)
@@ -55,26 +52,23 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 	this->Fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (Fd < 0 || port <= 0 || port > 65535)
 		throw SocketError();
-	set_socket_addr();// initialisation de la structure sock_addr_in puis convertit en (const sock_adrr *)
+	set_socket_addr();
 	if (bind(this->Fd, (const sockaddr *)&this->address1, sizeof(address1)) != 0)
 		throw SocketError();
-	else if (listen(this->Fd, SOMAXCONN) < 0)// 2emeparam= backlog file d'attente dont la connexion n'est pas encore accepter
+	else if (listen(this->Fd, SOMAXCONN) < 0)
 		throw SocketError();
 	int ancien_flags = fcntl(this->Fd, F_GETFL);
 	int res = fcntl(this->Fd, F_SETFL, ancien_flags | O_NONBLOCK);
 	if (ancien_flags == -1 || res == -1)
 		throw SocketError();
 }
-/*</CONSTRUCTION>*/
 
-/*<DESTRUCTION>*/
 Socket::Socket() {}
 
 Socket::~Socket()
 {
 	close(this->Fd);
 }
-/*</DESTRUCTION>*/
 
 uint32_t Socket::ParseIp(std::string ip)
 {
@@ -111,7 +105,7 @@ void	Socket::set_socket_addr()
 	setsockopt(this->Fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 	this->address1.sin_family = AF_INET;
 	this->address1.sin_port = htons(this->_port);
-	this->address1.sin_addr.s_addr = htonl(this->ParseIp(_ip)); // 127.0.0.1 // little_endian to big_endian for network // inet_pton->function mais pas le droit
+	this->address1.sin_addr.s_addr = htonl(this->ParseIp(_ip));
 }
 
 int Socket::getFd(void) const

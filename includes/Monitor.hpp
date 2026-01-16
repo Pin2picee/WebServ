@@ -15,16 +15,16 @@ class Monitor
 		size_t					nb_fd;
 		size_t					nb_fd_server;
 		std::map<int, Client>	clients;
-		std::map<int, Socket *>	all_sockets;//ma map avec cle = fd, valeur = obj Socket;
-		struct  pollfd			all_fd[200000];// dois tout avoir dans ce meme tab connexion for read & write
+		std::map<int, Socket *>	all_sockets;
+		struct  pollfd			all_fd[200000];
 		std::map<int, Client *>	tab_CGI;
 	private :
 		Monitor();
-		void 	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);// ajoute un client  dans mon vecteur de client
-		int		new_clients(int i);//ajoute un nouveau socket non bloquant pour le client
-		int		new_request(int i);// RECUP la requete + verif test_read
+		void 	add_client(int fd, in_addr_t ip, in_port_t port, int fd_server);
+		int		new_clients(int i);
+		int		new_request(int i);
 		int		test_read(ssize_t count);
-		int		deconnexion(int i);//SUPPRIME LA CONNEXION SOCKET CLIENT IF !TEST_READ
+		int		deconnexion(int i);
 		void 	remove_fd(int index);
 		void	Timeout();
 		void	clean_CGI();
@@ -43,9 +43,8 @@ class Monitor
 		Monitor(const Monitor &copy);
 		Monitor &operator=(const Monitor &copy);
 	public :
-		void	add_fd(int &fd, int event);//ajoute un nouveaux socket dans le tab pour poll / a faire avant le monitoring
-		void	Monitoring();//principal
-		
+		void	add_fd(int &fd, int event);
+		void	Monitoring();
 
 	class MonitorError : public std::exception
 	{

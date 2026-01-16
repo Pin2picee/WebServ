@@ -2,13 +2,11 @@
 #include "Config.hpp"
 #include "ResponseHandler.hpp"
 #include "Client.hpp"
-/* Constructor */
+
 Server::Server() : client_max_body_size(0) {}
 
-/* Destructor */
 Server::~Server() {}
 
-//Getters
 /**
  * @brief
  * Get the root path.
@@ -99,7 +97,6 @@ std::map<int, std::string>&	Server::getErrorPagesRef()
 	return error_pages;
 }
 
-//setters
 /**
  * @brief
  * Set the root path.
@@ -124,7 +121,6 @@ void	Server::setClientMaxBodySize(size_t value)
 	client_max_body_size = value;
 }
 
-//useful methods
 /**
  * @brief
  * Add a canal to listen on to `listen`.
@@ -170,13 +166,12 @@ void	Server::addLocation(const Locations& loc)
 Response parseCGIOutput(const std::string &output)
 {
 	Response res;
-	res.status_code = 200; // default value
-	res.content_type = "text/html"; // default value
+	res.status_code = 200;
+	res.content_type = "text/html";
 
-	// Separate headers from body
 	size_t header_end = output.find("\r\n\r\n");
 	if (header_end == std::string::npos)
-		header_end = output.find("\n\n"); // case where the script only use \n
+		header_end = output.find("\n\n");
 
 	std::string header_part = output.substr(0, header_end);
 	std::string body_part;
@@ -221,7 +216,7 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 {
 	std::string script_path = this->root + req.path;
 	std::string output;
-	int pipe_out[2] /* read CGI output */, pipe_in[2] /* send body to CGI if POST */;
+	int pipe_out[2], pipe_in[2];
 	if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
 		throw std::runtime_error("Pipe creation failed");
 	pid_t pid = fork();
@@ -229,12 +224,11 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		throw std::runtime_error("Fork failed");
 	if (!pid)
 	{
-		// --- Child process ---
 		close(pipe_out[0]);
 		close(pipe_in[1]);
 
 		signal(SIGPIPE, SIG_IGN);
-		signal(SIGINT, SIG_IGN);   // ← Ignore les signaux 
+		signal(SIGINT, SIG_IGN); 
 		dup2(pipe_out[1], STDOUT_FILENO);
 		dup2(pipe_in[0], STDIN_FILENO);
 		close(pipe_out[1]);
@@ -274,7 +268,6 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 			cgi_path = "/usr/bin/php-cgi";
 		else
 			throw std::runtime_error("Unsupported CGI extension");
-		// CGI arguments
 		char *argv[] = {
 			const_cast<char*>(cgi_path.c_str()),
 			const_cast<char*>(script_path.c_str()),
@@ -290,12 +283,12 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		close(pipe_out[1]);
 		close(pipe_in[0]);
 
-		current->setPipeIn(pipe_out[0]);//Lis la sortie du CGI
-		current->setPipeOut(pipe_in[1]);//ecrit dans l'entre du CGI
+		current->setPipeIn(pipe_out[0]);
+		current->setPipeOut(pipe_in[1]);
 		current->setBody(req.body);
 		current->setCgiPid(pid);
-		current->setCGiStartTime();//demarrage timing CGI
-		current->setInCGI();//on le mets a true
+		current->setCGiStartTime();
+		current->setInCGI();
 	}
 }
 
@@ -320,19 +313,15 @@ Server &Server::operator=(const Server &assignement)
 
 Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port)
 {
-    // Nom de cookie unique par port : User_8080, User_8081, etc.
     std::string cookie_name = "User_" + ft_to_string(port);
     std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
     std::map<std::string, Session>::iterator sess_it = g_sessions.end();
-    // Clé unique dans g_sessions : port_sessionId
     std::string session_key;
-	//cokie trouver
     if (it != req.cookies.end())
     {
         session_key = ft_to_string(port) +  "_" + it->second;
         sess_it = g_sessions.find(session_key);
     }
-    //pas trouver donc on genere id et le cookie
     if (it == req.cookies.end() || sess_it == g_sessions.end())
     {
         std::string id = generateSessionId();
@@ -341,7 +330,6 @@ Session &getSession(std::map<std::string, Session> &g_sessions, const Request &r
        	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
         return g_sessions[session_key];
     }
-	//je mets pas de set-cookie car deja present
     return g_sessions[session_key];
 }
 
@@ -355,8 +343,8 @@ void	deleteSession(std::map<std::string, Session> &g_sessions)
 		{
 			removeDirectoryRecursive("./config/www/uploads/" + it->second.ID);			
 			std::map<std::string, Session>::iterator toDelete = it;
-			++it;                     // avancer AVANT erase
-			g_sessions.erase(toDelete); // erase invalide toDelete, pas it
+			++it;
+			g_sessions.erase(toDelete);
 		}
 		else
 			++it;

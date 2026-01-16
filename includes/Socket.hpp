@@ -9,22 +9,22 @@ class Server;
 class Socket
 {
 	private :
-		int					Fd;// file descriptor genere par socket()
-		struct sockaddr_in	address1;// structure pour paramtrer l'adrresse a bind
+		int					Fd;
+		struct sockaddr_in	address1;
 		size_t				_port;
 		std::string			_ip;
 		Server				*BlockServer;
 	private :
 		Socket();
-		void		set_socket_addr();//methode qui definie les valeurs a implement
+		void		set_socket_addr();
 	public:
 		Socket(std::string ip, int port, Server *ref);
-		~Socket();// le ferme
+		~Socket();
 		Socket(const Socket &copy);
 		Socket &operator=(const Socket &assignement);
 	public:
-		int			getFd(void) const;// recupere le
-		Server		*getBlockServ(void);//donne une reference a son Server
+		int			getFd(void) const;
+		Server		*getBlockServ(void);
 		size_t		getPort(void) const;
 	public:
 		uint32_t	ParseIp(std::string ip);
