@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/14 17:32:42 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 00:24:35 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,6 +274,10 @@ const std::map<std::string, std::string> &Client::getCookies() const
 	return (this->cookies);
 }
 
+size_t			Client::getServerPort() const
+{
+	return (my_socket->getPort());
+}
 const std::string	&Client::getCgiOutput() const
 {
 	return (this->CgiOutput);

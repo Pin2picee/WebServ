@@ -318,24 +318,43 @@ Server &Server::operator=(const Server &assignement)
 	return (*this);
 }
 
-Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res)
+Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port)
 {
-	std::map<std::string, std::string>::const_iterator it = req.cookies.find("User");
-	std::map<std::string, Session>::const_iterator sess_it;
-	if (it != req.cookies.end())
-		sess_it = g_sessions.find(it->second);
-	if (it == req.cookies.end() || sess_it == g_sessions.end())
-	{
-		std::string id = generateSessionId();
-		Session &newSession = g_sessions[id];
-		newSession.ID = id;
-		newSession.expiryTime = getCurrentTime() + setCookie(id, res, "User", req.cookies);
-		return newSession;
-	}
-	std::string sessionId = it->second;
-	setCookie(sessionId, res, "User", req.cookies);
-	g_sessions[sessionId].ID = sessionId;
-	return g_sessions[sessionId];
+    // Nom de cookie unique par port : User_8080, User_8081, etc.
+    std::ostringstream cookie_name_stream;
+    cookie_name_stream << "User_" << port;
+    std::string cookie_name = cookie_name_stream.str();
+    
+    std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
+    std::map<std::string, Session>::iterator sess_it = g_sessions.end();
+    
+    // Clé unique dans g_sessions : port_sessionId
+    std::string session_key;
+    
+	//cokie trouver
+    if (it != req.cookies.end())
+    {
+        std::ostringstream key_stream;
+        key_stream << port << "_" << it->second;
+        session_key = key_stream.str();
+        sess_it = g_sessions.find(session_key);
+    }
+    //pas trouver donc on genere id et le cookie
+    if (it == req.cookies.end() || sess_it == g_sessions.end())
+    {
+        std::string id = generateSessionId();
+        std::ostringstream key_stream;
+        key_stream << port << "_" << id;
+        session_key = key_stream.str();
+
+        Session newSession;
+		g_sessions[session_key] = newSession;//introduit la session
+        g_sessions[session_key].ID = id;
+       	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
+        return g_sessions[session_key];
+    }
+	//je mets pas de set-cookie car deja present
+    return g_sessions[session_key];
 }
 
 void	deleteSession(std::map<std::string, Session> &g_sessions)

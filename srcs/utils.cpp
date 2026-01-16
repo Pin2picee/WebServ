@@ -279,7 +279,8 @@ std::string ft_to_string(int nb)
 std::string	generateSessionId(void)
 {
 	static int ID = 0;
-	return "sess" + ft_to_string(ID++);
+	std::string SessionId = "sess" + ft_to_string(ID++);
+	return SessionId;
 }
 
 int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies,
@@ -288,7 +289,10 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 	std::string value;
 	std::map<std::string, std::string>::const_iterator it = cookies.find(name);
 	if (it != cookies.end())
+	{
 		value = it->second;
+		return maxAgeSeconds;
+	}
 	else
 		value = id;
 	std::string cookie = name + "=" + value;

@@ -123,3 +123,8 @@ Server *Socket::getBlockServ(void)
 {
 	return (this->BlockServer);
 }
+
+size_t		Socket::getPort(void) const
+{
+	return (this->_port);
+}

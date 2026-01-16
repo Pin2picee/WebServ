@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 18:08:38 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/16 00:24:31 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,7 @@ class Client
 		const std::string		&getCgiOutput(void) const;
 		const bool				&getPipeAddPoll(void) const;
 		const timeval			&getCgiStartTime(void) const;
+		size_t			getServerPort() const;
 		
 	//method
 		void			ResetCgiOutput();

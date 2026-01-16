@@ -24,7 +24,8 @@ class Socket
 		Socket &operator=(const Socket &assignement);
 	public:
 		int			getFd(void) const;// recupere le
-		Server		*getBlockServ(void);//donne une reference a son Server 
+		Server		*getBlockServ(void);//donne une reference a son Server
+		size_t		getPort(void) const;
 	public:
 		uint32_t	ParseIp(std::string ip);
 	class   SocketError : public std::exception
