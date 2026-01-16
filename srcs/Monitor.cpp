@@ -6,7 +6,7 @@
 /*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 21:04:47 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/16 21:58:57 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,6 +213,12 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 	}
 	ip_str = oss.str();
 	nouveau.setBasic(ip_str, port_str);
+	// Remove any stale client with the same fd (shouldn't happen, but safety)
+	if (clients.find(fd) != clients.end())
+	{
+		std::cerr << "WARNING: Client fd " << fd << " already exists in map! Removing stale entry." << std::endl;
+		clients.erase(fd);
+	}
 	clients.insert(std::pair<int, Client>(fd, nouveau));
 }
 
@@ -865,9 +871,15 @@ void	Monitor::monitoring()
 					size_t		offset;
 
 					offset = it_client->second.getOffset();
-					if ((it_client->second.getSyntax() || it_client->second.getFinishRequest()) && offset == 0 && it_client->second.getInCGI() == false && !it_client->second.getResponseGenerate())
+					if (it_client->second.getFinishRequest() && offset == 0 && it_client->second.getInCGI() == false && !it_client->second.getResponseGenerate())
 					{
 						Request request = it_client->second.ExtractRequest();
+						// Safety check: skip if request is incomplete
+						if (request.method.empty() || request.path.empty())
+						{
+							i++;
+							continue;
+						}
 						Response	structResponse = it_client->second.handler.handleRequest(request, g_sessions, &it_client->second);
 						updateClientCookies(it_client->second, structResponse);
 						if (it_client->second.getInCGI())
