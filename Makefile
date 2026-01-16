@@ -30,7 +30,7 @@ IP      = 127.0.0.1
 PORT1  = 8080
 PORT2  = 8081
 
-test: $(NAME)
+test:
 	@echo $(CYAN)"Testing server on port $(PORT1)..."$(RESET)
 	@curl --resolve localhost:$(PORT1):$(IP) http://localhost:$(PORT1)/ || true
 	@echo

@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 16:40:07 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 17:21:38 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -668,7 +668,6 @@ void	Monitor::addCgiPollFd(Client *current, int i)
  */
 void	Monitor::afterSend(Client *current, int i, int nb_send)
 {
-	std::cout << "afterSend called with nb_send: " << nb_send << std::endl;
 	if (nb_send < 0)
 	{
 		if (errno == EPIPE || errno == ECONNRESET)
