@@ -269,7 +269,7 @@ void parseCookies(Request &req)
 	}
 }
 
-std::string ft_to_string(int nb)
+std::string ft_to_string(size_t nb)
 {
 	std::stringstream ss;
 	ss << nb;
@@ -279,16 +279,18 @@ std::string ft_to_string(int nb)
 std::string	generateSessionId(void)
 {
 	static int ID = 0;
-	return "sess" + ft_to_string(ID++);
+	std::string SessionId = "sess" + ft_to_string(ID++);
+	return SessionId;
 }
 
+//fonction qui permet de mettre le cookie dans la reponse
 int setCookie(std::string &id, Response &res, const std::string &name, const std::map<std::string, std::string> &cookies,
 				int maxAgeSeconds = 3600, const std::string &path = "/", bool httpOnly = true, bool secure = true)
 {
 	std::string value;
 	std::map<std::string, std::string>::const_iterator it = cookies.find(name);
 	if (it != cookies.end())
-		value = it->second;
+		return maxAgeSeconds;
 	else
 		value = id;
 	std::string cookie = name + "=" + value;

@@ -107,7 +107,7 @@ public:
 	void 												handleCGI(const Request &req, const Locations &loc, Client *current) const;
 };
 
-Session		&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res);
+Session		&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port);
 void		removeUploadFileSession(Session &session, std::string deletePath);
 void		deleteSession(std::map<std::string, Session> &g_sessions);
 Response	parseCGIOutput(const std::string &output);

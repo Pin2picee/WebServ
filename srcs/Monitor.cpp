@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 16:23:59 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 02:03:59 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,46 @@ const char *Monitor::MonitorError::what() const throw()
 	return (strerror(errno));
 }
 
+// Dans Monitor.cpp
+int Monitor::searchClient(Client *my_client, int i)
+{
+        bool client_still_connected = false;
+    for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+    {
+        if (&it->second == my_client)
+        {
+            client_still_connected = true;
+            break;
+        }
+    }
+    
+    if (!client_still_connected)
+    {
+        std::cerr << "[POLLIN_CGI] Client disconnected, cleaning up CGI without sending response" << std::endl;
+        
+        // Nettoyer le CGI sans générer de réponse
+        pid_t cgi_pid = my_client->getCgiPid();
+        if (cgi_pid > 0)
+        {
+           	kill(cgi_pid, SIGKILL);
+            waitpid(cgi_pid, NULL, WNOHANG);
+        }
+        // Nettoyer tab_CGI
+        std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);
+        if (it_temp != tab_CGI.end())
+        {
+            if (tab_CGI.find(it_temp->second->getPipeOut()) != tab_CGI.end())
+                tab_CGI.erase(it_temp->second->getPipeOut());
+            tab_CGI.erase(all_fd[i].fd);
+        }
+        
+        // Note: Les pipes seront fermés par deconnexion() qui a déjà été appelé
+        // ou seront nettoyés comme fd orphelins
+        
+        return (-1);
+    }
+	return (0);
+}
 /*</Exception>*/
 
 /*<Construction>*/
@@ -128,29 +168,33 @@ int Monitor::deconnexion(int i)
 
     if (client_ptr)
         client_ptr->disconnected();
-    close(client_fd);
-    for (std::map<int, Client *>::iterator it = tab_CGI.begin(); it != tab_CGI.end(); )
-    {
-        std::map<int, Client *>::iterator cur = it++;
-        if (cur->second == client_ptr)
-            tab_CGI.erase(cur);
-    }
-    if (client_ptr && client_ptr->getCgiPid() > 0)
-    {
-        kill(client_ptr->getCgiPid(), SIGKILL);
-        waitpid(client_ptr->getCgiPid(), NULL, WNOHANG);
-    }
+
     int pipe_in  = client_ptr ? client_ptr->getPipeIn()  : -1;
     int pipe_out = client_ptr ? client_ptr->getPipeOut() : -1;
-    for (size_t j = 0; j < nb_fd; )
+    pid_t cgi_pid = client_ptr ? client_ptr->getCgiPid() : -1;
+    
+    if (pipe_in > 0 && tab_CGI.find(pipe_in) != tab_CGI.end())
+        tab_CGI.erase(pipe_in);
+    if (pipe_out > 0 && tab_CGI.find(pipe_out) != tab_CGI.end())
+        tab_CGI.erase(pipe_out);
+    
+    if (cgi_pid > 0)
+    {
+        kill(cgi_pid, SIGKILL);
+		usleep (500);
+        waitpid(cgi_pid, NULL, WNOHANG);
+    }
+    std::vector<size_t> indices_to_remove;
+    for (size_t j = 0; j < nb_fd; j++)
     {
         int fdj = all_fd[j].fd;
         if (fdj == pipe_in || fdj == pipe_out)
-            remove_fd(j);
-        else
-            ++j;
-    }
+            indices_to_remove.push_back(j);
+    }    
+    for (int k = indices_to_remove.size() - 1; k >= 0; k--)
+        remove_fd(indices_to_remove[k]);
     clients.erase(client_fd);
+	close(client_fd);
     all_fd[i] = all_fd[nb_fd - 1];
     all_fd[nb_fd - 1].fd = -1;
     nb_fd--;
@@ -254,10 +298,11 @@ void	Monitor::Timeout()
 		int	PipeIn = it_tab_cgi->second->getPipeIn();
 		int	PipeOut = it_tab_cgi->second->getPipeOut();
 		double resultat = (time_sec - it_tab_cgi->second->getCgiStartTime().tv_sec) + ((time_usec - it_tab_cgi->second->getCgiStartTime().tv_usec) / 1000000.0);
-		if (resultat > 2.0)
+		if (resultat > 3.0)
 		{
-			std::cout << "TIMEOUT" << std::endl;
 			kill(it_tab_cgi->second->getCgiPid(), SIGKILL);
+			std::cout << "TIMEOUT" << std::endl;
+			usleep(500);
 			Response new_response;
 			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
 			it_tab_cgi->second->setReponse(it_tab_cgi->second->handler.responseToString(new_response));
@@ -265,6 +310,7 @@ void	Monitor::Timeout()
 			it_tab_cgi->second->setOutCGI();
 			it_tab_cgi->second->setPipeAddPoll(false);
 			waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
+			usleep(50);
 			reactive_pollout(it_tab_cgi->second, it_tab_cgi->second->getPipeIn(), it_tab_cgi->second->getPipeOut(), true);
 			if (tab_CGI.find(PipeIn) != tab_CGI.end())
 				Key_Erase.push_back(PipeIn);
@@ -352,6 +398,14 @@ int	Monitor::pollout_CGI(int i, Client *my_client)
 		int	reste = body.size() - my_client->getOffsetBodyCgi(); 
 		if (reste > 0)
 		{
+			int status;
+			pid_t result = waitpid(my_client->getCgiPid(), &status, WNOHANG);
+			if (result != 0)
+			{
+				std::cerr << "CGI process died before receiving body" << std::endl;
+				return -1;
+			}
+			std::cout << "ca ecrit" << std::endl;
 			int	nb_written = write(all_fd[i].fd, body.c_str() + my_client->getOffsetBodyCgi(), reste);
 			if (nb_written > 0)
 				return (my_client->AddOffsetBodyCgi(nb_written), -1);
@@ -393,15 +447,16 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 		if (nb_read > 0)
 		{
 			my_client->AddCgiOutput(std::string(buffer, nb_read));
-			nb_read = 0;
+			//nb_read = 0;
 			return (-1);
 		}
 		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
 		{
+
 			Response new_response = parseCGIOutput(my_client->getCgiOutput());
 			my_client->setReponse(my_client->handler.responseToString(new_response));
 			my_client->setResponseGenerate(true);
-			my_client->setOutCGI();
+			usleep(1000);
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);							
 			reactive_pollout(my_client, my_client->getPipeIn(), my_client->getPipeOut(), false);
 			std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);  
@@ -419,9 +474,10 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 		}
 		if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
 			return (-1);
-		else
+		else if (nb_read < 0)
 		{
 			kill(my_client->getCgiPid(), SIGKILL);
+			usleep(3000);
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 			Response new_response;
 			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
@@ -450,9 +506,25 @@ Gere entré et sortie des pipes CGI pour envoyer body et recup l'output du CGI
 */
 int	Monitor::CGI_engine(int i)
 {
-	if (tab_CGI.find(all_fd[i].fd) != tab_CGI.end())
+	std::map<int, Client *>::iterator it = tab_CGI.find(all_fd[i].fd);
+	if (it == tab_CGI.end())
+        return 0;
+	std::cerr << "CGI_engine: fd " << all_fd[i].fd << " found in tab_CGI" << std::endl;
+	Client *my_client = it->second;
+	bool client_exists = false;
+    for (std::map<int, Client>::iterator it_c = clients.begin(); it_c != clients.end(); ++it_c)
+    {
+        if (&it_c->second == my_client)
+        {
+            client_exists = true;
+            break;
+        }
+    }
+	std::cerr << "CGI_engine: client_exists = " << client_exists << std::endl;
+	if (searchClient(my_client, i) < 0)
+				return (-1);
+	if (it != tab_CGI.end())
 	{
-		Client *my_client = tab_CGI[all_fd[i].fd];
 		if (pollout_CGI(i, my_client) < 0)
 			return (-1);
 		if (pollin_CGI(i, my_client) < 0)
@@ -495,11 +567,22 @@ void	Monitor::AddCgiPollFd(Client *current, int i)
 
 void	Monitor::AfterSend(Client *current, int i, int nb_send)
 {
-	if (nb_send < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
+	std::cout << "AfterSend called with nb_send: " << nb_send << std::endl;
+	if (nb_send < 0)
 	{
-		perror("ERROR : SEND FAILED\n");
-		std::cout << all_fd[i].fd << std::endl;
-	}	
+		if (errno == EPIPE || errno == ECONNRESET)
+		{
+			deconnexion(i);
+			return;
+		}
+		if (errno != EAGAIN && errno != EWOULDBLOCK)
+		{
+			perror("send");
+			deconnexion(i);
+			return;
+		}
+	}
+
 	if (nb_send > 0)
 		current->AddOffset(nb_send);
 	if (current->getOffset() >= current->getReponse().length() && !current->getInCGI() 
@@ -544,8 +627,14 @@ void	Monitor::Monitoring()
 		{
 			for (size_t i = 0; i < nb_fd;)//parcours les socket
 			{
+				//std::cout << "i : " << i << " nb_fd : " << nb_fd << " nb_fd_server: " << nb_fd_server << " le fd -> " << all_fd[i].fd << " revents: " << all_fd[i].revents << std::endl;
 				std::map<int, Client>::iterator it_client = clients.find(all_fd[i].fd);
 				bool client_disconnected = false;
+				if (all_fd[i].fd < 0)
+				{
+					i++;
+					continue;
+				}
 				if (CGI_engine(i) < 0)
 				{
 					i++;
@@ -554,6 +643,14 @@ void	Monitor::Monitoring()
 				if (all_fd[i].fd < 0 || all_fd[i].revents & POLLNVAL)
 				{
 					i++;
+					continue;
+				}
+				// Nettoyer les fd orphelins (pipes CGI sans client associé)
+				// Un fd qui n'est ni un serveur, ni un client, ni un pipe CGI actif
+				if (i >= nb_fd_server && it_client == clients.end() && tab_CGI.find(all_fd[i].fd) == tab_CGI.end())
+				{
+					std::cerr << "Cleaning orphan fd: " << all_fd[i].fd << std::endl;
+					remove_fd(i);
 					continue;
 				}
 				//ERROR socket
@@ -620,9 +717,33 @@ void	Monitor::Monitoring()
 						}
 					}
 					AddCgiPollFd(&it_client->second, i);
-					if (it_client->second.getReponse() != "")
+					it_client = clients.find(all_fd[i].fd);
+					if (it_client == clients.end())
+					{
+						deconnexion(i);
+						continue;
+					}
+					if (it_client->second.getInCGI() == false && all_fd[i].fd > 0 &&  it_client->second.getReponse() != "")
+					{
+						int error = 0;
+                        socklen_t len = sizeof(error);
+                        if (getsockopt(all_fd[i].fd, SOL_SOCKET, SO_ERROR, &error, &len) < 0 || error != 0)
+                        {
+                            std::cerr << "Socket error detected before send: " << strerror(error) << std::endl;
+                            deconnexion(i);
+                            continue;
+                        }
+						std::cout << "SEND" << std::endl;
 						nb_send = send(all_fd[i].fd,  it_client->second.getReponse().c_str() + offset, it_client->second.getReponse().length() - offset, 0);
-					AfterSend(&it_client->second, i, nb_send);
+						AfterSend(&it_client->second, i, nb_send);
+						it_client = clients.find(all_fd[i].fd);
+						if (it_client == clients.end())
+						{
+							// Le client a disparu entre-temps
+							deconnexion(i);
+							continue;
+						}
+					}
 				}
 				i++;
 			}

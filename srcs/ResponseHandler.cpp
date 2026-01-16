@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResponseHandler.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/14 14:37:32 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 00:16:51 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ Response ResponseHandler::handleRequest(const Request &req, std::map<std::string
 {
 	Response	res;
 	deleteSession(g_sessions);
-	Session &session = getSession(g_sessions, req, res);
+	Session &session = getSession(g_sessions, req, res, current->getServerPort());
 	const std::vector<Locations> &locs = _server.getLocations();
 	const Locations *target = findLocation(req, locs);
 
