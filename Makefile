@@ -30,12 +30,6 @@ IP      = 127.0.0.1
 PORT1  = 8080
 PORT2  = 8081
 
-test:
-	@echo $(CYAN)"Testing server on port $(PORT1)..."$(RESET)
-	@curl --resolve localhost:$(PORT1):$(IP) http://localhost:$(PORT1)/ || true
-	@echo
-	@echo $(CYAN)"Testing server on port $(PORT2)..."$(RESET)
-	@curl --resolve localhost:$(PORT2):$(IP) http://localhost:$(PORT2)/ || true
 
 all: $(NAME)
 
@@ -55,6 +49,12 @@ clean:
 fclean: clean
 	@echo $(CYAN)"executable suppression..."$(RESET)
 	@$(RM) $(NAME) 
+test:
+	@echo $(CYAN)"Testing server on port $(PORT1)..."$(RESET)
+	@curl --resolve localhost:$(PORT1):$(IP) http://localhost:$(PORT1)/ || true
+	@echo
+	@echo $(CYAN)"Testing server on port $(PORT2)..."$(RESET)
+	@curl --resolve localhost:$(PORT2):$(IP) http://localhost:$(PORT2)/ || true
 
 re: fclean all
 
