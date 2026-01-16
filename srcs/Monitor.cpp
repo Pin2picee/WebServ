@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:59:50 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:36:51 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -365,10 +365,10 @@ void	Monitor::Timeout()
 			usleep(500);
 			Response new_response;
 			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
-			it_tab_cgi->second->setReponse(it_tab_cgi->second->handler.responseToString(new_response));
+			it_tab_cgi->second->setResponse(it_tab_cgi->second->handler.responseToString(new_response));
 			it_tab_cgi->second->setResponseGenerate(true);
 			it_tab_cgi->second->setOutCGI();
-			it_tab_cgi->second->setPipeAddPoll(false);
+			it_tab_cgi->second->setaddPipeToPoll(false);
 			waitpid(it_tab_cgi->second->getCgiPid(), NULL, WNOHANG);
 			usleep(50);
 			reactive_pollout(it_tab_cgi->second, it_tab_cgi->second->getPipeIn(), it_tab_cgi->second->getPipeOut(), true);
@@ -486,7 +486,7 @@ int	Monitor::pollout_CGI(int i, Client *my_client)
 			std::cout << "ca ecrit" << std::endl;
 			int	nb_written = write(all_fd[i].fd, body.c_str() + my_client->getOffsetBodyCgi(), reste);
 			if (nb_written > 0)
-				return (my_client->AddOffsetBodyCgi(nb_written), -1);
+				return (my_client->addCgiBodyOffset(nb_written), -1);
 			if (nb_written == 0)
 				return (-1);
 			if (nb_written < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
@@ -533,14 +533,14 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			nb_read = read(all_fd[i].fd, &buffer, sizeof(buffer));
 		if (nb_read > 0)
 		{
-			my_client->AddCgiOutput(std::string(buffer, nb_read));
+			my_client->addCgiOutput(std::string(buffer, nb_read));
 			return (-1);
 		}
 		if (nb_read == 0 || (nb_read < 0 && all_fd[i].revents & POLLHUP))
 		{
 
 			Response new_response = parseCGIOutput(my_client->getCgiOutput());
-			my_client->setReponse(my_client->handler.responseToString(new_response));
+			my_client->setResponse(my_client->handler.responseToString(new_response));
 			my_client->setResponseGenerate(true);
 			usleep(1000);
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);
@@ -555,7 +555,7 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			remove_fd_CGI(my_client, 3);
 			my_client->resetAfterCGI();
 			my_client->setOutCGI();
-			my_client->setPipeAddPoll(false);
+			my_client->setaddPipeToPoll(false);
 			return (-1);
 		}
 		if (nb_read < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
@@ -567,10 +567,10 @@ int	Monitor::pollin_CGI(int &i, Client *my_client)
 			waitpid(my_client->getCgiPid(), NULL, WNOHANG);
 			Response new_response;
 			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
-			my_client->setReponse(my_client->handler.responseToString(new_response));
+			my_client->setResponse(my_client->handler.responseToString(new_response));
 			my_client->setResponseGenerate(true);
 			my_client->setOutCGI();
-			my_client->setPipeAddPoll(false);
+			my_client->setaddPipeToPoll(false);
 			my_client->resetAfterCGI();
 			reactive_pollout(my_client, my_client->getPipeIn(), my_client->getPipeOut(), false);
 			std::map<int, Client*>::iterator it_temp = tab_CGI.find(all_fd[i].fd);  
@@ -633,7 +633,7 @@ int	Monitor::CGI_engine(int i)
  */
 void	Monitor::AddCgiPollFd(Client *current, int i)
 {
-	if (current->getInCGI() == true && !current->getPipeAddPoll())
+	if (current->getInCGI() == true && !current->getaddPipeToPoll())
 	{
 		int	PipeIn = current->getPipeIn();
 		int	PipeOut = current->getPipeOut();
@@ -653,7 +653,7 @@ void	Monitor::AddCgiPollFd(Client *current, int i)
 		}
 		if (current->getPipeIn() > 0)
 		{
-			current->setPipeAddPoll(true);
+			current->setaddPipeToPoll(true);
 			all_fd[i].events = POLLIN;
 		}
 	}
@@ -691,11 +691,11 @@ void	Monitor::AfterSend(Client *current, int i, int nb_send)
 		&& current->getReponse().length() > 0)
 	{
 		all_fd[i].events = POLLIN;
-		current->setReponse("");
+		current->setResponse("");
 		current->setResponseGenerate(false);
 		current->resetAfterCGI();
 		current->setOutCGI();
-		current->resetInf();
+		current->resetRequestState();
 		current->ResetCgiOutput();
 	}
 }
@@ -800,7 +800,7 @@ void	Monitor::Monitoring()
 							it_client->second.setResponseGenerate(true);
 						else
 						{
-							it_client->second.setReponse(it_client->second.handler.responseToString(structResponse));
+							it_client->second.setResponse(it_client->second.handler.responseToString(structResponse));
 							it_client->second.setResponseGenerate(true);
 						}
 					}

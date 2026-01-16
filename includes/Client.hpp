@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 04:30:11 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:36:51 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ enum HeaderType
  * @param ResponseGenerate True if a response has been generated for this client.
  * @param correct_syntax   True if the HTTP request syntax is valid.
  * @param InCgi            True if the client is currently being processed by CGI.
- * @param PipeAddPoll      True if the CGI pipes have been added to the poll loop.
+ * @param addPipeToPoll      True if the CGI pipes have been added to the poll loop.
  * @param offset           Tracks the response body send offset for partial sends.
  * @param OffsetCgi        Tracks how much CGI output has been read/sent.
  * @param OffsetBodyCgi    Tracks how much request body has been read by CGI.
@@ -78,7 +78,7 @@ private :
 	bool								correct_syntax;
 	bool								InCgi;
 	size_t								offset;
-	bool								PipeAddPoll;
+	bool								addPipeToPoll;
 	int									fd_pipe_out;
 	int									fd_pipe_in;
 	pid_t								_pid;
@@ -103,14 +103,14 @@ public :
 
 	void			setRequest(std::string buf);
 	void			setCookies(std::string name, std::string value);
-	void			setReponse(std::string buf);
+	void			setResponse(std::string buf);
 	void			setPipeIn(int fd);
 	void			setPipeOut(int fd);
 	void			setInCGI(void);
 	void			setOutCGI(void);
 	void			setBody(std::string body);
 	void			setCgiPid(pid_t pid);
-	void			setPipeAddPoll(bool	booleen);
+	void			setaddPipeToPoll(bool	booleen);
 	void			setResponseGenerate(bool etat);
 	void			setCGiStartTime(void);
 
@@ -131,22 +131,22 @@ public :
 	const std::string							&getBody(void) const;
 	const pid_t									&getCgiPid(void) const;
 	const std::string							&getCgiOutput(void) const;
-	const bool									&getPipeAddPoll(void) const;
+	const bool									&getaddPipeToPoll(void) const;
 	const timeval								&getCgiStartTime(void) const;
 	size_t										getServerPort() const;
 		
 	// Methods
 
 	void			ResetCgiOutput();
-	void			resetInf();
+	void			resetRequestState();
 	void			resetAfterCGI();
 	Request			ExtractRequest();
 	void			AddOffset(size_t nb);
-	void			AddOffsetBodyCgi(size_t nb);
+	void			addCgiBodyOffset(size_t nb);
 
 
-	size_t			AddCgiOutput(std::string morceau);
-	void			view_log();
+	size_t			addCgiOutput(std::string morceau);
+	void			viewLog();
 	void			disconnected();
 };
 

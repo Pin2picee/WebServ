@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 03:58:49 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:36:51 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), han
 {
 	OffsetBodyCgi = 0;
 	request_finish = false;
-	PipeAddPoll = false;
+	addPipeToPoll = false;
 	correct_syntax = true;
 	offset = 0;
 	InCgi = false;
@@ -81,7 +81,7 @@ Client &Client::operator=(const Client &copy)
 		_pid = copy._pid;
 		_body = copy._body;
 		CgiOutput = copy.CgiOutput;
-		PipeAddPoll = copy.PipeAddPoll;
+		addPipeToPoll = copy.addPipeToPoll;
 		OffsetCgi = copy.OffsetCgi;
 		ResponseGenerate = copy.ResponseGenerate;
 		fd_pipe_in = copy.fd_pipe_in;
@@ -108,7 +108,7 @@ void Client::setbasic(std::string ip_address, std::string port_address)
  * @brief
  * Resets request-related client information.
  */
-void	Client::resetInf()
+void	Client::resetRequestState()
 {
 	this->request_finish = false;
 	this->correct_syntax = true;
@@ -126,7 +126,7 @@ void	Client::resetAfterCGI()
 	this->fd_pipe_in = -1;
 	this->fd_pipe_out = -1;
 	this->_pid = 0;
-	this->PipeAddPoll = false;
+	this->addPipeToPoll = false;
 }
 
 /**
@@ -178,7 +178,7 @@ void	Client::setRequest(std::string buf)
 	else
 	{
 		this->request = buf;
-		resetInf();
+		resetRequestState();
 	}
 	Request tmp = ExtractRequest();
 	pos = request.find("\r\n");
@@ -224,7 +224,7 @@ void	Client::setCookies(std::string name, std::string value)
  *
  * @param buf Response content.
  */
-void	Client::setReponse(std::string buf)
+void	Client::setResponse(std::string buf)
 {
 	this->reponse = buf;
 	this->offset = 0;
@@ -287,9 +287,9 @@ void	Client::setCGiStartTime(void)
  *
  * @param booleen Boolean state.
  */
-void	Client::setPipeAddPoll(bool	booleen)
+void	Client::setaddPipeToPoll(bool	booleen)
 {
-	this->PipeAddPoll = booleen;
+	this->addPipeToPoll = booleen;
 }
 
 /**
@@ -298,7 +298,7 @@ void	Client::setPipeAddPoll(bool	booleen)
  *
  * @param nb Number of bytes written.
  */
-void	Client::AddOffsetBodyCgi(size_t nb)
+void	Client::addCgiBodyOffset(size_t nb)
 {
 	this->OffsetBodyCgi += nb;
 }
@@ -320,9 +320,9 @@ const size_t	&Client::getOffsetBodyCgi() const
  *
  * @return Reference to the state.
  */
-const bool	&Client::getPipeAddPoll(void) const
+const bool	&Client::getaddPipeToPoll(void) const
 {
-	return (this->PipeAddPoll);
+	return (this->addPipeToPoll);
 }
 
 /**
@@ -499,7 +499,7 @@ const std::string	&Client::getCgiOutput() const
  *
  * @return New CGI output offset.
  */
-size_t	Client::AddCgiOutput(std::string morceau)
+size_t	Client::addCgiOutput(std::string morceau)
 {
 	this->CgiOutput += morceau;
 	OffsetCgi += morceau.size();
@@ -531,7 +531,7 @@ void	Client::AddOffset(size_t nb)
  * @brief
  * Displays a connection/disconnection log for the client.
  */
-void	Client::view_log()
+void	Client::viewLog()
 {
 	long	start_h = (start.tv_sec / 3600) % 24 + 1;
 	long	start_m = (start.tv_sec / 60) % 60;
@@ -551,7 +551,7 @@ void	Client::disconnected()
 {
 	this->connected = false;
 	gettimeofday(&this->end, NULL);
-	view_log();
+	viewLog();
 }
 
 /**
