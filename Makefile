@@ -22,6 +22,21 @@ RED				= "\033[31m"
 GREEN			= "\033[32m"
 RESET			= "\033[0m"
 
+# =======================
+# Tests HTTP avec curl
+# =======================
+
+IP      = 127.0.0.1
+PORT1  = 8080
+PORT2  = 8081
+
+test: $(NAME)
+	@echo $(CYAN)"Testing server on port $(PORT1)..."$(RESET)
+	@curl --resolve localhost:$(PORT1):$(IP) http://localhost:$(PORT1)/ || true
+	@echo
+	@echo $(CYAN)"Testing server on port $(PORT2)..."$(RESET)
+	@curl --resolve localhost:$(PORT2):$(IP) http://localhost:$(PORT2)/ || true
+
 all: $(NAME)
 
 $(NAME): $(SRC_O)
@@ -43,4 +58,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re test

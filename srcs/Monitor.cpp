@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 16:27:01 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 16:40:07 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -494,7 +494,7 @@ int	Monitor::pollOutCgi(int i, Client *my_client)
 			{
 				kill(my_client->getCgiPid(), SIGKILL);
 				waitpid(my_client->getCgiPid(), NULL, WNOHANG);
-				std::cerr << "Erreur ecriture pipe CGI: " << strerror(errno) << std::endl;
+				std::cerr << "Error while writting in CGI pipe : " << strerror(errno) << std::endl;
 				tab_CGI.erase(all_fd[i].fd);
 				removeFd_CGI(my_client, 3);
 				my_client->setOutCgi();

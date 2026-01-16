@@ -539,7 +539,7 @@ std::string getFileClass(const std::string &name, const struct stat &st)
 		else if (ext == "mp4" || ext == "avi" || ext == "mkv" || ext == "mov")
 			return "video";
 		else if (ext == "pdf")
-			returnsspdf";
+			return "pdf";
 		else if (ext == "txt" || ext == "md" || ext == "cpp" || ext == "h")
 			return "text";
 	}
