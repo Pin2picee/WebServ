@@ -4,20 +4,18 @@
 #include "Client.hpp"
 
 /**
- * @brief
- * Default constructor for Server.
+ * @brief Default constructor for `Server`.
  */
 Server::Server() : client_max_body_size(0) {}
 
 /**
- * @brief
- * Destructor for Server.
+ * @brief Destructor for `Server`.
  */
 Server::~Server() {}
 
 /**
  * @brief
- * Get the root path of the server.
+ * Get the root path of the `Server`.
  *
  * @return The root path string.
  */
@@ -53,7 +51,7 @@ const std::string& Server::getErrorPage(int code, Session &session) const
 
 /**
  * @brief
- * Get the list of IP and port pairs (canals) the server listens on.
+ * Get the list of IP and port pairs (canals) the `Server` listens on.
  *
  * @return Vector of (IP, port) pairs.
  */
@@ -75,9 +73,9 @@ size_t	Server::getClientMaxBodySize() const
 
 /**
  * @brief
- * Get the list of configured locations for this server.
+ * Get the list of configured `Locations` for this `Server`.
  *
- * @return Vector of Locations.
+ * @return Vector of `Locations`.
  */
 const std::vector<Locations>&	Server::getLocations() const
 {
@@ -86,7 +84,7 @@ const std::vector<Locations>&	Server::getLocations() const
 
 /**
  * @brief
- * Get the error directory path relative to the server root.
+ * Get the error directory path relative to the `Server` root.
  *
  * @return Error directory path.
  */
@@ -109,7 +107,7 @@ std::map<int, std::string>&	Server::getErrorPagesRef()
 
 /**
  * @brief
- * Set the root path of the server.
+ * Set the root path of the `Server`.
  *
  * @param r The root path string.
  */
@@ -133,7 +131,7 @@ void	Server::setClientMaxBodySize(size_t value)
 
 /**
  * @brief
- * Add a listening canal (IP + port) to the server.
+ * Add a listening canal (IP + port) to the `Server`.
  *
  * @param ip The IP address.
  * @param port The port number.
@@ -145,9 +143,9 @@ void	Server::addListen(const std::string& ip, int port)
 
 /**
  * @brief
- * Set the error directory for this server.
+ * Set the error directory for this `Server`.
  *
- * @param dir Directory path relative to the server root.
+ * @param dir Directory path relative to the `Server` root.
  */
 void	Server::addErrorDir(const std::string& dir)
 {
@@ -156,9 +154,9 @@ void	Server::addErrorDir(const std::string& dir)
 
 /**
  * @brief
- * Add a location configuration to the server.
+ * Add a location configuration to the `Server`.
  *
- * @param loc The Locations struct to add.
+ * @param loc The `Locations` struct to add.
  */
 void	Server::addLocation(const Locations& loc)
 {
@@ -218,7 +216,7 @@ Response parseCgiOutput(const std::string &output)
  * Execute a CGI script for a given request and location, and prepare the Client object.
  *
  * @param req The incoming Request.
- * @param loc The corresponding Locations configuration.
+ * @param loc The corresponding `Locations` configuration.
  * @param current Pointer to the Client object handling this request.
  *
  * @throws std::runtime_error on pipe creation, fork, or unsupported CGI extension.
@@ -304,10 +302,9 @@ void Server::handleCgi(const Request &req, const Locations &loc, Client *current
 }
 
 /**
- * @brief
- * Copy constructor for Server.
+ * @brief Copy constructor for `Server`.
  *
- * @param copy The Server object to copy.
+ * @param copy The `Server` object to copy.
  */
 Server::Server(const Server &copy)
 {
@@ -317,11 +314,11 @@ Server::Server(const Server &copy)
 
 /**
  * @brief
- * Assignment operator for Server.
+ * Assignment operator for `Server`.
  *
- * @param assignement The Server object to assign from.
+ * @param assignement The `Server` object to assign from.
  *
- * @return Reference to this Server object.
+ * @return Reference to this `Server` object.
  */
 Server &Server::operator=(const Server &assignement)
 {
@@ -338,14 +335,14 @@ Server &Server::operator=(const Server &assignement)
 
 /**
  * @brief
- * Retrieve or create a Session object for a given request and port.
+ * Retrieve or create a `Session` object for a given request and port.
  *
  * @param g_sessions Map of all sessions.
  * @param req The incoming Request.
  * @param res The Response to set cookies if needed.
- * @param port The server port.
+ * @param port The `Server` port.
  *
- * @return Reference to the Session object for this request.
+ * @return Reference to the `Session` object for this request.
  */
 Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port)
 {
@@ -395,9 +392,9 @@ void	deleteSession(std::map<std::string, Session> &g_sessions)
 
 /**
  * @brief
- * Remove a specific uploaded file from a Session.
+ * Remove a specific uploaded file from a `Session`.
  *
- * @param session The Session object.
+ * @param session The `Session` object.
  * @param deletePath Path of the file to remove from uploaded_files.
  */
 void removeUploadFileSession(Session &session, std::string deletePath)

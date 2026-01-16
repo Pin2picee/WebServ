@@ -17,9 +17,9 @@ std::string stripSemicolon(const std::string &s)
 
 /**
  * @brief
- * Initialize default error pages for a server configuration.
+ * Initialize default error pages for a `Server` configuration.
  *
- * Extracts available HTML error pages from the server's error directory.
+ * Extracts available HTML error pages from the `Server`'s error directory.
  *
  * @param conf The `Server` configuration to initialize errors for.
  */
@@ -216,9 +216,9 @@ size_t convertSize(const std::string &input)
 
 /**
  * @brief
- * Display the details of a Request object for debugging purposes.
+ * Display the details of a `Request` object for debugging purposes.
  *
- * @param req The Request object to display.
+ * @param req The `Request` object to display.
  */
 void displayRequestInfo(const Request &req)
 {
@@ -243,9 +243,9 @@ void displayRequestInfo(const Request &req)
 
 /**
  * @brief
- * Display the details of a Response object for debugging purposes.
+ * Display the details of a `Response` object for debugging purposes.
  *
- * @param res The Response object to display.
+ * @param res The `Response` object to display.
  */
 void displayResponseInfo(const Response &res)
 {
@@ -332,9 +332,9 @@ std::string urlDecode(const std::string &str)
 
 /**
  * @brief
- * Parse the "Cookie" header from a Request and populate the cookies map.
+ * Parse the "Cookie" header from a `Request` and populate the cookies map.
  *
- * @param req The Request object to populate cookies for.
+ * @param req The `Request` object to populate cookies for.
  */
 void parseCookies(Request &req)
 {
@@ -390,10 +390,10 @@ std::string	generateSessionId(void)
 
 /**
  * @brief
- * Set a cookie in the Response object, creating it if it does not exist.
+ * Set a cookie in the `Response` object, creating it if it does not exist.
  *
  * @param id The session ID to store in the cookie.
- * @param res The Response object to add the cookie to.
+ * @param res The `Response` object to add the cookie to.
  * @param name The name of the cookie.
  * @param cookies Map of existing cookies.
  * @param maxAgeSeconds Max age in seconds for the cookie.
@@ -591,7 +591,7 @@ void findHtmlFiles(const std::string &action, const std::string &path)
  * @param c The character to check.
  * @param set The string containing allowed characters.
  *
- * @return true if c is in set, false otherwise.
+ * @return true if `c` is in `set`, false otherwise.
  */
 static bool inSet(char c, const std::string &set)
 {

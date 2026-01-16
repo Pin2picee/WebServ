@@ -14,7 +14,7 @@
 
 /**
  * @brief
- * Custom exception class for socket-related errors.
+ * Custom exception class for `Socket`-related errors.
  */
 const char *Socket::SocketError::what() const throw()
 {
@@ -23,9 +23,9 @@ const char *Socket::SocketError::what() const throw()
 
 /**
  * @brief
- * Copy constructor for Socket.
+ * Copy constructor for `Socket`.
  *
- * @param copy The Socket object to copy from.
+ * @param copy The `Socket` object to copy from.
  */
 Socket::Socket(const Socket &copy)
 {
@@ -40,11 +40,11 @@ Socket::Socket(const Socket &copy)
 
 /**
  * @brief
- * Assignment operator for Socket.
+ * Assignment operator for `Socket`.
  *
- * @param assignement The Socket object to assign from.
+ * @param assignement The `Socket` object to assign from.
  *
- * @return Reference to the current Socket object.
+ * @return Reference to the current `Socket` object.
  */
 Socket &Socket::operator=(const Socket &assignement)
 {
@@ -60,13 +60,13 @@ Socket &Socket::operator=(const Socket &assignement)
 
 /**
  * @brief
- * Create a socket, bind it to the given IP and port, and set it to listen mode.
+ * Create a `Socket`, bind it to the given IP and port, and set it to listen mode.
  *
- * @param ip IP address to bind the socket to.
- * @param port Port number to listen on (must be 1-65535).
- * @param refBlock Pointer to the Server object associated with this socket.
+ * @param ip IP address to bind the `Socket` to.
+ * @param port Port number to listen on.
+ * @param refBlock Pointer to the `Server` object associated with this `Socket`.
  *
- * @throws SocketError if socket creation, bind, listen, or fcntl fails.
+ * @throws `SocketError` if `Socket` creation, bind, listen, or fcntl fails.
  */
 Socket::Socket(std::string ip, int port, Server *refBlock)
 {
@@ -89,13 +89,13 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 
 /**
  * @brief
- * Default constructor for Socket.
+ * Default constructor for `Socket`.
  */
 Socket::Socket() {}
 
 /**
  * @brief
- * Destructor for Socket. Closes the file descriptor.
+ * Destructor for `Socket`. Closes the file descriptor.
  */
 Socket::~Socket()
 {
@@ -141,7 +141,7 @@ uint32_t Socket::parseIp(std::string ip)
 
 /**
  * @brief
- * Set the socket address structure and configure socket options (SO_REUSEADDR).
+ * Set the `Socket` address structure and configure `Socket` options (SO_REUSEADDR).
  */
 void	Socket::setSocketAddr()
 {
@@ -154,9 +154,9 @@ void	Socket::setSocketAddr()
 
 /**
  * @brief
- * Get the file descriptor of the socket.
+ * Get the file descriptor of the `Socket`.
  *
- * @return The socket's file descriptor.
+ * @return The `Socket`'s file descriptor.
  */
 int Socket::getFd(void) const
 {
@@ -165,9 +165,9 @@ int Socket::getFd(void) const
 
 /**
  * @brief
- * Get the Server object associated with this socket.
+ * Get the `Server` object associated with this `Socket`.
  *
- * @return Pointer to the Server object.
+ * @return Pointer to the `Server` object.
  */
 Server *Socket::getBlockServer(void)
 {
@@ -176,7 +176,7 @@ Server *Socket::getBlockServer(void)
 
 /**
  * @brief
- * Get the port number the socket is bound to.
+ * Get the port number the `Socket` is bound to.
  *
  * @return The port number.
  */

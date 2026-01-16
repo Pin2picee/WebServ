@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 04:44:23 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 05:04:46 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,16 +16,14 @@
  * @brief
  * Entry point for the Webserv project.
  *
- * Initializes the server by parsing the configuration file, setting up signals,
- * creating and monitoring server sockets, and cleaning up resources on exit.
+ * Initializes the `Server` by parsing the configuration file, setting up signals,
+ * creating and monitoring server `Sockets`, and cleaning up resources on exit.
  *
  * @param argc Number of command-line arguments.
  * @param argv Array of command-line arguments.
- */
-/**
+ *//**
  *             - If no argument is provided, uses "config/default.conf".
- */
-/**
+ *//**
  *             - If one argument is provided, uses it as the configuration file path.
  *
  * @return Returns 0 on successful execution, 1 if usage is incorrect.
