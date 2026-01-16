@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Monitor.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 18:12:43 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 21:04:47 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,7 +145,7 @@ Monitor::Monitor(std::vector<Socket *> tab)
 {
 	this->nb_fd = 0;
 	std::vector<Socket *>::iterator	it = tab.begin();
-	for (size_t i = nb_fd; i < 200000; i++)
+	for (size_t i = nb_fd; i < NUMBERS_CLIENTS; i++)
 	{
 		all_fd[i].fd = -1;
 		all_fd[i].events = 0;
@@ -173,7 +173,22 @@ Monitor::Monitor(std::vector<Socket *> tab)
  */
 void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
 {
-	Client  nouveau(all_sockets.at(fd_server));
+	Socket *serverSock = NULL;
+	std::map<int, Socket *>::iterator itSock = all_sockets.find(fd_server);
+	if (itSock != all_sockets.end())
+		serverSock = itSock->second;
+	else if (!all_sockets.empty())
+	{
+		std::cerr << "Warning: server fd " << fd_server << " not found in all_sockets. Using first server socket as fallback." << std::endl;
+		serverSock = all_sockets.begin()->second;
+	}
+	else
+	{
+		std::cerr << "Error: no server sockets registered; cannot attach client." << std::endl;
+		close(fd);
+		return;
+	}
+	Client  nouveau(serverSock);
 	uint32_t	ip_adress = ntohl(ip);
 	uint16_t	port_adress = ntohs(port);
 	std::ostringstream	oss;
@@ -212,22 +227,23 @@ void Monitor::add_client(int fd, in_addr_t ip, in_port_t port, int fd_server)
  */
 int Monitor::disconnect(int i)
 {
+	if (i < (int)nb_fd_server)
+	{
+		std::cerr << "ERROR: Attempted to disconnect server socket at index " << i << std::endl;
+		return 0;
+	}
 	const int client_fd = all_fd[i].fd;
 	std::map<int, Client>::iterator it_client = clients.find(client_fd);
 	Client *client_ptr = (it_client != clients.end()) ? &it_client->second : 0;
-
 	if (client_ptr)
 		client_ptr->disconnected();
-
 	int pipe_in  = client_ptr ? client_ptr->getPipeIn()  : -1;
 	int pipe_out = client_ptr ? client_ptr->getPipeOut() : -1;
 	pid_t cgi_pid = client_ptr ? client_ptr->getCgiPid() : -1;
-	
 	if (pipe_in > 0 && tab_CGI.find(pipe_in) != tab_CGI.end())
 		tab_CGI.erase(pipe_in);
 	if (pipe_out > 0 && tab_CGI.find(pipe_out) != tab_CGI.end())
 		tab_CGI.erase(pipe_out);
-	
 	if (cgi_pid > 0)
 	{
 		kill(cgi_pid, SIGKILL);
@@ -235,7 +251,7 @@ int Monitor::disconnect(int i)
 		waitpid(cgi_pid, NULL, WNOHANG);
 	}
 	std::vector<size_t> indices_to_remove;
-	for (size_t j = 0; j < nb_fd; j++)
+	for (size_t j = nb_fd_server; j < nb_fd; j++)
 	{
 		int fdj = all_fd[j].fd;
 		if (fdj == pipe_in || fdj == pipe_out)
@@ -244,10 +260,30 @@ int Monitor::disconnect(int i)
 	for (int k = indices_to_remove.size() - 1; k >= 0; k--)
 		removeFd(indices_to_remove[k]);
 	clients.erase(client_fd);
+	
+	if (all_sockets.find(client_fd) != all_sockets.end())
+	{
+		std::cerr << "ERROR: fd " << client_fd << " is a server socket, not closing!" << std::endl;
+		return 0;
+	}
 	close(client_fd);
-	all_fd[i] = all_fd[nb_fd - 1];
-	all_fd[nb_fd - 1].fd = -1;
-	nb_fd--;
+	while (nb_fd > nb_fd_server && all_fd[nb_fd - 1].fd <= 0)
+		nb_fd--;
+	if ((size_t)i < nb_fd - 1 && nb_fd > nb_fd_server)
+	{
+		all_fd[i] = all_fd[nb_fd - 1];
+		all_fd[nb_fd - 1].fd = -1;
+		nb_fd--;
+	}
+	else if ((size_t)i == nb_fd - 1)
+	{
+		all_fd[i].fd = -1;
+		nb_fd--;
+	}
+	else
+	{
+		all_fd[i].fd = -1;
+	}
 	return 0;
 }
 
@@ -304,18 +340,43 @@ int	Monitor::newRequest(int i)
  * @brief
  * Removes a `fd` from the `all_fd` array.
  *
- * @param index Index of the `fd` in `all_fd`.
+ * @parm index Index of the `fd` in `all_fd`.
  */
 void Monitor::removeFd(int index)
 {
+	if (index < (int)nb_fd_server)
+	{
+		std::cerr << "ERROR: Attempted to remove server socket at index " << index << std::endl;
+		return;
+	}
 	if (all_fd[index].fd > 0)
 	{
+		if (all_sockets.find(all_fd[index].fd) != all_sockets.end())
+		{
+			std::cerr << "ERROR: fd " << all_fd[index].fd << " is a server socket, not removing!" << std::endl;
+			return;
+		}
 		close(all_fd[index].fd);
+	}
+	while (nb_fd > nb_fd_server && all_fd[nb_fd - 1].fd <= 0)
+		nb_fd--;
+	if ((size_t)index < nb_fd - 1 && nb_fd > nb_fd_server)
+	{
 		all_fd[index] = all_fd[nb_fd - 1];
 		all_fd[nb_fd - 1].fd = -1;
 		nb_fd--;
 	}
+	else if ((size_t)index == nb_fd - 1)
+	{
+		all_fd[index].fd = -1;
+		nb_fd--;
+	}
+	else
+	{
+		all_fd[index].fd = -1;
+	}
 }
+
 
 /**
  * @brief
@@ -327,19 +388,44 @@ void Monitor::removeFd(int index)
  */
 int	Monitor::newClients(int i)
 {
-	struct sockaddr_in address;
-	socklen_t addrlen = sizeof(address);
-	all_fd[nb_fd].fd = accept(all_fd[i].fd, (sockaddr *)&address, &addrlen);
-	all_fd[nb_fd].events = POLLIN;
-	if (all_fd[nb_fd].fd < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-		return (std::cout << "Nothing to accept"<< std::endl, 1) ;
-	else if (all_fd[nb_fd].fd < 0)
-		return (std::cout << "Error : issue with ressources acceptation" << std::endl, 1);
-	add_client(all_fd[nb_fd].fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);
-	int ancien_flags = fcntl (all_fd[nb_fd].fd, F_GETFL);
-	fcntl(all_fd[nb_fd].fd, F_SETFL, ancien_flags | O_NONBLOCK);
-	nb_fd++;
-	return (0);
+	if (i >= (int)nb_fd_server)
+	{
+		std::cerr << "ERROR: newClients called on non-server index " << i << std::endl;
+		return 1;
+	}
+	
+	size_t	accepted = 0;
+	while (true)
+	{
+		struct sockaddr_in address;
+		socklen_t addrlen = sizeof(address);
+		int client_fd = accept(all_fd[i].fd, (sockaddr *)&address, &addrlen);
+		if (client_fd < 0)
+		{
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				break;
+			if (errno == EINVAL)
+			{
+				std::cerr << "FATAL: Server socket fd " << all_fd[i].fd << " is no longer listening! Disabling POLLIN." << std::endl;
+				all_fd[i].events = 0;
+				return 1;
+			}
+			std::cerr << "accept() error: " << std::strerror(errno) << " (errno=" << errno << ")" << std::endl;
+			if (errno == EMFILE || errno == ENFILE)
+				std::cerr << "Hint: process/system file descriptor limit reached." << std::endl;
+			else if (errno == ENOBUFS || errno == ENOMEM)
+				std::cerr << "Kernel buffer/memory exhausted under load" << std::endl;
+			break;
+		}
+		all_fd[nb_fd].fd = client_fd;
+		all_fd[nb_fd].events = POLLIN;	
+		add_client(client_fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);
+		int ancien_flags = fcntl(client_fd, F_GETFL);
+		fcntl(client_fd, F_SETFL, ancien_flags | O_NONBLOCK);
+		nb_fd++;
+		accepted++;
+	}
+	return ((accepted > 0) ? 0 : 1);
 }
 
 /**
@@ -674,19 +760,13 @@ void	Monitor::afterSend(Client *current, int i, int nb_send)
 			return;
 		}
 	}
-
 	if (nb_send > 0)
 		current->addOffset(nb_send);
 	if (current->getOffset() >= current->getReponse().length() && !current->getInCGI() 
 		&& current->getReponse().length() > 0)
 	{
-		all_fd[i].events = POLLIN;
-		current->setResponse("");
-		current->setResponseGenerate(false);
-		current->resetAfterCGI();
-		current->setOutCgi();
-		current->resetRequestState();
-		current->ResetCgiOutput();
+		disconnect(i);
+		return;
 	}
 }
 /**
@@ -713,7 +793,10 @@ void	Monitor::monitoring()
 		{
 			if (errno == EINTR)
 				break;
-			throw MonitorError();
+			if (errno == EINVAL)
+				continue;  
+			std::cerr << "poll() error: " << strerror(errno) << std::endl;
+			continue;
 		}
 		else if (poll_return > 0)
 		{
@@ -767,7 +850,8 @@ void	Monitor::monitoring()
 				{
 					if (i < nb_fd_server)
 					{
-						newClients(i++);
+						newClients(i);
+						i++;
 						continue;
 					}
 					else if (i >= nb_fd_server && !newRequest(i))

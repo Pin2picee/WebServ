@@ -374,6 +374,8 @@ std::string	ResponseHandler::responseToString(const Response &res)
 	if (!res.content_type.empty())
 		oss << "Content-Type: " << res.content_type << "\r\n";
 	oss << "Content-Length: " << res.body.size() << "\r\n";
+	// Explicitly close the connection: this server does not implement HTTP keep-alive yet
+	oss << "Connection: close\r\n";
 	for (size_t i = 0; i < res.headers.size(); ++i)
 		oss << "Set-Cookie: " << res.headers[i] << "\r\n";
 	oss << "\r\n" << res.body;

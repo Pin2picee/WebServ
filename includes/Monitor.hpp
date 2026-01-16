@@ -29,7 +29,7 @@ private :
 	size_t					nb_fd_server;
 	std::map<int, Client>	clients;
 	std::map<int, Socket *>	all_sockets;
-	struct pollfd			all_fd[200000];
+	struct pollfd			all_fd[NUMBERS_CLIENTS];
 	std::map<int, Client *>	tab_CGI;
 
 	// Internal helpers

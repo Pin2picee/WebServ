@@ -18,7 +18,7 @@
 # include <dirent.h>		// opendir, readdir, closedir
 # include <string.h>		// strerror
 # include <errno.h>			// errno
-
+# include <cstring>
 # include <iostream>
 # include <string>
 # include <vector>
@@ -33,6 +33,9 @@
 # include <ctime>
 # include <sys/stat.h>
 
+
+//Tab pollfd
+# define NUMBERS_CLIENTS 200000
 // Text colors
 # define RESET   "\033[0m"
 # define RED	 "\033[31m"
