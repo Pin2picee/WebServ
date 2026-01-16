@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
+/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 16:29:39 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 22:06:54 by abelmoha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -539,8 +539,9 @@ void	Client::viewLog()
 	long	end_h = (end.tv_sec / 3600) % 24 + 1;
 	long	end_m = (end.tv_sec / 60) % 60;
 
-	std::cout	<< RED <<"the Client " << this->ip << " connected at " << start_h << "h" << start_m
-				<< " and disconnected at " << end_h << "h" << end_m << " on port " << port << RESET << std::endl;
+	std::cout    << RED << "the Client " << this->ip << " connected at " << std::setw(2) << std::setfill('0') << start_h << "h"
+                << std::setw(2) << std::setfill('0') << start_m << " and disconnected at " << std::setw(2) << std::setfill('0')
+                << end_h << "h" << std::setw(2) << std::setfill('0') << end_m << " on port " << port << RESET << std::endl;
 }
 
 /**
