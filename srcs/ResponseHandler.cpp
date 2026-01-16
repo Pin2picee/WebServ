@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 04:47:36 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 18:09:34 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -109,10 +109,17 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 		return makeResponseFromFile(res, 418, _server.getErrorPage(418, session), req);
 	else if (full_path.empty())
 		return makeResponseFromFile(res, 400, _server.getErrorPage(400, session), req);
-	else if (pathExists(full_path))
+	else if (pathDirectoryExists(full_path))
 	{
+		std::cout << "loc.root = " << loc.root << std::endl;
 		if (loc.sensitive)
 			return makeResponseFromFile(res, 403, _server.getErrorPage(403, session), req);
+		else if (loc.root == "cgi-bin")
+		{
+			std::cout << "oui" << std::endl;
+			std::string filePath = _server.getRoot() + "/cgi_tester.html";
+			return makeResponseFromFile(res, 200, filePath, req);
+		}
 		else if (loc.autoindex)
 			return generateAutoindex(full_path, full_path.substr(_server.getRoot().size()), req, res, session);
 		else
@@ -322,7 +329,7 @@ std::string ResponseHandler::generateDeleteFileForm(const Session &session, cons
 	std::string fileSelectHtml;
 	bool hasFiles = false;
 
-	if (!pathExists(userDir) || session.uploaded_files.empty())
+	if (!pathDirectoryExists(userDir) || session.uploaded_files.empty())
 		fileSelectHtml = "<p>No files to delete.</p>";
 	else
 	{

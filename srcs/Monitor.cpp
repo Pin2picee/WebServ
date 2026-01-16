@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 17:21:38 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 18:01:33 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -709,7 +709,7 @@ void	Monitor::monitoring()
 
 	std::cout << "Server started" << std::endl;
 	findHtmlFiles("close", "./config");
-	if (!pathExists(uploadsPath) && mkdir(uploadsPath.c_str(), 0755) == -1)
+	if (!pathDirectoryExists(uploadsPath) && mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
 	while (on)
 	{

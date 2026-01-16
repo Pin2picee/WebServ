@@ -91,7 +91,7 @@ bool removeDirectoryRecursive(const std::string &path)
  */
 void resetUploadsDir(const std::string &uploadsPath)
 {
-	if (pathExists(uploadsPath) && !removeDirectoryRecursive(uploadsPath))
+	if (pathDirectoryExists(uploadsPath) && !removeDirectoryRecursive(uploadsPath))
 			std::cerr << "Failed to remove " << uploadsPath << std::endl;
 	if (mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
@@ -453,7 +453,7 @@ time_t getCurrentTime()
  *
  * @return true if the directory exists, false otherwise.
  */
-bool pathExists(const std::string &path)
+bool pathDirectoryExists(const std::string &path)
 {
 	struct stat info;
 	return stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);

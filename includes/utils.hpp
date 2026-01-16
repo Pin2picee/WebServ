@@ -67,7 +67,7 @@ void		init_default_errors(Server &conf);
 
 std::string urlDecode(const std::string &str);
 std::string cleanPath(const std::string &path);
-bool		pathExists(const std::string &path);
+bool		pathDirectoryExists(const std::string &path);
 std::string readFile(const std::string& filepath);
 void		resetUploadsDir(const std::string &uploadsPath);
 bool		removeDirectoryRecursive(const std::string &path);
