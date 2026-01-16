@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 04:48:24 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 16:29:39 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -539,8 +539,8 @@ void	Client::viewLog()
 	long	end_h = (end.tv_sec / 3600) % 24 + 1;
 	long	end_m = (end.tv_sec / 60) % 60;
 
-	std::cout << RED <<"the Client " << this->ip << " connected at " << start_h << "h" << start_m;
-	std::cout << " and disconnected at " << end_h << "h" << end_m << " on port: " << port << RESET << std::endl;
+	std::cout	<< RED <<"the Client " << this->ip << " connected at " << start_h << "h" << start_m
+				<< " and disconnected at " << end_h << "h" << end_m << " on port " << port << RESET << std::endl;
 }
 
 /**

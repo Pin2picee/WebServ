@@ -521,7 +521,7 @@ std::string shortenFileName(const std::string &name, size_t maxLength)
  * @param name The filename.
  * @param st The stat structure of the file.
  *
- * @return A string representing the file class ("folder", "image", "video", "pdf", "text", "file").
+ * @return A string representing the file class (folder, image, video, pdf, tex, file).
  */
 std::string getFileClass(const std::string &name, const struct stat &st)
 {
@@ -539,7 +539,7 @@ std::string getFileClass(const std::string &name, const struct stat &st)
 		else if (ext == "mp4" || ext == "avi" || ext == "mkv" || ext == "mov")
 			return "video";
 		else if (ext == "pdf")
-			return "pdf";
+			returnsspdf";
 		else if (ext == "txt" || ext == "md" || ext == "cpp" || ext == "h")
 			return "text";
 	}
@@ -550,7 +550,7 @@ std::string getFileClass(const std::string &name, const struct stat &st)
  * @brief
  * Find HTML files recursively in a directory and apply an action (chmod open/close).
  *
- * @param action The action to apply ("open" or "close").
+ * @param action The action to apply (open or close).
  * @param path The path to search recursively.
  */
 void findHtmlFiles(const std::string &action, const std::string &path)

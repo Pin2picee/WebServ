@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 04:47:56 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 16:27:01 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -332,9 +332,9 @@ int	Monitor::newClients(int i)
 	all_fd[nb_fd].fd = accept(all_fd[i].fd, (sockaddr *)&address, &addrlen);
 	all_fd[nb_fd].events = POLLIN;
 	if (all_fd[nb_fd].fd < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-		return (std::cout << "RIEN A ACCEPTER"<< std::endl, 1) ;
+		return (std::cout << "Nothing to accept"<< std::endl, 1) ;
 	else if (all_fd[nb_fd].fd < 0)
-		return (std::cout << "ERROR ressources accept" << std::endl, 1);
+		return (std::cout << "Error : issue with ressources acceptation" << std::endl, 1);
 	add_client(all_fd[nb_fd].fd, address.sin_addr.s_addr, address.sin_port, all_fd[i].fd);
 	int ancien_flags = fcntl (all_fd[nb_fd].fd, F_GETFL);
 	fcntl(all_fd[nb_fd].fd, F_SETFL, ancien_flags | O_NONBLOCK);
@@ -361,7 +361,7 @@ void	Monitor::timeout()
 		if (resultat > 3.0)
 		{
 			kill(it_tab_cgi->second->getCgiPid(), SIGKILL);
-			std::cout << "timeout" << std::endl;
+			std::cout << "Timeout" << std::endl;
 			usleep(500);
 			Response new_response;
 			makeResponse(new_response, 504, readFile("config/www/errors/504.html"), "");
@@ -483,7 +483,6 @@ int	Monitor::pollOutCgi(int i, Client *my_client)
 				std::cerr << "CGI process died before receiving body" << std::endl;
 				return -1;
 			}
-			std::cout << "ca ecrit" << std::endl;
 			int	nb_written = write(all_fd[i].fd, body.c_str() + my_client->getOffsetBodyCgi(), reste);
 			if (nb_written > 0)
 				return (my_client->addCgiBodyOffset(nb_written), -1);
@@ -709,7 +708,7 @@ void	Monitor::monitoring()
 	std::map<std::string, Session> g_sessions;
 	std::string uploadsPath = "./config/www/uploads";
 
-	std::cout << "Lancement du server" << std::endl;
+	std::cout << "Server started" << std::endl;
 	findHtmlFiles("close", "./config");
 	if (!pathExists(uploadsPath) && mkdir(uploadsPath.c_str(), 0755) == -1)
 		std::cerr << "Failed to recreate " << uploadsPath << std::endl;
@@ -756,7 +755,7 @@ void	Monitor::monitoring()
 					}
 					else
 					{
-						std::cout << "Problem socket server" << std::endl;
+						std::cout << "Issue with server's socket" << std::endl;
 						i++;
 					}
 				}
