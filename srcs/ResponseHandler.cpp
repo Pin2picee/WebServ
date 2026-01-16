@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:59:01 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:47:36 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -143,7 +143,7 @@ void ResponseHandler::handleGet(Response &res, const Locations &loc, const Reque
 			return (makeResponseFromFile(res, 404, _server.getErrorPage(404, session), req));
 		else if (loc.cgi && full_path.size() >= loc.cgi_extension.size() &&
 			full_path.substr(full_path.size() - loc.cgi_extension.size()) == loc.cgi_extension)
-				return _server.handleCGI(req, loc, current);
+				return _server.handleCgi(req, loc, current);
 		else
 		{
 			std::ostringstream buf;
@@ -664,6 +664,6 @@ void	ResponseHandler::getContentType(Response &res, const Locations &loc, const 
 		return makeResponse(res, 413, readFile(_server.getErrorPage(413, session)), getMimeType(req));
 	std::string Path = _server.getRoot() + req.path;
 	if (!access(Path.c_str(), F_OK) && loc.cgi)
-		return _server.handleCGI(req, loc, current);
+		return _server.handleCgi(req, loc, current);
 	return makeResponse(res, 404, readFile(_server.getErrorPage(404, session)), getMimeType(req));
 }

@@ -107,7 +107,7 @@ public:
 	void												addLocation(const Locations& loc);
 	void												addListen(const std::string& ip, int port);
 	void												addErrorDir(const std::string& path);
-	void												handleCGI(const Request &req, const Locations &loc, Client *current) const;
+	void												handleCgi(const Request &req, const Locations &loc, Client *current) const;
 };
 
 // Session helpers
@@ -115,5 +115,5 @@ public:
 Session		&getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port);
 void		removeUploadFileSession(Session &session, std::string deletePath);
 void		deleteSession(std::map<std::string, Session> &g_sessions);
-Response	parseCGIOutput(const std::string &output);
+Response	parseCgiOutput(const std::string &output);
 #endif

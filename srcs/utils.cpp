@@ -8,7 +8,7 @@
  * 
  * @return The string without semicolon.
  */
-std::string strip_semicolon(const std::string &s)
+std::string stripSemicolon(const std::string &s)
 {
 	if (!s.empty() && s[s.size() - 1] == ';')
 		return s.substr(0, s.size() - 1);
@@ -120,13 +120,13 @@ void	handle_sigint(int signum)
  * @param tokens Source vector of tokens.
  * @param i Current index in tokens (will be incremented).
  */
-void fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
+void fillTokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i)
 {
 	dest.clear();
 	while (++i < tokens.size() && tokens[i][tokens[i].size() - 1] != ';')
 		dest.push_back(tokens[i]);
 	if (i < tokens.size() && tokens[i][tokens[i].size() - 1] == ';')
-		dest.push_back(strip_semicolon(tokens[i]));
+		dest.push_back(stripSemicolon(tokens[i]));
 }
 
 /**
@@ -166,7 +166,7 @@ size_t convertSize(const std::string &input)
 {
 	if (input.empty())
 		throw std::invalid_argument("Empty size string");
-	std::string str = strip_semicolon(input);
+	std::string str = stripSemicolon(input);
 
 	while (!str.empty() && std::isspace(static_cast<unsigned char>(str[str.size() - 1])))
 		str.erase(str.size() - 1);
@@ -368,7 +368,7 @@ void parseCookies(Request &req)
  *
  * @return The string representation of the number.
  */
-std::string ft_to_string(size_t nb)
+std::string ftToString(size_t nb)
 {
 	std::stringstream ss;
 	ss << nb;
@@ -384,7 +384,7 @@ std::string ft_to_string(size_t nb)
 std::string	generateSessionId(void)
 {
 	static int ID = 0;
-	std::string SessionId = "sess" + ft_to_string(ID++);
+	std::string SessionId = "sess" + ftToString(ID++);
 	return SessionId;
 }
 
@@ -415,7 +415,7 @@ int setCookie(std::string &id, Response &res, const std::string &name, const std
 	std::string cookie = name + "=" + value;
 	cookie += "; Path=" + path;
 	if (maxAgeSeconds > 0)
-		cookie += "; Max-Age=" + ft_to_string(maxAgeSeconds);
+		cookie += "; Max-Age=" + ftToString(maxAgeSeconds);
 	if (httpOnly)
 		cookie += "; HttpOnly";
 	cookie += "; SameSite=Lax";

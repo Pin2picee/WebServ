@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 04:36:51 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:43:11 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,7 @@ public :
 
 	// Base
 
-	void	setbasic(std::string ip_address, std::string port_address);
+	void	setBasic(std::string ip_address, std::string port_address);
 		
 	// Setters
 
@@ -106,13 +106,13 @@ public :
 	void			setResponse(std::string buf);
 	void			setPipeIn(int fd);
 	void			setPipeOut(int fd);
-	void			setInCGI(void);
-	void			setOutCGI(void);
+	void			setInCgi(void);
+	void			setOutCgi(void);
 	void			setBody(std::string body);
 	void			setCgiPid(pid_t pid);
-	void			setaddPipeToPoll(bool	booleen);
+	void			setAddPipeToPoll(bool	booleen);
 	void			setResponseGenerate(bool etat);
-	void			setCGiStartTime(void);
+	void			setCgiStartTime(void);
 
 	// Getters
 
@@ -141,7 +141,7 @@ public :
 	void			resetRequestState();
 	void			resetAfterCGI();
 	Request			ExtractRequest();
-	void			AddOffset(size_t nb);
+	void			addOffset(size_t nb);
 	void			addCgiBodyOffset(size_t nb);
 
 

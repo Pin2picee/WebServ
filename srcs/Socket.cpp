@@ -76,7 +76,7 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 	this->Fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (Fd < 0 || port <= 0 || port > 65535)
 		throw SocketError();
-	set_socket_addr();
+	setSocketAddr();
 	if (bind(this->Fd, (const sockaddr *)&this->address1, sizeof(address1)) != 0)
 		throw SocketError();
 	else if (listen(this->Fd, SOMAXCONN) < 0)
@@ -110,7 +110,7 @@ Socket::~Socket()
  *
  * @return The 32-bit representation of the IP, or 0 if invalid.
  */
-uint32_t Socket::ParseIp(std::string ip)
+uint32_t Socket::parseIp(std::string ip)
 {
 	std::stringstream ss(ip);
 	int a, b, c, d;
@@ -143,13 +143,13 @@ uint32_t Socket::ParseIp(std::string ip)
  * @brief
  * Set the socket address structure and configure socket options (SO_REUSEADDR).
  */
-void	Socket::set_socket_addr()
+void	Socket::setSocketAddr()
 {
 	int option = 1;
 	setsockopt(this->Fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 	this->address1.sin_family = AF_INET;
 	this->address1.sin_port = htons(this->_port);
-	this->address1.sin_addr.s_addr = htonl(this->ParseIp(_ip));
+	this->address1.sin_addr.s_addr = htonl(this->parseIp(_ip));
 }
 
 /**
@@ -169,7 +169,7 @@ int Socket::getFd(void) const
  *
  * @return Pointer to the Server object.
  */
-Server *Socket::getBlockServ(void)
+Server *Socket::getBlockServer(void)
 {
 	return (this->BlockServer);
 }

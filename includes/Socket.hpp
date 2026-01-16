@@ -25,7 +25,7 @@ private :
 	Server				*BlockServer;
 
 	Socket();
-	void		set_socket_addr();
+	void		setSocketAddr();
 public:
 
 	// Constructors / Destructor
@@ -38,12 +38,12 @@ public:
 	// Getters
 
 	int			getFd(void) const;
-	Server		*getBlockServ(void);
+	Server		*getBlockServer(void);
 	size_t		getPort(void) const;
 	
 	// Util
 
-	uint32_t	ParseIp(std::string ip);
+	uint32_t	parseIp(std::string ip);
 
 	// Throw
 

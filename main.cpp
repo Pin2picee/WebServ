@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/07 20:31:51 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 03:59:17 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:44:23 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 		parser.parseAllServerFiles(ConfigFileName);
 		all_socket = parser.getSocket();
 		Monitor	Moniteur(all_socket);
-		Moniteur.Monitoring();
+		Moniteur.monitoring();
 		for (std::vector<Socket*>::iterator it = all_socket.begin(); it != all_socket.end(); ++it)
 		{
 			if (*it)

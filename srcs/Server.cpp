@@ -173,7 +173,7 @@ void	Server::addLocation(const Locations& loc)
  *
  * @return A Response struct containing headers and body.
  */
-Response parseCGIOutput(const std::string &output)
+Response parseCgiOutput(const std::string &output)
 {
 	Response res;
 	res.status_code = 200;
@@ -223,7 +223,7 @@ Response parseCGIOutput(const std::string &output)
  *
  * @throws std::runtime_error on pipe creation, fork, or unsupported CGI extension.
  */
-void Server::handleCGI(const Request &req, const Locations &loc, Client *current) const
+void Server::handleCgi(const Request &req, const Locations &loc, Client *current) const
 {
 	std::string script_path = this->root + req.path;
 	std::string output;
@@ -298,8 +298,8 @@ void Server::handleCGI(const Request &req, const Locations &loc, Client *current
 		current->setPipeOut(pipe_in[1]);
 		current->setBody(req.body);
 		current->setCgiPid(pid);
-		current->setCGiStartTime();
-		current->setInCGI();
+		current->setCgiStartTime();
+		current->setInCgi();
 	}
 }
 
@@ -349,19 +349,19 @@ Server &Server::operator=(const Server &assignement)
  */
 Session &getSession(std::map<std::string, Session> &g_sessions, const Request &req, Response &res, size_t port)
 {
-	std::string cookie_name = "User_" + ft_to_string(port);
+	std::string cookie_name = "User_" + ftToString(port);
 	std::map<std::string, std::string>::const_iterator it = req.cookies.find(cookie_name);
 	std::map<std::string, Session>::iterator sess_it = g_sessions.end();
 	std::string session_key;
 	if (it != req.cookies.end())
 	{
-		session_key = ft_to_string(port) +  "_" + it->second;
+		session_key = ftToString(port) +  "_" + it->second;
 		sess_it = g_sessions.find(session_key);
 	}
 	if (it == req.cookies.end() || sess_it == g_sessions.end())
 	{
 		std::string id = generateSessionId();
-		session_key = ft_to_string(port) + "_" + id;
+		session_key = ftToString(port) + "_" + id;
 		g_sessions[session_key].ID = id;
 	   	g_sessions[session_key].expiryTime = getCurrentTime() + setCookie(id, res, cookie_name, req.cookies);
 		return g_sessions[session_key];

@@ -74,13 +74,13 @@ bool		removeDirectoryRecursive(const std::string &path);
 
 /* ---------------- String / Parsing Utils ---------------- */
 
-std::string ft_to_string(size_t nb);
+std::string ftToString(size_t nb);
 size_t		convertSize(const std::string &input);
-std::string	strip_semicolon(const std::string &s);
+std::string	stripSemicolon(const std::string &s);
 std::string shortenFileName(const std::string &name, size_t maxLength);
 enum StripSide { LEFT, RIGHT, BOTH };
 void		stripe(std::string &s, const std::string &set, StripSide side = BOTH);
-void		fill_tokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
+void		fillTokens(std::vector<std::string> &dest, const std::vector<std::string> &tokens, size_t &i);
 
 /* ---------------- Response / HTTP Utils ---------------- */
 

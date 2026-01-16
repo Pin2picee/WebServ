@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 04:36:51 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 04:48:24 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@
  *
  * @param the_socket Pointer to the server `Socket`.
  */
-Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServ()))
+Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServer()))
 {
 	OffsetBodyCgi = 0;
 	request_finish = false;
@@ -98,7 +98,7 @@ Client &Client::operator=(const Client &copy)
  * @param ip_address Client IP address.
  * @param port_address Client port.
  */
-void Client::setbasic(std::string ip_address, std::string port_address)
+void Client::setBasic(std::string ip_address, std::string port_address)
 {
 	ip = ip_address;
 	port = port_address;
@@ -234,7 +234,7 @@ void	Client::setResponse(std::string buf)
  * @brief
  * Marks the client as being in a CGI execution.
  */
-void	Client::setInCGI()
+void	Client::setInCgi()
 {
 	if (!this->InCgi)
 		this->InCgi = true;
@@ -244,7 +244,7 @@ void	Client::setInCGI()
  * @brief
  * Marks the client as out of CGI execution.
  */
-void	Client::setOutCGI()
+void	Client::setOutCgi()
 {
 	if (this->InCgi)
 		this->InCgi = false;
@@ -276,7 +276,7 @@ void	Client::setPipeOut(int fd)
  * @brief
  * Stores the CGI start time.
  */
-void	Client::setCGiStartTime(void)
+void	Client::setCgiStartTime(void)
 {
 	gettimeofday(&this->cgi_start_time, NULL);
 }
@@ -287,7 +287,7 @@ void	Client::setCGiStartTime(void)
  *
  * @param booleen Boolean state.
  */
-void	Client::setaddPipeToPoll(bool	booleen)
+void	Client::setAddPipeToPoll(bool	booleen)
 {
 	this->addPipeToPoll = booleen;
 }
@@ -522,7 +522,7 @@ void	Client::ResetCgiOutput()
  *
  * @param nb Number of bytes sent.
  */
-void	Client::AddOffset(size_t nb)
+void	Client::addOffset(size_t nb)
 {
 	this->offset += nb;
 }

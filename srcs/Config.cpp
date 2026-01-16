@@ -101,23 +101,23 @@ Locations	parse_loc(size_t &i, std::vector<std::string> tokens, size_t &t_size)
 			continue;
 		}
 		if (tokens[i] == "methods")
-			fill_tokens(loc.methods, tokens, i);
+			fillTokens(loc.methods, tokens, i);
 		else if (tokens[i] == "index")
-			fill_tokens(loc.index_files, tokens, i);
+			fillTokens(loc.index_files, tokens, i);
 		else if (tokens[i] == "autoindex")
-			loc.autoindex = (strip_semicolon(tokens[++i]) == "on");
+			loc.autoindex = (stripSemicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "upload_dir")
-			loc.upload_dir = strip_semicolon(tokens[++i]);
+			loc.upload_dir = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "cgi")
-			loc.cgi = (strip_semicolon(tokens[++i]) == "on");
+			loc.cgi = (stripSemicolon(tokens[++i]) == "on");
 		else if (tokens[i] == "cgi_extension")
-			loc.cgi_extension = strip_semicolon(tokens[++i]);
+			loc.cgi_extension = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "cgi_path")
-			loc.cgi_path = strip_semicolon(tokens[++i]);
+			loc.cgi_path = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "root")
-			loc.root = strip_semicolon(tokens[++i]);
+			loc.root = stripSemicolon(tokens[++i]);
 		else if (tokens[i] == "sensitive")
-			loc.sensitive = (strip_semicolon(tokens[++i]) == "on");
+			loc.sensitive = (stripSemicolon(tokens[++i]) == "on");
 		++i;
 	}
 	return (loc);
@@ -182,7 +182,7 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, siz
 				continue;
 			if (tokens[i] == "listen")
 			{
-				std::string ip_port = strip_semicolon(tokens[i + 1]);
+				std::string ip_port = stripSemicolon(tokens[i + 1]);
 				size_t colon = ip_port.find(':');
 				if (colon == std::string::npos)
 					throw std::runtime_error("Invalid listen format : " + ip_port);
@@ -193,9 +193,9 @@ Server Config::parse(const std::vector<std::string> &tokens, size_t &t_size, siz
 				conf.addListen(ip, port);
 			}
 			else if (tokens[i] == "root")
-				conf.setRoot(strip_semicolon(tokens[i + 1]));
+				conf.setRoot(stripSemicolon(tokens[i + 1]));
 			else if (tokens[i] == "error_pages")
-				conf.addErrorDir(strip_semicolon(tokens[i + 1]));
+				conf.addErrorDir(stripSemicolon(tokens[i + 1]));
 			else if (tokens[i] == "client_max_body_size")
 				conf.setClientMaxBodySize(convertSize((tokens[i + 1])));
 			else if (tokens[i] == "location")
