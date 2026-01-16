@@ -6,12 +6,18 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 03:17:25 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/16 03:56:34 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "Client.hpp"
 
+/**
+ * @brief
+ * Constructs a new Client associated with a server socket.
+ *
+ * @param the_socket Pointer to the server `Socket`.
+ */
 Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), handler(*(my_socket->getBlockServ()))
 {
 	OffsetBodyCgi = 0;
@@ -29,14 +35,32 @@ Client::Client(Socket *the_socket) : my_socket(the_socket), connected(true), han
 	
 }
 
+/**
+ * @brief
+ * Destructor for `Client`.
+ */
 Client::~Client() {}
 
+/**
+ * @brief
+ * Copy constructor for `Client`.
+ *
+ * @param copy The `Client` instance to copy.
+ */
 Client::Client(const Client &copy) : handler(copy.handler)
 {
 	if (this != &copy)
 		*this = copy;
 }
 
+/**
+ * @brief
+ * Assignment operator for `Client`.
+ *
+ * @param copy The `Client` instance to assign.
+ *
+ * @return Reference to the assigned `Client`.
+ */
 Client &Client::operator=(const Client &copy)
 {
 	if (this != &copy)
@@ -67,19 +91,34 @@ Client &Client::operator=(const Client &copy)
 	return (*this);
 }
 
+/**
+ * @brief
+ * Sets the basic client connection information.
+ *
+ * @param ip_address Client IP address.
+ * @param port_address Client port.
+ */
 void Client::setbasic(std::string ip_address, std::string port_address)
 {
 	ip = ip_address;
 	port = port_address;
 }
 
+/**
+ * @brief
+ * Resets request-related client information.
+ */
 void	Client::resetInf()
 {
-		this->request_finish = false;
-		this->correct_syntax = true;
-		this->offset = 0;
+	this->request_finish = false;
+	this->correct_syntax = true;
+	this->offset = 0;
 }
 
+/**
+ * @brief
+ * Resets client state after a CGI execution.
+ */
 void	Client::resetAfterCGI()
 {
 	this->OffsetBodyCgi = 0;
@@ -90,20 +129,46 @@ void	Client::resetAfterCGI()
 	this->PipeAddPoll = false;
 }
 
+/**
+ * @brief
+ * Sets the request body.
+ *
+ * @param body Request body content.
+ */
 void			Client::setBody(std::string body)
 {
 	_body = body;
 }
+
+/**
+ * @brief
+ * Sets the CGI process PID.
+ *
+ * @param pid CGI process ID.
+ */
 void			Client::setCgiPid(pid_t pid)
 {
 	_pid = pid;
 }
 
+/**
+ * @brief
+ * Sets the response generation state.
+ *
+ * @param etat Boolean state.
+ */
 void			Client::setResponseGenerate(bool etat)
 {
 	this->ResponseGenerate = etat;
 }
 
+
+/**
+ * @brief
+ * Appends received data to the request buffer and parses it.
+ *
+ * @param buf Received data buffer.
+ */
 void	Client::setRequest(std::string buf)
 {
 	size_t	pos;
@@ -141,135 +206,299 @@ void	Client::setRequest(std::string buf)
 	}
 }
 
+/**
+ * @brief
+ * Adds a cookie to the client.
+ *
+ * @param name Cookie name.
+ * @param value Cookie value.
+ */
 void	Client::setCookies(std::string name, std::string value)
 {
 	this->cookies[name] = value;
 }
 
+/**
+ * @brief
+ * Sets the HTTP response string.
+ *
+ * @param buf Response content.
+ */
 void	Client::setReponse(std::string buf)
 {
-		this->reponse = buf;
-		this->offset = 0;
+	this->reponse = buf;
+	this->offset = 0;
 }
+
+/**
+ * @brief
+ * Marks the client as being in a CGI execution.
+ */
 void	Client::setInCGI()
 {
 	if (!this->InCgi)
 		this->InCgi = true;
 }
 
+/**
+ * @brief
+ * Marks the client as out of CGI execution.
+ */
 void	Client::setOutCGI()
 {
 	if (this->InCgi)
 		this->InCgi = false;
 }
+
+/**
+ * @brief
+ * Sets the CGI input pipe file descriptor.
+ *
+ * @param fd Pipe file descriptor.
+ */
 void			Client::setPipeIn(int fd)
 {
 	this->fd_pipe_in = fd;
 }
 
+/**
+ * @brief
+ * Sets the CGI output pipe file descriptor.
+ *
+ * @param fd Pipe file descriptor.
+ */
 void			Client::setPipeOut(int fd)
 {
 	this->fd_pipe_out = fd;
 }
 
+/**
+ * @brief
+ * Stores the CGI start time.
+ */
 void			Client::setCGiStartTime(void)
 {
 	gettimeofday(&this->cgi_start_time, NULL);
 }
 
+/**
+ * @brief
+ * Sets whether CGI pipes were added to poll.
+ *
+ * @param booleen Boolean state.
+ */
 void			Client::setPipeAddPoll(bool	booleen)
 {
 	this->PipeAddPoll = booleen;
 }
 
+/**
+ * @brief
+ * Increments the offset of the CGI body written.
+ *
+ * @param nb Number of bytes written.
+ */
 void			Client::AddOffsetBodyCgi(size_t nb)
 {
 	this->OffsetBodyCgi += nb;
 }
+
+/**
+ * @brief
+ * Returns the CGI body offset.
+ *
+ * @return Reference to the offset value.
+ */
 const size_t			&Client::getOffsetBodyCgi() const
 {
 	return (this->OffsetBodyCgi);
 }
 
+/**
+ * @brief
+ * Indicates if CGI pipes are registered in poll.
+ *
+ * @return Reference to the state.
+ */
 const bool				&Client::getPipeAddPoll(void) const
 {
 	return (this->PipeAddPoll);
 }
 
+/**
+ * @brief
+ * Returns the request body.
+ *
+ * @return Reference to the body string.
+ */
 const std::string		&Client::getBody(void) const
 {
 	return (this->_body);
 }
 
+/**
+ * @brief
+ * Returns the CGI process PID.
+ *
+ * @return Reference to the PID.
+ */
 const pid_t			&Client::getCgiPid(void) const
 {
 	return (this->_pid);
 }
 
+/**
+ * @brief
+ * Indicates if a response is ready to be sent.
+ *
+ * @return Reference to the state.
+ */
 const bool			&Client::getResponseGenerate() const
 {
 	return (this->ResponseGenerate);
 }
 
+/**
+ * @brief
+ * Indicates if the client is currently in CGI.
+ *
+ * @return Reference to the state.
+ */
 const bool			&Client::getInCGI() const
 {
 	return (this->InCgi);
 }
 
+/**
+ * @brief
+ * Returns the raw HTTP request.
+ *
+ * @return Reference to the request string.
+ */
 const std::string	&Client::getRequest() const 
 {
 	return (this->request);
 }
 
+/**
+ * @brief
+ * Returns the CGI start time.
+ *
+ * @return Reference to the timeval structure.
+ */
 const timeval	&Client::getCgiStartTime(void) const
 {
 	return (this->cgi_start_time);
 }
 
+/**
+ * @brief
+ * Returns the CGI input pipe FD.
+ *
+ * @return Reference to the FD.
+ */
 const int				&Client::getPipeIn() const
 {
 	return (this->fd_pipe_in);
 }
 
+/**
+ * @brief
+ * Returns the CGI output pipe FD.
+ *
+ * @return Reference to the FD.
+ */
 const int				&Client::getPipeOut() const
 {
 	return (this->fd_pipe_out);
 }
 
+/**
+ * @brief
+ * Returns the response sending offset.
+ *
+ * @return Reference to the offset.
+ */
 const size_t &Client::getOffset() const
 {
 	return (this->offset);
 }
 
+/**
+ * @brief
+ * Indicates if the request is complete.
+ *
+ * @return Reference to the state.
+ */
 const bool	&Client::getFinishRequest() const
 {
 	return (request_finish);
 }
 
+/**
+ * @brief
+ * Indicates if the request syntax is valid.
+ *
+ * @return Reference to the state.
+ */
 const bool	&Client::getSyntax() const
 {
 	return (this->correct_syntax);
 }
 
+/**
+ * @brief
+ * Returns the HTTP response string.
+ *
+ * @return Reference to the response.
+ */
 const std::string &Client::getReponse() const
 {
 	return (this->reponse);
 }
 
+/**
+ * @brief
+ * Returns the client's cookies.
+ *
+ * @return Reference to the cookie map.
+ */
 const std::map<std::string, std::string> &Client::getCookies() const
 {
 	return (this->cookies);
 }
 
+/**
+ * @brief
+ * Returns the server port associated with the client.
+ *
+ * @return Server port.
+ */
 size_t			Client::getServerPort() const
 {
 	return (my_socket->getPort());
 }
+
+/**
+ * @brief
+ * Returns the CGI output buffer.
+ *
+ * @return Reference to the output string.
+ */
 const std::string	&Client::getCgiOutput() const
 {
 	return (this->CgiOutput);
 }
 
+
+/**
+ * @brief
+ * Appends data to the CGI output buffer.
+ *
+ * @param morceau Data chunk.
+ *
+ * @return New CGI output offset.
+ */
 size_t			Client::AddCgiOutput(std::string morceau)
 {
 	this->CgiOutput += morceau;
@@ -277,19 +506,31 @@ size_t			Client::AddCgiOutput(std::string morceau)
 	return (this->OffsetCgi);
 }
 
+/**
+ * @brief
+ * Clears the CGI output buffer.
+ */
 void			Client::ResetCgiOutput()
 {
 	this->OffsetCgi = 0;
 	this->CgiOutput = "";
 }
 
+/**
+ * @brief
+ * Increments the response sending offset.
+ *
+ * @param nb Number of bytes sent.
+ */
 void			Client::AddOffset(size_t nb)
 {
 	this->offset += nb;
 }
 
-
-
+/**
+ * @brief
+ * Displays a connection/disconnection log for the client.
+ */
 void	Client::view_log()
 {
 	long	start_h = (start.tv_sec / 3600) % 24 + 1;
@@ -302,6 +543,10 @@ void	Client::view_log()
 	std::cout << " and disconnected at " << end_h << "h" << end_m << " on port: " << port << RESET << std::endl;
 }
 
+/**
+ * @brief
+ * Marks the client as disconnected and logs it.
+ */
 void	Client::disconnected()
 {
 	this->connected = false;
@@ -309,6 +554,12 @@ void	Client::disconnected()
 	view_log();
 }
 
+/**
+ * @brief
+ * Extracts and parses the HTTP request into a `Request` structure.
+ *
+ * @return Parsed `Request`.
+ */
 Request	Client::ExtractRequest()
 {
 	Request	tmp;
