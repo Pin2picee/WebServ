@@ -3,7 +3,7 @@ import sys
 import os
 import urllib.parse
 
-# --- Lire les données ---
+# --- Read datas ---
 method = os.environ.get("REQUEST_METHOD", "GET").upper()
 input_text = ""
 
@@ -17,13 +17,13 @@ if method == "POST":
 elif method == "GET":
     input_text = os.environ.get("QUERY_STRING", "")
 
-# Décoder les données URL-encoded
+# Decode URL-encoded datas
 input_text = urllib.parse.unquote_plus(input_text.replace("&", "<br>"))
 
 if not input_text:
-    input_text = "<i>Aucune donnée reçue.</i>"
+    input_text = "<i>No data received.</i>"
 
-# --- Génération HTML ---
+# --- HTML generation ---
 HTML = f"""<!doctype html>
 <html lang="fr">
 <head>
@@ -37,14 +37,14 @@ h1 {{ color: #0ea5e9; }}
 </head>
 <body>
 <div class="container">
-<h1>Données reçues par le CGI</h1>
+<h1>Datas received by CGI</h1>
 <p>{input_text}</p>
 </div>
 </body>
 </html>
 """
 
-# --- En-têtes HTTP ---
+# --- HTTP headers ---
 sys.stdout.write("Status: 200 OK\r\n")
 sys.stdout.write("Content-Type: text/html; charset=utf-8\r\n\r\n")
 sys.stdout.write(HTML)

@@ -5,7 +5,7 @@ HTML = """<!doctype html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Animation CGI</title>
+<title>CGI animation</title>
 <style>
 :root {
   --bg1: #111827;
@@ -76,7 +76,7 @@ p  { margin: 0 0 20px; color: rgba(248,250,252,0.8); line-height: 1.5; }
 <div class="bg-wave"></div>
 <div class="card">
   <h1>Animation CGI</h1>
-  <p>Servie par un script Python CGI. Fond en gradient animé et pulsation centrale.</p>
+  <p>Served by a CGI Python script. Animated gradient background and central pulsation.</p>
   <div class="pulse-wrap">
     <div class="pulse-ring r1"></div>
     <div class="pulse-ring r2"></div>
