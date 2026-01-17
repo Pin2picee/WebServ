@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Monitor.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/12/23 20:34:42 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 21:58:57 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/17 17:06:18 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -272,7 +272,8 @@ int Monitor::disconnect(int i)
 		std::cerr << "ERROR: fd " << client_fd << " is a server socket, not closing!" << std::endl;
 		return 0;
 	}
-	close(client_fd);
+	if (client_fd != -1)
+		close(client_fd);
 	while (nb_fd > nb_fd_server && all_fd[nb_fd - 1].fd <= 0)
 		nb_fd--;
 	if ((size_t)i < nb_fd - 1 && nb_fd > nb_fd_server)

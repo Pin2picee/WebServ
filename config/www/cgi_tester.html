@@ -311,10 +311,10 @@
 </head>
 <body>
   <div class="container">
-    <a href="index.html" class="back-btn">← Retour</a>
+    <a href="../index.html" class="back-btn">← Return</a>
     
     <h1>🚀 CGI Scripts Tester</h1>
-    <p class="subtitle">Testez vos scripts CGI avec les méthodes HTTP de votre choix</p>
+    <p class="subtitle">Test  CGI scripts with HTTP methods of your choice</p>
 
     <!-- CGI 1: test.py -->
     <div class="cgi-card">
@@ -323,7 +323,7 @@
           <div class="cgi-icon">🎨</div>
           <div>
             <div class="cgi-name">test.py</div>
-            <div class="cgi-description">Animation CGI avec design moderne</div>
+            <div class="cgi-description">Modern design CGI animation</div>
           </div>
         </div>
         <div class="toggle-icon">▼</div>
@@ -331,12 +331,12 @@
       <div class="cgi-content">
         <div class="cgi-inner">
           <div class="info-box">
-            Ce CGI génère une page HTML avec des animations CSS (gradient, pulsation).
+            This CGI generates an HTML page with CSS animations (gradient, pulsation).
           </div>
           
           <form id="form-test" onsubmit="return handleSubmit(event, 'test')">
             <div class="form-group">
-              <label class="form-label">Méthode HTTP :</label>
+              <label class="form-label">HTTP method:</label>
               <div class="method-selector">
                 <button type="button" class="method-btn active" onclick="selectMethod(this, 'test', 'GET')">GET</button>
                 <button type="button" class="method-btn post" onclick="selectMethod(this, 'test', 'POST')">POST</button>
@@ -346,17 +346,17 @@
 
             <div class="checkbox-group">
               <input type="checkbox" id="body-test" onchange="toggleBody('test')">
-              <label for="body-test">Ajouter un body à la requête</label>
+              <label for="body-test">Add a body to the request</label>
             </div>
 
             <div id="body-test-section" class="body-section">
               <div class="form-group">
-                <label class="form-label">Body (données à envoyer) :</label>
+                <label class="form-label">Body (datas to send) :</label>
                 <textarea id="body-test-data" placeholder="Ex: name=John&age=25&city=Paris"></textarea>
               </div>
             </div>
 
-            <button type="submit">🚀 Exécuter la requête</button>
+            <button type="submit">🚀 Execute the request</button>
           </form>
           <div id="debug-test" class="debug-info"></div>
         </div>
@@ -370,7 +370,7 @@
           <div class="cgi-icon">📝</div>
           <div>
             <div class="cgi-name">print.py</div>
-            <div class="cgi-description">Echo des données GET/POST reçues</div>
+            <div class="cgi-description">Echo from GET/POST datas received</div>
           </div>
         </div>
         <div class="toggle-icon">▼</div>
@@ -378,12 +378,12 @@
       <div class="cgi-content">
         <div class="cgi-inner">
           <div class="info-box">
-            Affiche toutes les données reçues (GET query string ou POST body).
+            Displays all received datas (GET query string or POST body).
           </div>
           
           <form id="form-print" onsubmit="return handleSubmit(event, 'print')">
             <div class="form-group">
-              <label class="form-label">Méthode HTTP :</label>
+              <label class="form-label">HTTP Method:</label>
               <div class="method-selector">
                 <button type="button" class="method-btn active" onclick="selectMethod(this, 'print', 'GET')">GET</button>
                 <button type="button" class="method-btn post" onclick="selectMethod(this, 'print', 'POST')">POST</button>
@@ -393,17 +393,17 @@
 
             <div class="checkbox-group">
               <input type="checkbox" id="body-print" onchange="toggleBody('print')">
-              <label for="body-print">Ajouter un body à la requête</label>
+              <label for="body-print">Add a body to the request</label>
             </div>
 
             <div id="body-print-section" class="body-section">
               <div class="form-group">
-                <label class="form-label">Body (données à envoyer) :</label>
+                <label class="form-label">Body (datas to send) :</label>
                 <textarea id="body-print-data" placeholder="Ex: message=Hello World&user=42student&status=active"></textarea>
               </div>
             </div>
 
-            <button type="submit">📤 Exécuter la requête</button>
+            <button type="submit">📤 Execute the request</button>
           </form>
           <div id="debug-print" class="debug-info"></div>
         </div>
@@ -417,7 +417,7 @@
           <div class="cgi-icon">⚠️</div>
           <div>
             <div class="cgi-name">boucle.py</div>
-            <div class="cgi-description">Boucle infinie (test timeout)</div>
+            <div class="cgi-description">Infinite loop (timeout test)</div>
           </div>
         </div>
         <div class="toggle-icon">▼</div>
@@ -425,12 +425,12 @@
       <div class="cgi-content">
         <div class="cgi-inner">
           <div class="info-box" style="background: rgba(255,0,0,0.2);">
-            ⚠️ ATTENTION : Ce script contient une boucle infinie. Utilisez-le pour tester le timeout CGI de votre serveur.
+            ⚠️ WARNING : This script contains an infinite loop. use it to test CGI timout in the server.
           </div>
           
           <form id="form-boucle" onsubmit="return handleSubmit(event, 'boucle')">
             <div class="form-group">
-              <label class="form-label">Méthode HTTP :</label>
+              <label class="form-label">HTTP method :</label>
               <div class="method-selector">
                 <button type="button" class="method-btn active" onclick="selectMethod(this, 'boucle', 'GET')">GET</button>
                 <button type="button" class="method-btn post" onclick="selectMethod(this, 'boucle', 'POST')">POST</button>
@@ -440,18 +440,18 @@
 
             <div class="checkbox-group">
               <input type="checkbox" id="body-boucle" onchange="toggleBody('boucle')">
-              <label for="body-boucle">Ajouter un body à la requête</label>
+              <label for="body-boucle">Add a body to the request</label>
             </div>
 
             <div id="body-boucle-section" class="body-section">
               <div class="form-group">
-                <label class="form-label">Body (données à envoyer) :</label>
+                <label class="form-label">Body (datas to send) :</label>
                 <textarea id="body-boucle-data" placeholder="Ex: test=timeout"></textarea>
               </div>
             </div>
 
             <button type="submit" style="background: linear-gradient(135deg, #ff6b6b, #c92a2a);">
-              💣 Lancer (timeout attendu)
+              💣 Launch (expecting timeout)
             </button>
           </form>
           <div id="debug-boucle" class="debug-info"></div>
@@ -459,14 +459,14 @@
       </div>
     </div>
 
-    <!-- CGI 4: rien.py -->
+    <!-- CGI 4: empty.py -->
     <div class="cgi-card">
       <div class="cgi-header" onclick="toggleCard(this)">
         <div class="cgi-title">
           <div class="cgi-icon">🔇</div>
           <div>
-            <div class="cgi-name">rien.py</div>
-            <div class="cgi-description">Script vide (test réponse vide)</div>
+            <div class="cgi-name">nothing.py</div>
+            <div class="cgi-description">Empty script (Empty response test)</div>
           </div>
         </div>
         <div class="toggle-icon">▼</div>
@@ -474,34 +474,34 @@
       <div class="cgi-content">
         <div class="cgi-inner">
           <div class="info-box">
-            Ce script ne produit aucune sortie. Testez comment votre serveur gère une réponse CGI vide.
+            This script doesn't provide any output. Test how the server handles an empty CGI response.
           </div>
           
-          <form id="form-rien" onsubmit="return handleSubmit(event, 'rien')">
+          <form id="form-empty" onsubmit="return handleSubmit(event, 'empty')">
             <div class="form-group">
-              <label class="form-label">Méthode HTTP :</label>
+              <label class="form-label">HTTP method :</label>
               <div class="method-selector">
-                <button type="button" class="method-btn active" onclick="selectMethod(this, 'rien', 'GET')">GET</button>
-                <button type="button" class="method-btn post" onclick="selectMethod(this, 'rien', 'POST')">POST</button>
-                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'rien', 'DELETE')">DELETE</button>
+                <button type="button" class="method-btn active" onclick="selectMethod(this, 'empty', 'GET')">GET</button>
+                <button type="button" class="method-btn post" onclick="selectMethod(this, 'empty', 'POST')">POST</button>
+                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'empty', 'DELETE')">DELETE</button>
               </div>
             </div>
 
             <div class="checkbox-group">
-              <input type="checkbox" id="body-rien" onchange="toggleBody('rien')">
-              <label for="body-rien">Ajouter un body à la requête</label>
+              <input type="checkbox" id="body-empty" onchange="toggleBody('empty')">
+              <label for="body-empty">Add a body to the request</label>
             </div>
 
-            <div id="body-rien-section" class="body-section">
+            <div id="body-empty-section" class="body-section">
               <div class="form-group">
-                <label class="form-label">Body (données à envoyer) :</label>
-                <textarea id="body-rien-data" placeholder="Ex: data=empty_test"></textarea>
+                <label class="form-label">Body (datas to send) :</label>
+                <textarea id="body-empty-data" placeholder="Ex: data=empty_test"></textarea>
               </div>
             </div>
 
-            <button type="submit">🔇 Exécuter la requête</button>
+            <button type="submit">🔇 Execute the request</button>
           </form>
-          <div id="debug-rien" class="debug-info"></div>
+          <div id="debug-empty" class="debug-info"></div>
         </div>
       </div>
     </div>
@@ -509,12 +509,12 @@
   </div>
 
   <script>
-    // Stockage de la méthode sélectionnée pour chaque formulaire
+    // Selected method storage for each form
     const selectedMethods = {
       'test': 'GET',
       'print': 'GET',
       'boucle': 'GET',
-      'rien': 'GET'
+      'empty': 'GET'
     };
 
     function toggleCard(header) {
@@ -533,15 +533,15 @@
     function selectMethod(btn, formId, method) {
       const buttons = btn.parentElement.querySelectorAll('.method-btn');
       
-      // Mise à jour visuelle
+      // visual update
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      // Stockage de la méthode sélectionnée
+      // Selected method storage
       selectedMethods[formId] = method;
       
       // Debug
-      console.log(`[${formId}] Méthode sélectionnée: ${method}`);
+      console.log(`[${formId}] Selected method: ${method}`);
     }
 
     function toggleBody(formId) {
@@ -556,27 +556,27 @@
     }
 
     function handleSubmit(event, formId) {
-      event.preventDefault(); // Empêche toujours la soumission par défaut
+      event.preventDefault(); // Always prevent default submission
       
       const form = document.getElementById('form-' + formId);
       const checkbox = document.getElementById('body-' + formId);
       const bodyData = document.getElementById('body-' + formId + '-data');
-      const method = selectedMethods[formId]; // Utilise la méthode stockée
+      const method = selectedMethods[formId]; // use stored method
       const debugDiv = document.getElementById('debug-' + formId);
       
       const action = '/cgi-bin/' + formId + '.py';
       
       // Debug info
-      let debugInfo = `Méthode: ${method}\nURL: ${action}\n`;
+      let debugInfo = `Method: ${method}\nURL: ${action}\n`;
       
       if (method === 'GET') {
-        // GET: construit l'URL avec query string si body présent
+        // GET: Build URL with query string if body exist
         let url = action;
         if (checkbox.checked && bodyData.value.trim()) {
           url += '?' + bodyData.value;
           debugInfo += `Query String: ${bodyData.value}\n`;
         }
-        debugInfo += `Redirection vers: ${url}`;
+        debugInfo += `Redirection to: ${url}`;
         
         debugDiv.textContent = debugInfo;
         debugDiv.classList.add('show');
@@ -589,7 +589,7 @@
         }, 500);
         
       } else {
-        // POST ou DELETE: utilise fetch
+        // POST or DELETE: use fetch
         let body = null;
         let headers = {};
         
@@ -600,7 +600,7 @@
           debugInfo += `Content-Type: application/x-www-form-urlencoded\n`;
         }
         
-        debugInfo += `Envoi via fetch...`;
+        debugInfo += `Send with fetch...`;
         debugDiv.textContent = debugInfo;
         debugDiv.classList.add('show');
         
@@ -613,7 +613,7 @@
           body: body
         })
         .then(response => {
-          console.log(`Réponse reçue: ${response.status} ${response.statusText}`);
+          console.log(`Received response: ${response.status} ${response.statusText}`);
           return response.text();
         })
         .then(html => {
@@ -622,12 +622,12 @@
             newWindow.document.write(html);
             newWindow.document.close();
           } else {
-            alert('Popup bloquée ! Autorisez les popups pour ce site.');
+            alert('Blocked pop-up ! Allow pop-ups for this website.');
           }
         })
         .catch(error => {
-          console.error('Erreur:', error);
-          alert('Erreur lors de la requête: ' + error.message);
+          console.error('Error:', error);
+          alert('Error while request: ' + error.message);
         });
       }
       
