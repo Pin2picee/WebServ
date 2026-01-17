@@ -459,7 +459,7 @@
       </div>
     </div>
 
-    <!-- CGI 4: empty.py -->
+    <!-- CGI 4: nothing.py -->
     <div class="cgi-card">
       <div class="cgi-header" onclick="toggleCard(this)">
         <div class="cgi-title">
@@ -471,40 +471,47 @@
         </div>
         <div class="toggle-icon">▼</div>
       </div>
+
       <div class="cgi-content">
         <div class="cgi-inner">
           <div class="info-box">
             This script doesn't provide any output. Test how the server handles an empty CGI response.
           </div>
-          
-          <form id="form-empty" onsubmit="return handleSubmit(event, 'empty')">
+
+          <form id="form-nothing" onsubmit="return handleSubmit(event, 'nothing')">
             <div class="form-group">
               <label class="form-label">HTTP method :</label>
               <div class="method-selector">
-                <button type="button" class="method-btn active" onclick="selectMethod(this, 'empty', 'GET')">GET</button>
-                <button type="button" class="method-btn post" onclick="selectMethod(this, 'empty', 'POST')">POST</button>
-                <button type="button" class="method-btn delete" onclick="selectMethod(this, 'empty', 'DELETE')">DELETE</button>
+                <button type="button" class="method-btn active"
+                  onclick="selectMethod(this, 'nothing', 'GET')">GET</button>
+                <button type="button" class="method-btn post"
+                  onclick="selectMethod(this, 'nothing', 'POST')">POST</button>
+                <button type="button" class="method-btn delete"
+                  onclick="selectMethod(this, 'nothing', 'DELETE')">DELETE</button>
               </div>
             </div>
 
             <div class="checkbox-group">
-              <input type="checkbox" id="body-empty" onchange="toggleBody('empty')">
-              <label for="body-empty">Add a body to the request</label>
+              <input type="checkbox" id="body-nothing" onchange="toggleBody('nothing')">
+              <label for="body-nothing">Add a body to the request</label>
             </div>
 
-            <div id="body-empty-section" class="body-section">
+            <div id="body-nothing-section" class="body-section">
               <div class="form-group">
                 <label class="form-label">Body (datas to send) :</label>
-                <textarea id="body-empty-data" placeholder="Ex: data=empty_test"></textarea>
+                <textarea id="body-nothing-data"
+                  placeholder="Ex: data=empty_test"></textarea>
               </div>
             </div>
 
             <button type="submit">🔇 Execute the request</button>
           </form>
-          <div id="debug-empty" class="debug-info"></div>
+
+          <div id="debug-nothing" class="debug-info"></div>
         </div>
       </div>
     </div>
+
 
   </div>
 
