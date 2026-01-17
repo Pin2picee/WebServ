@@ -2,8 +2,6 @@
 
 # Webserv
 
-# <a name="webserv"></a>Webserv
-
 ## <a name="table-of-contents"></a>📑 Table of Contents
 - [Description](#description)
   - [Socket Programming](#socket-programming)
@@ -25,8 +23,7 @@
 
 ## <a name="description"></a>📌 Description
 
-**Webserv** is a project from the **42 school curriculum** whose objective is to build a  
-fully functional **HTTP web server from scratch** using **C++98**.
+**Webserv** is a project from the **42 school curriculum** whose objective is to build a fully functional **HTTP web server from scratch** using **C++98**.
 
 The project focuses on low-level programming concepts such as:
 
@@ -89,12 +86,9 @@ The project focuses on low-level programming concepts such as:
 | dup2 | Redirects standard input/output |
 | chdir | Changes the working directory |
 
-No external libraries or modern C++ abstractions are allowed, requiring careful memory  
-management and strict adherence to system-level APIs.
+No external libraries or modern C++ abstractions are allowed, requiring careful memory management and strict adherence to system-level APIs.
 
-The final goal is to create a **robust, performant, and standards-compliant web server**  
-capable of serving static content, handling dynamic requests via CGI, and managing  
-multiple clients simultaneously.
+The final goal is to create a **robust, performant, and standards-compliant web server** capable of serving static content, handling dynamic requests via CGI, and managing multiple clients simultaneously.
 
 ---
 
@@ -169,8 +163,7 @@ The server will start listening on the ports defined in the configuration file.
 
 ## <a name="authorized-system-calls"></a>📖 Authorized System Calls
 
-This project strictly follows the list of authorized system calls provided by the 42  
-subject, including (but not limited to):
+This project strictly follows the list of authorized system calls provided by the 42 subject, including (but not limited to):
 
 - Process management: `fork`, `execve`, `waitpid`  
 - Networking: `socket`, `bind`, `listen`, `accept`, `send`, `recv`  
@@ -197,12 +190,10 @@ AI tools (ChatGPT) were used **as an assistance tool only**, specifically for:
 - Affining knowledges on RFC norm
 - Improving documentation clarity (README wording and structure)  
 
-All architectural decisions, implementation, and code writing were performed by the  
-project authors.
+All architectural decisions, implementation, and code writing were performed by the project authors.
 
 ---
 
 ## <a name="notes"></a>🏁 Notes
 
-This project is educational and aims to deepen understanding of how web servers work at  
-a low level, without relying on frameworks or high-level abstractions.
+This project is educational and aims to deepen understanding of how web servers work at a low level, without relying on frameworks or high-level abstractions.
