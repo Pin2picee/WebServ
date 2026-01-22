@@ -48,11 +48,10 @@
 
   <h2>Delete a File</h2>
 
-  <!-- Message affiché après refresh -->
+  <!-- Displayed message after a refresh -->
   <p id="statusMessage" style="display:none; font-weight:bold;"></p>
 
   <form id="deleteForm">
-    <!-- CET INPUT SERA REMPLACÉ PAR TON <select> CÔTÉ SERVEUR -->
     <input type="text" id="filename" placeholder="Enter filename" required>
     <button type="submit">Delete</button>
   </form>
@@ -60,7 +59,7 @@
   <a href="index.html" class="button">Return to Home</a>
 
   <script>
-    // 🔄 Affiche le message APRÈS le refresh
+    // 🔄 Display message after refresh
     window.addEventListener("load", function () {
       const statusMsg = document.getElementById("statusMessage");
 
@@ -69,12 +68,12 @@
         statusMsg.style.display = "block";
         statusMsg.style.color = "#b6ffb6";
 
-        // Nettoyage
+        // Clean up
         sessionStorage.removeItem("deleteSuccess");
       }
     });
 
-    // 🗑️ Gestion du DELETE
+    // 🗑️ DELETE management
     document.getElementById("deleteForm").addEventListener("submit", function(event) {
       event.preventDefault();
 
@@ -91,15 +90,15 @@
         .then(response => {
           return response.text().then(text => {
             if (response.ok) {
-              // Succès → pop-up vert
+              // Success → green pop-up
               alert("File deleted successfully!");
             } else {
-              // Erreur → parse JSON si possible
+              // Error → JSON parse if possible
               try {
                 var obj = JSON.parse(text);
                 alert("Error: " + obj.message);
               } catch (e) {
-                // Si ce n'est pas du JSON, affiche le texte brut
+                // If it's not JSON, display raw test
                 alert("Error: " + text);
               }
             }
@@ -110,5 +109,5 @@
         });
     });
   </script>
-                  </body>
+  </body>
 </html>

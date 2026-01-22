@@ -60,11 +60,9 @@
       background: rgba(255, 255, 255, 0.25);
     }
     
-    li.go-back a {
-      /* aucun emoji en ::before pour ce bouton */
-    }
+    li.go-back a {}
 
-    /* Emojis pour chaque type de fichier */
+    /* Emojis for each file types */
     .folder a::before { content: "📁 "; }
     .file a::before   { content: "📄 "; }
     .image a::before  { content: "🖼️ "; }
@@ -72,7 +70,6 @@
     .pdf a::before    { content: "📕 "; }
     .text a::before   { content: "📄 "; }
 
-    /* Style spécial pour les fichiers texte */
     .text a, .image a, .file a, .video a, .pdf a, .folder a, li.go-back a {
       background: rgba(255, 255, 255, 0.25);
       border-left: 4px solid transparent;
