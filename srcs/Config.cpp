@@ -54,9 +54,9 @@ void	Config::CreateSocket(void)
 {
 	for (std::vector<Server>::iterator it = Servers.begin(); it != Servers.end(); it++)
 	{
-		std::vector<std::pair< std::string, int> > CurrentListen = it->getListen();
+		std::vector<std::pair< std::string, int> > CurrentListen = it->getListen();//on recup le vector de ip/port a bind pour le serverblock actuelle
 		for (std::vector<std::pair< std::string, int> >::iterator it_current = CurrentListen.begin();
-			it_current != CurrentListen.end(); it_current++)
+			it_current != CurrentListen.end(); it_current++)//parcour le vector listen
 		{
 			Socket	*new_socket = new Socket(it_current->first, it_current->second, &(*it));
 			this->Sockets.push_back(new_socket);

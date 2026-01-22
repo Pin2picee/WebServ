@@ -9,7 +9,7 @@ class Server;
  * @brief
  * Represents a TCP listening socket.
  * 
- * @param Fd				The socket file descriptor.
+ * @param Fd			The socket file descriptor.
  * @param address1		The socket address structure.
  * @param _port			The port the socket is bound to.
  * @param _ip			The IP address the socket listens on.
@@ -18,27 +18,27 @@ class Server;
 class Socket
 {
 private :
-	int					Fd;
-	struct sockaddr_in	address1;
+	int					Fd;// file descriptor genere par socket()
+	struct sockaddr_in	address1;// structure pour paramtrer l'adrresse a bind
 	size_t				_port;
 	std::string			_ip;
 	Server				*BlockServer;
 
 	Socket();
-	void		setSocketAddr();
+	void		setSocketAddr();//methode qui definie les valeurs a implement
 public:
 
 	// Constructors / Destructor
 
 	Socket(std::string ip, int port, Server *ref);
-	~Socket();
+	~Socket();// le ferme
 	Socket(const Socket &copy);
 	Socket &operator=(const Socket &assignement);
 	
 	// Getters
 
-	int			getFd(void) const;
-	Server		*getBlockServer(void);
+	int			getFd(void) const;// recupere le
+	Server		*getBlockServer(void);//donne une reference a son Server
 	size_t		getPort(void) const;
 	
 	// Util

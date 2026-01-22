@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 17:31:17 by marvin            #+#    #+#             */
-/*   Updated: 2026/01/16 22:06:54 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/23 00:12:55 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,6 +87,7 @@ Client &Client::operator=(const Client &copy)
 		fd_pipe_in = copy.fd_pipe_in;
 		fd_pipe_out = copy.fd_pipe_out;
 		OffsetBodyCgi = copy.OffsetBodyCgi;
+		//pas de end car init dans deconnected;
 	}
 	return (*this);
 }
@@ -122,10 +123,12 @@ void	Client::resetRequestState()
 void	Client::resetAfterCGI()
 {
 	this->OffsetBodyCgi = 0;
+	// Ne pas remettre request_finish à false ici : la nouvelle requête peut déjà être arrivée
 	this->request.clear();
 	this->fd_pipe_in = -1;
 	this->fd_pipe_out = -1;
 	this->_pid = 0;
+	// Ne pas effacer _body ici : il sera écrasé par setBody() lors de la prochaine requête
 	this->addPipeToPoll = false;
 }
 
@@ -181,6 +184,8 @@ void	Client::setRequest(std::string buf)
 		resetRequestState();
 	}
 	Request tmp = ExtractRequest();
+	// si GET & autres alors pas de body par contre si POST alors body
+	// Le but est de mettre le request_finish a true si la requete est fini
 	pos = request.find("\r\n");
 	line = request.substr(0, pos);
 	if (line.find("  ") != std::string::npos)
@@ -569,13 +574,14 @@ Request	Client::ExtractRequest()
 	size_t	pos_point;
 	std::string line;
 	
-	pos_finish = request.find("\r\n\r\n");
-	pos = request.find("\r\n");
+	//extract request_line
+	pos_finish = request.find("\r\n\r\n");//la fin de la requete
+	pos = request.find("\r\n");//fin premiere ligne	
 	if (pos_finish == std::string::npos || pos == std::string::npos )
 		return tmp;
 	
-	line = request.substr(0, pos);
-	std::stringstream ss(line);
+	line = request.substr(0, pos);//toute la premiere ligne
+	std::stringstream ss(line);//decoupe la premiere ligne
 	ss >> tmp.method >> tmp.uri >> tmp.version;
 	size_t qmark = tmp.uri.find('?');
 	tmp.path = tmp.uri.substr(0, qmark);
@@ -587,11 +593,11 @@ Request	Client::ExtractRequest()
 
 	while (pos != pos_finish)
 	{
-		pos += 2;
+		pos += 2;//on bypass \r\n
 		pos_point = request.find(":", pos);
 		if (pos_point == std::string::npos || pos == std::string::npos)
 			return (tmp);
-		tmp.headers[request.substr(pos, (pos_point) - pos)] = request.substr(pos_point + 1, request.find("\r\n", pos_point + 1) - (pos_point + 1));
+		tmp.headers[request.substr(pos, (pos_point) - pos)] = request.substr(pos_point + 1, request.find("\r\n", pos_point + 1) - (pos_point + 1));//avant et apres le point;
 		pos = request.find("\r\n", pos);
 	}
 	for (std::map<std::string, std::string>::iterator it = tmp.headers.begin(); it != tmp.headers.end(); it++ )

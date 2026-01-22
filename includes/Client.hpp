@@ -6,7 +6,7 @@
 /*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:40:16 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 04:43:11 by marvin           ###   ########.fr       */
+/*   Updated: 2026/01/23 00:14:43 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,9 +68,9 @@ private :
 	std::string							reponse;
 	std::string							ip;
 	std::string							port;
-	timeval								start;
+	timeval								start;//Connexion client
 	std::map<std::string, std::string>	cookies;
-	timeval								end;
+	timeval								end;//deco client
 	timeval								cgi_start_time;
 	bool								connected;
 	bool								request_finish;
@@ -79,8 +79,8 @@ private :
 	bool								InCgi;
 	size_t								offset;
 	bool								addPipeToPoll;
-	int									fd_pipe_out;
-	int									fd_pipe_in;
+	int									fd_pipe_out;//lecture a la sortie du fils donc 0 car sortie du pipe
+	int									fd_pipe_in;//ecriture a l'entre du fils pour le body donc 1 car entre du pipe
 	pid_t								_pid;
 	size_t								OffsetCgi;
 	size_t								OffsetBodyCgi;
@@ -97,7 +97,7 @@ public :
 
 	// Base
 
-	void	setBasic(std::string ip_address, std::string port_address);
+	void	setBasic(std::string ip_address, std::string port_address);// assign les valeurs basic d'un nouveau client
 		
 	// Setters
 
@@ -146,8 +146,8 @@ public :
 
 
 	size_t			addCgiOutput(std::string morceau);
-	void			viewLog();
-	void			disconnected();
+	void			viewLog();//utiliser seulement par deconected car end pas encore init;affiche les temps de connexions avec l'ip et port + socket serveur
+	void			disconnected();//met a false + view_log()
 };
 
 #endif

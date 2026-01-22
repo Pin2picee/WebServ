@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ResponseHandler.cpp                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: abelmoha <abelmoha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: marvin <locagnio@student.42perpignan.fr    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/14 01:39:44 by abelmoha          #+#    #+#             */
-/*   Updated: 2026/01/16 22:00:43 by abelmoha         ###   ########.fr       */
+/*   Updated: 2026/01/23 00:38:41 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -405,7 +405,7 @@ ResponseHandler::ResponseHandler(const ResponseHandler &copy) : _server(copy._se
 ResponseHandler &ResponseHandler::operator=(const ResponseHandler &assignement)
 {
 	(void)assignement;
-	return (*this);
+	return (*this);// rien a mettre egal a l'assignement car la seule variable est const donc deja init
 }
 
 /**

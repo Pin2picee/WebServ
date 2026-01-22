@@ -76,10 +76,10 @@ Socket::Socket(std::string ip, int port, Server *refBlock)
 	this->Fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (Fd < 0 || port <= 0 || port > 65535)
 		throw SocketError();
-	setSocketAddr();
+	setSocketAddr();// initialisation de la structure sock_addr_in puis convertit en (const sock_adrr *)
 	if (bind(this->Fd, (const sockaddr *)&this->address1, sizeof(address1)) != 0)
 		throw SocketError();
-	else if (listen(this->Fd, SOMAXCONN) < 0)
+	else if (listen(this->Fd, SOMAXCONN) < 0)// 2emeparam= backlog file d'attente dont la connexion n'est pas encore accepter
 		throw SocketError();
 	int ancien_flags = fcntl(this->Fd, F_GETFL);
 	int res = fcntl(this->Fd, F_SETFL, ancien_flags | O_NONBLOCK);
@@ -149,7 +149,7 @@ void	Socket::setSocketAddr()
 	setsockopt(this->Fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 	this->address1.sin_family = AF_INET;
 	this->address1.sin_port = htons(this->_port);
-	this->address1.sin_addr.s_addr = htonl(this->parseIp(_ip));
+	this->address1.sin_addr.s_addr = htonl(this->parseIp(_ip));// 127.0.0.1 // little_endian to big_endian for network // inet_pton->function mais pas le droit
 }
 
 /**
